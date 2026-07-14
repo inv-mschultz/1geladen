@@ -1,67 +1,65 @@
-# Payload Blank Template
+# 1geladen 🎉
 
-This template comes configured with the bare minimum to get started on anything you need.
+Events organisieren wie 2010. Nur besser. („1" → „eins" → „**Ein**geladen". Genau.) — Organize events like it's 2010. Only better.
 
-## Quick start
+A small, bold event site for dinner evenings and gatherings: **where/when/what** front and center, RSVPs (the sacred *Attending / Maybe / Can't* trinity), a wall for posts + comments, a claimable **"What do I bring?"** list, and a photo gallery that unlocks once the party starts.
 
-This template can be deployed directly from our Cloud hosting and it will setup MongoDB and cloud S3 object storage for media.
+Built with **Next.js 16 + Payload CMS 3** in one app. The frontend is the party; `/admin` is backstage.
 
-## Quick Start - local setup
+## Local development
 
-To spin up this template locally, follow these steps:
+```bash
+pnpm install
+pnpm seed     # optional: demo users + a spaghetti night (skips if users exist)
+pnpm dev      # http://localhost:3000
+```
 
-### Clone
+Seeded logins (all password `partey2010`):
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. If you've already cloned this repo, skip to [Development](#development).
+| Who | Email | Role |
+| --- | --- | --- |
+| Michael | michael@inversestudio.io | admin |
+| Anna / Ben / Clara | anna/ben/clara@example.com | guest |
 
-### Development
-
-1. First [clone the repo](#clone) if you have not done so already
-2. `cd my-project && cp .env.example .env` to copy the example environment variables. You'll need to add the `MONGODB_URL` from your Cloud project to your `.env` if you want to use S3 storage and the MongoDB database that was created for you.
-
-3. `pnpm install && pnpm dev` to install dependencies and start the dev server
-4. open `http://localhost:3000` to open the app in your browser
-
-That's it! Changes made in `./src` will be reflected in your app. Follow the on-screen instructions to login and create your first admin user. Then check out [Production](#production) once you're ready to build and serve your app, and [Deployment](#deployment) when you're ready to go live.
-
-#### Docker (Optional)
-
-If you prefer to use Docker for local development instead of a local MongoDB instance, the provided docker-compose.yml file can be used.
-
-To do so, follow these steps:
-
-- Modify the `MONGODB_URL` in your `.env` file to `mongodb://127.0.0.1/<dbname>`
-- Modify the `docker-compose.yml` file's `MONGODB_URL` to match the above `<dbname>`
-- Run `docker-compose up` to start the database, optionally pass `-d` to run in the background.
+Without the seed, the **first registered user automatically becomes admin**. Everyone after that is a guest; only admins can promote roles (in `/admin` → Users).
 
 ## How it works
 
-The Payload config is tailored specifically to the needs of most websites. It is pre-configured in the following ways:
+- **Admin panel** at `/admin` (Payload) — create events, manage users/roles, moderate everything. Only `role: admin` users can enter.
+- **Guests** register on the site, then RSVP, post on the wall, comment, add/claim bring-items, and upload photos.
+- **Photo gallery** opens automatically once the event start time passes, or earlier via the event's `photosOpen` checkbox.
+- **i18n:** frontend is German/English (cookie-based toggle in the header). Event `title` and `description` are localized fields — enter both languages in the admin via its locale switcher.
 
 ### Collections
 
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
+`users` (admin/guest) · `events` · `posts` · `comments` · `bring-items` · `rsvps` · `media`
 
-- #### Users (Authentication)
+Ownership is enforced server-side: authors are stamped from the session, guests can only edit/delete their own content, and the `role` field is admin-locked (tested: registering with `"role": "admin"` gets you a guest badge).
 
-  Users are auth-enabled collections that have access to the admin panel.
+## Deploying to Vercel
 
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/3.x/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
+The config is environment-aware: `DATABASE_URL=file:...` → SQLite + local disk (dev); `POSTGRES_URL` → Vercel/Neon Postgres, and `BLOB_READ_WRITE_TOKEN` → uploads on Vercel Blob (production). The `vercel-build` script runs `payload migrate` before `next build`, applying the migrations in `src/migrations/`.
 
-- #### Media
+One-time setup:
 
-  This is the uploads enabled collection. It features pre-configured sizes, focal point and manual resizing to help you manage your pictures.
+1. Import the repo at vercel.com → root directory `.` (this app).
+2. In the Vercel project → Storage: add **Neon Postgres** and **Blob** — both inject their env vars (`POSTGRES_URL`, `BLOB_READ_WRITE_TOKEN`) automatically.
+3. Add env vars: `PAYLOAD_SECRET` (long random string) and `NEXT_PUBLIC_GIPHY_API_KEY`.
+4. Deploy. Then register the first user — they become admin.
+5. Domains: add `1geladen.de` (+ `www`), set the DNS records Vercel shows at your registrar.
 
-### Docker
+After schema changes, generate a migration and commit it: `pnpm payload migrate:create <name>` (with `POSTGRES_URL` set; a dummy URL works — generation is offline).
 
-Alternatively, you can use [Docker](https://www.docker.com) to spin up this template locally. To do so, follow these steps:
+## Scripts
 
-1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root
-1. Next run `docker-compose up`
-1. Follow [steps 4 and 5 from above](#development) to login and create your first admin user
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | dev server |
+| `pnpm seed` | seed demo party |
+| `pnpm build` / `pnpm start` | production build / serve |
+| `pnpm generate:types` | regenerate `payload-types.ts` after schema changes |
+| `pnpm test` | vitest + playwright |
 
-That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
+---
 
-## Questions
-
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+Mit Liebe und Abendessen gebaut. 🍝
