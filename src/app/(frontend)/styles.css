@@ -1042,8 +1042,127 @@ a {
   align-items: center;
 }
 
-.wall__comment-form .input {
+/* Input with nested low-affordance tool buttons (thread replies) */
+.input-shell {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--paper-bright);
+  border: 1.5px solid rgba(55, 40, 30, 0.35);
+  border-radius: 8px;
+  padding-right: 5px;
+}
+
+.input-shell:hover {
+  border-color: rgba(55, 40, 30, 0.55);
+}
+
+.input-shell:focus-within {
+  outline: 3px solid var(--mustard);
+  outline-offset: 1px;
+}
+
+.input-shell__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  padding: 7px 12px;
+}
+
+.input-shell__tools {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+/* Quiet buttons: minimal affordance, for secondary/destructive actions */
+.btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink-soft);
+  opacity: 0.55;
+  padding: 6px;
+  border-radius: 7px;
+  font-size: 1rem;
+  line-height: 0;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.btn-quiet:hover:not(:disabled),
+.btn-quiet:focus-visible {
+  opacity: 1;
+  color: var(--ink);
+  background: rgba(55, 40, 30, 0.08);
+}
+
+.btn-quiet:disabled {
+  cursor: wait;
+}
+
+.btn-quiet--gif {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 8px 6px;
+}
+
+/* Reveal-on-hover for destructive actions; stays faintly visible on touch */
+@media (hover: hover) {
+  .wall__post .btn-quiet--reveal,
+  .bring__item .btn-quiet--reveal {
+    opacity: 0;
+  }
+
+  .wall__post:hover .btn-quiet--reveal,
+  .bring__item:hover .btn-quiet--reveal {
+    opacity: 0.55;
+  }
+
+  .wall__post .btn-quiet--reveal:hover,
+  .bring__item .btn-quiet--reveal:hover,
+  .btn-quiet--reveal:focus-visible {
+    opacity: 1;
+  }
+}
+
+/* The send button: the one thing that should pop */
+.btn--send {
+  background: var(--tomato);
+  color: var(--paper-bright);
+  animation: pop-in 0.16s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.btn--send:hover:not(:disabled) {
+  background: var(--tomato-deep);
+  color: var(--paper-bright);
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn--send {
+    animation: none;
+  }
 }
 
 .wall__comment-media img {

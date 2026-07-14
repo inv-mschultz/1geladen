@@ -8,7 +8,10 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'role'],
   },
-  auth: true,
+  auth: {
+    // Guests shouldn't have to log in before every party — keep sessions for 30 days
+    tokenExpiration: 60 * 60 * 24 * 30,
+  },
   access: {
     // Only admins may enter the backstage area
     admin: ({ req: { user } }) => user?.role === 'admin',

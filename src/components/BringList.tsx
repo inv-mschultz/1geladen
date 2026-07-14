@@ -72,7 +72,7 @@ export function BringList({
                 {item.claimedByMe && (
                   <button
                     type="button"
-                    className="btn btn--icon"
+                    className="btn-quiet btn-quiet--reveal"
                     disabled={pending}
                     aria-label={dict.unclaim}
                     title={dict.unclaim}
@@ -84,7 +84,7 @@ export function BringList({
                 {item.canDelete && (
                   <button
                     type="button"
-                    className="btn btn--icon"
+                    className="btn-quiet btn-quiet--reveal"
                     disabled={pending}
                     aria-label={dict.deleteItem}
                     title={dict.deleteItem}

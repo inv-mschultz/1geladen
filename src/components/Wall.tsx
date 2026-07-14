@@ -140,18 +140,20 @@ function PostMedia({ imageUrl, gifUrl }: { imageUrl?: string | null; gifUrl?: st
 function CommentForm({ postId, dict }: { postId: number; dict: Dictionary['wall'] }) {
   const [pending, startTransition] = useTransition()
   const [showGifs, setShowGifs] = useState(false)
+  const [value, setValue] = useState('')
   const { attachment, attachGif, attachImage, clear, appendTo } = useAttachment()
-  const inputRef = useRef<HTMLInputElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const canSend = Boolean(value.trim() || attachment)
 
   const submit = () => {
-    const content = inputRef.current?.value.trim() ?? ''
-    if ((!content && !attachment) || pending) return
+    if (!canSend || pending) return
     const formData = new FormData()
-    formData.set('content', content)
+    formData.set('content', value.trim())
     appendTo(formData)
     startTransition(async () => {
       await createComment(postId, formData)
-      if (inputRef.current) inputRef.current.value = ''
+      setValue('')
       clear()
       setShowGifs(false)
     })
@@ -172,26 +174,63 @@ function CommentForm({ postId, dict }: { postId: number; dict: Dictionary['wall'
       )}
       <form
         className="wall__comment-form"
-        action={() => submit()}
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit()
+        }}
       >
-        <input
-          ref={inputRef}
-          name="content"
-          type="text"
-          placeholder={dict.commentPlaceholder}
-          maxLength={1000}
-          className="input input--small"
-        />
-        <AttachButtons onImage={attachImage} onGifToggle={() => setShowGifs((v) => !v)} dict={dict} />
-        <button
-          type="submit"
-          className="btn btn--icon"
-          disabled={pending}
-          aria-label={dict.comment}
-          title={dict.comment}
-        >
-          <ArrowUp />
-        </button>
+        <div className="input-shell">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={dict.commentPlaceholder}
+            maxLength={1000}
+            className="input-shell__input"
+          />
+          <div className="input-shell__tools">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="visually-hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) attachImage(file)
+                e.target.value = ''
+              }}
+            />
+            <button
+              type="button"
+              className="btn-quiet"
+              aria-label={dict.attachImage}
+              title={dict.attachImage}
+              onClick={() => fileRef.current?.click()}
+            >
+              <ImageIcon />
+            </button>
+            <button
+              type="button"
+              className="btn-quiet btn-quiet--gif"
+              aria-label={dict.attachGif}
+              title={dict.attachGif}
+              onClick={() => setShowGifs((v) => !v)}
+            >
+              GIF
+            </button>
+          </div>
+        </div>
+        {canSend && (
+          <button
+            type="submit"
+            className="btn btn--icon btn--send"
+            disabled={pending}
+            aria-label={dict.comment}
+            title={dict.comment}
+          >
+            <ArrowUp />
+          </button>
+        )}
       </form>
     </div>
   )
@@ -298,7 +337,7 @@ export function Wall({
                   {post.deleted && isAdmin && (
                     <button
                       type="button"
-                      className="btn btn--icon"
+                      className="btn-quiet"
                       disabled={pending}
                       aria-label={dict.restore}
                       title={dict.restore}
@@ -310,7 +349,7 @@ export function Wall({
                   {!post.deleted && (post.mine || isAdmin) && (
                     <button
                       type="button"
-                      className="btn btn--icon"
+                      className="btn-quiet btn-quiet--reveal"
                       disabled={pending}
                       aria-label={dict.deletePost}
                       title={dict.deletePost}
