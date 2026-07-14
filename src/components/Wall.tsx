@@ -3,7 +3,7 @@
 import React, { useRef, useState, useTransition } from 'react'
 
 import { createComment, createPost, deletePost, restorePost } from '@/app/(frontend)/actions'
-import type { Dictionary } from '@/i18n/dictionaries'
+import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import { Avatar } from './Avatar'
 import { GifPicker } from './GifPicker'
 import { ArrowUp, ImageIcon, Restore, Trash, X } from './icons'
@@ -126,14 +126,31 @@ function AttachButtons({
   )
 }
 
-const formatTime = (iso: string): string =>
-  new Date(iso).toLocaleString(undefined, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+/** Casual timestamps: "vor 5 Minuten" → "Gestern, 15:24" → full date for older. */
+function formatTime(iso: string, locale: Locale, dict: Dictionary['wall']): string {
+  const intlLocale = locale === 'de' ? 'de-DE' : 'en-GB'
+  const then = new Date(iso)
+  const now = new Date()
+  const minutes = Math.floor((now.getTime() - then.getTime()) / 60000)
+
+  const sameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+
+  const clock = new Intl.DateTimeFormat(intlLocale, { hour: '2-digit', minute: '2-digit' }).format(then)
+
+  if (minutes < 1) return dict.justNow
+
+  if (sameDay(then, now)) {
+    const rtf = new Intl.RelativeTimeFormat(intlLocale, { numeric: 'always' })
+    return minutes < 60 ? rtf.format(-minutes, 'minute') : rtf.format(-Math.floor(minutes / 60), 'hour')
+  }
+
+  if (sameDay(then, yesterday)) return `${dict.yesterday}, ${clock}`
+
+  return `${new Intl.DateTimeFormat(intlLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(then)}, ${clock}`
+}
 
 function PostMedia({ imageUrl, gifUrl }: { imageUrl?: string | null; gifUrl?: string | null }) {
   const src = gifUrl || imageUrl
@@ -250,12 +267,14 @@ export function Wall({
   posts,
   userName,
   isAdmin,
+  locale,
   dict,
 }: {
   eventId: number
   posts: WallPost[]
   userName: string
   isAdmin: boolean
+  locale: Locale
   dict: Dictionary['wall']
 }) {
   const [pending, startTransition] = useTransition()
@@ -331,8 +350,8 @@ export function Wall({
                 <Avatar name={post.authorName} />
                 <div className="wall__post-meta">
                   <strong>{post.authorName}</strong>
-                  <time dateTime={post.createdAt} className="wall__time">
-                    {formatTime(post.createdAt)}
+                  <time dateTime={post.createdAt} className="wall__time" suppressHydrationWarning>
+                    {formatTime(post.createdAt, locale, dict)}
                   </time>
                 </div>
                 <div className="wall__post-actions">
@@ -380,8 +399,8 @@ export function Wall({
                             <img src={comment.gifUrl || comment.imageUrl || ''} alt="" loading="lazy" />
                           </div>
                         )}
-                        <time dateTime={comment.createdAt} className="wall__time">
-                          {formatTime(comment.createdAt)}
+                        <time dateTime={comment.createdAt} className="wall__time" suppressHydrationWarning>
+                          {formatTime(comment.createdAt, locale, dict)}
                         </time>
                       </div>
                     </li>

@@ -250,6 +250,7 @@ export async function EventView({
           posts={wallPosts}
           userName={user.name}
           isAdmin={user.role === 'admin'}
+          locale={locale}
           dict={dict.wall}
         />
       </section>

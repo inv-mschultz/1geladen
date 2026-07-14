@@ -82,6 +82,8 @@ const de = {
     gifSearch: 'GIFs suchen …',
     gifBy: 'Powered by GIPHY',
     gifEmpty: 'Nichts gefunden. Anderes Stichwort?',
+    justNow: 'gerade eben',
+    yesterday: 'Gestern',
   },
   gallery: {
     title: 'Fotos',
@@ -185,6 +187,8 @@ const en: typeof de = {
     gifSearch: 'Search GIFs …',
     gifBy: 'Powered by GIPHY',
     gifEmpty: 'Nothing found. Try another keyword?',
+    justNow: 'just now',
+    yesterday: 'Yesterday',
   },
   gallery: {
     title: 'Photos',

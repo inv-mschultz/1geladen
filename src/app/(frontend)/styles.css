@@ -1012,8 +1012,8 @@ a {
 }
 
 .wall__time {
-  color: var(--ink-soft);
-  font-size: 0.75rem;
+  color: rgba(55, 40, 30, 0.48);
+  font-size: 0.7rem;
   line-height: 1.2;
 }
 
