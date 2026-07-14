@@ -1000,14 +1000,21 @@ a {
   margin-bottom: 8px;
 }
 
-.wall__post-head strong {
-  display: block;
-  line-height: 1.2;
+.wall__post-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  justify-content: center;
+}
+
+.wall__post-meta strong {
+  line-height: 1.15;
 }
 
 .wall__time {
   color: var(--ink-soft);
   font-size: 0.75rem;
+  line-height: 1.2;
 }
 
 .wall__content {
@@ -1027,13 +1034,24 @@ a {
 .wall__comment {
   display: flex;
   gap: 8px;
-  align-items: baseline;
+  align-items: flex-start;
   font-size: 0.92rem;
 }
 
-.wall__comment .avatar {
-  align-self: flex-start;
-  transform: translateY(3px);
+.wall__comment-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wall__comment-body strong {
+  line-height: 1.2;
+}
+
+.wall__comment-text {
+  margin: 0;
+  white-space: pre-wrap;
 }
 
 .wall__comment-form {
@@ -1115,25 +1133,6 @@ a {
   letter-spacing: 0.04em;
   line-height: 1;
   padding: 8px 6px;
-}
-
-/* Reveal-on-hover for destructive actions; stays faintly visible on touch */
-@media (hover: hover) {
-  .wall__post .btn-quiet--reveal,
-  .bring__item .btn-quiet--reveal {
-    opacity: 0;
-  }
-
-  .wall__post:hover .btn-quiet--reveal,
-  .bring__item:hover .btn-quiet--reveal {
-    opacity: 0.55;
-  }
-
-  .wall__post .btn-quiet--reveal:hover,
-  .bring__item .btn-quiet--reveal:hover,
-  .btn-quiet--reveal:focus-visible {
-    opacity: 1;
-  }
 }
 
 /* The send button: the one thing that should pop */

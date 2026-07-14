@@ -126,6 +126,15 @@ function AttachButtons({
   )
 }
 
+const formatTime = (iso: string): string =>
+  new Date(iso).toLocaleString(undefined, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
 function PostMedia({ imageUrl, gifUrl }: { imageUrl?: string | null; gifUrl?: string | null }) {
   const src = gifUrl || imageUrl
   if (!src) return null
@@ -320,16 +329,10 @@ export function Wall({
             <li key={post.id} className={`wall__post ${post.deleted ? 'wall__post--deleted' : ''}`}>
               <div className="wall__post-head">
                 <Avatar name={post.authorName} />
-                <div>
+                <div className="wall__post-meta">
                   <strong>{post.authorName}</strong>
                   <time dateTime={post.createdAt} className="wall__time">
-                    {new Date(post.createdAt).toLocaleString(undefined, {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    {formatTime(post.createdAt)}
                   </time>
                 </div>
                 <div className="wall__post-actions">
@@ -349,7 +352,7 @@ export function Wall({
                   {!post.deleted && (post.mine || isAdmin) && (
                     <button
                       type="button"
-                      className="btn-quiet btn-quiet--reveal"
+                      className="btn-quiet"
                       disabled={pending}
                       aria-label={dict.deletePost}
                       title={dict.deletePost}
@@ -368,14 +371,18 @@ export function Wall({
                   {post.comments.map((comment) => (
                     <li key={comment.id} className="wall__comment">
                       <Avatar name={comment.authorName} size={24} />
-                      <div>
-                        <strong>{comment.authorName}</strong> {comment.content}
+                      <div className="wall__comment-body">
+                        <strong>{comment.authorName}</strong>
+                        {comment.content && <p className="wall__comment-text">{comment.content}</p>}
                         {(comment.gifUrl || comment.imageUrl) && (
                           <div className="wall__comment-media">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={comment.gifUrl || comment.imageUrl || ''} alt="" loading="lazy" />
                           </div>
                         )}
+                        <time dateTime={comment.createdAt} className="wall__time">
+                          {formatTime(comment.createdAt)}
+                        </time>
                       </div>
                     </li>
                   ))}
