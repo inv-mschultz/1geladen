@@ -1045,8 +1045,16 @@ a {
   min-width: 0;
 }
 
-.wall__comment-body strong {
-  line-height: 1.2;
+/* Name + timestamp on one line, vertically centered against the 24px avatar */
+.wall__comment-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.wall__comment-head strong {
+  line-height: 24px;
 }
 
 .wall__comment-text {

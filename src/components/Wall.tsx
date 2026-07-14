@@ -391,7 +391,12 @@ export function Wall({
                     <li key={comment.id} className="wall__comment">
                       <Avatar name={comment.authorName} size={24} />
                       <div className="wall__comment-body">
-                        <strong>{comment.authorName}</strong>
+                        <div className="wall__comment-head">
+                          <strong>{comment.authorName}</strong>
+                          <time dateTime={comment.createdAt} className="wall__time" suppressHydrationWarning>
+                            {formatTime(comment.createdAt, locale, dict)}
+                          </time>
+                        </div>
                         {comment.content && <p className="wall__comment-text">{comment.content}</p>}
                         {(comment.gifUrl || comment.imageUrl) && (
                           <div className="wall__comment-media">
@@ -399,9 +404,6 @@ export function Wall({
                             <img src={comment.gifUrl || comment.imageUrl || ''} alt="" loading="lazy" />
                           </div>
                         )}
-                        <time dateTime={comment.createdAt} className="wall__time" suppressHydrationWarning>
-                          {formatTime(comment.createdAt, locale, dict)}
-                        </time>
                       </div>
                     </li>
                   ))}
