@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import type { CollectionConfig } from 'payload'
 
 import { isAdmin, isLoggedIn } from '@/access'
@@ -32,6 +33,9 @@ export const Events: CollectionConfig = {
           if (typeof title === 'string' && title.length > 0) {
             data.slug = formatSlug(title)
           }
+        }
+        if (data && !data.inviteToken && !originalDoc?.inviteToken) {
+          data.inviteToken = randomBytes(12).toString('base64url')
         }
         return data
       },
@@ -106,6 +110,21 @@ export const Events: CollectionConfig = {
       name: 'coverImage',
       type: 'upload',
       relationTo: 'media',
+    },
+    {
+      // The secret in the invite link (/join/<token>). Guests must not read it
+      // via the API — knowing it is equivalent to holding an invitation.
+      name: 'inviteToken',
+      type: 'text',
+      unique: true,
+      index: true,
+      access: {
+        read: ({ req: { user } }) => user?.role === 'admin',
+      },
+      admin: {
+        position: 'sidebar',
+        description: 'Secret for the invite link. Auto-generated.',
+      },
     },
     {
       name: 'photosOpen',

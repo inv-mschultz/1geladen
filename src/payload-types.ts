@@ -134,6 +134,7 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   name: string;
+  guestJoin?: boolean | null;
   role: 'admin' | 'guest';
   updatedAt: string;
   createdAt: string;
@@ -194,6 +195,10 @@ export interface Event {
     mapsUrl?: string | null;
   };
   coverImage?: (number | null) | Media;
+  /**
+   * Secret for the invite link. Auto-generated.
+   */
+  inviteToken?: string | null;
   /**
    * Open the photo gallery for uploads. The gallery also opens automatically once the event has started.
    */
@@ -416,6 +421,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  guestJoin?: T;
   role?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -452,6 +458,7 @@ export interface EventsSelect<T extends boolean = true> {
         mapsUrl?: T;
       };
   coverImage?: T;
+  inviteToken?: T;
   photosOpen?: T;
   updatedAt?: T;
   createdAt?: T;

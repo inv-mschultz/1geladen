@@ -3,10 +3,12 @@
 import config from '@payload-config'
 import { revalidatePath } from 'next/cache'
 import { cookies, headers as getHeaders } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
 import { LOCALE_COOKIE } from '@/i18n/locale'
 import { type Locale, locales } from '@/i18n/dictionaries'
+import { derivedGuestPassword, syntheticGuestEmail } from '@/lib/guestAuth'
 
 async function getCtx() {
   const payload = await getPayload({ config })
@@ -24,6 +26,103 @@ export async function setLocale(locale: string): Promise<void> {
   const store = await cookies()
   store.set(LOCALE_COOKIE, locale, { path: '/', maxAge: 60 * 60 * 24 * 365 })
   revalidatePath('/', 'layout')
+}
+
+async function setSessionCookie(token: string, exp?: number | null): Promise<void> {
+  const store = await cookies()
+  store.set('payload-token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    ...(exp ? { expires: new Date(exp * 1000) } : {}),
+  })
+}
+
+async function findEventByInviteToken(payload: PayloadClient, inviteToken: string) {
+  if (!inviteToken) return null
+  const { docs } = await payload.find({
+    collection: 'events',
+    where: { inviteToken: { equals: inviteToken } },
+    limit: 1,
+    overrideAccess: true,
+  })
+  return docs[0] ?? null
+}
+
+/** Invite-link join: one name, zero friction. Creates a real guest account. */
+export async function joinParty(inviteToken: string, name: string): Promise<{ error: string } | never> {
+  const payload = await getPayload({ config })
+
+  const trimmed = name.trim()
+  if (!trimmed) return { error: 'name' }
+
+  const event = await findEventByInviteToken(payload, inviteToken)
+  if (!event) return { error: 'invalid' }
+
+  const email = syntheticGuestEmail()
+  const password = derivedGuestPassword(email)
+
+  await payload.create({
+    collection: 'users',
+    data: { name: trimmed.slice(0, 80), email, password, role: 'guest', guestJoin: true },
+    overrideAccess: true,
+  })
+
+  const login = await payload.login({ collection: 'users', data: { email, password } })
+  if (!login.token) return { error: 'failed' }
+  await setSessionCookie(login.token, login.exp)
+
+  revalidatePath('/', 'layout')
+  redirect('/')
+}
+
+/** "Das bin ich" — re-enter as an existing invite-link guest. Trust-based. */
+export async function rejoinParty(inviteToken: string, userId: number): Promise<{ error: string } | never> {
+  const payload = await getPayload({ config })
+
+  const event = await findEventByInviteToken(payload, inviteToken)
+  if (!event) return { error: 'invalid' }
+
+  const guest = await payload.findByID({ collection: 'users', id: userId, overrideAccess: true })
+  // Only invite-link guests are re-enterable; claimed/registered accounts log in normally
+  if (!guest || guest.role !== 'guest' || !guest.guestJoin) return { error: 'invalid' }
+
+  const login = await payload.login({
+    collection: 'users',
+    data: { email: guest.email, password: derivedGuestPassword(guest.email) },
+  })
+  if (!login.token) return { error: 'failed' }
+  await setSessionCookie(login.token, login.exp)
+
+  revalidatePath('/', 'layout')
+  redirect('/')
+}
+
+/** Upgrade an invite-link guest to a real account (email + password). */
+export async function claimAccount(formData: FormData): Promise<{ error: string } | never> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+
+  const email = String(formData.get('email') ?? '').trim().toLowerCase()
+  const password = String(formData.get('password') ?? '')
+  if (!email || password.length < 6) return { error: 'invalid' }
+
+  try {
+    await payload.update({
+      collection: 'users',
+      id: user.id,
+      data: { email, password, guestJoin: false },
+      overrideAccess: true,
+    })
+  } catch {
+    return { error: 'taken' }
+  }
+
+  const login = await payload.login({ collection: 'users', data: { email, password } })
+  if (login.token) await setSessionCookie(login.token, login.exp)
+
+  revalidatePath('/', 'layout')
+  redirect('/')
 }
 
 export async function logout(): Promise<void> {

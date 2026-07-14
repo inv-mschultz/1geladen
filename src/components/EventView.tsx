@@ -7,6 +7,7 @@ import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
 import { BringList, type BringListItem } from './BringList'
 import { ArrowUpRight } from './icons'
+import { InviteLink } from './InviteLink'
 import { Gallery, type GalleryPhoto } from './Gallery'
 import { Rsvp } from './Rsvp'
 import { Wall, type WallPost } from './Wall'
@@ -232,6 +233,12 @@ export async function EventView({
           <h2 className="section__title">{dict.rsvp.title}</h2>
           <Rsvp eventId={event.id} myStatus={myStatus} names={rsvpNames} dict={dict.rsvp} />
         </div>
+
+        {user.role === 'admin' && event.inviteToken && (
+          <div className="event__invite">
+            <InviteLink token={event.inviteToken} dict={dict.invite} />
+          </div>
+        )}
       </header>
 
       {myStatus !== 'no' && (

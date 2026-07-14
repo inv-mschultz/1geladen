@@ -42,6 +42,19 @@ export const Users: CollectionConfig = {
       required: true,
     },
     {
+      // Set for accounts created via an invite link (name-only join). These can
+      // be re-entered from the join page and upgraded to full accounts later.
+      name: 'guestJoin',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      access: {
+        create: isAdminFieldLevel,
+        update: isAdminFieldLevel,
+      },
+      admin: { position: 'sidebar' },
+    },
+    {
       name: 'role',
       type: 'select',
       required: true,

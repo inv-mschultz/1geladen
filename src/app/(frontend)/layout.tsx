@@ -73,10 +73,10 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
                     {dict.nav.admin}
                   </a>
                 )}
-                <span className="site-user chip">
+                <Link href="/account" className="site-user chip">
                   <Avatar name={user.name} size={24} />
                   {user.name}
-                </span>
+                </Link>
                 <LogoutButton label={dict.nav.logout} />
               </>
             ) : (
