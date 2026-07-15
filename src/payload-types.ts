@@ -196,9 +196,13 @@ export interface Event {
   };
   coverImage?: (number | null) | Media;
   /**
-   * One color, e.g. #a8f25a — the event theme is derived from it.
+   * One color, e.g. #4ce6a5 — the event theme is derived from it.
    */
   themeColor?: string | null;
+  /**
+   * Accent for buttons and icons, e.g. #ff8ad4.
+   */
+  accentColor?: string | null;
   members?: (number | User)[] | null;
   /**
    * Secret for the invite link. Auto-generated.
@@ -464,6 +468,7 @@ export interface EventsSelect<T extends boolean = true> {
       };
   coverImage?: T;
   themeColor?: T;
+  accentColor?: T;
   members?: T;
   inviteToken?: T;
   photosOpen?: T;

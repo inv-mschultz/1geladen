@@ -121,10 +121,21 @@ export const Events: CollectionConfig = {
       name: 'themeColor',
       type: 'text',
       validate: (value: string | null | undefined) =>
-        !value || /^#[0-9a-fA-F]{6}$/.test(value) || 'Use a hex color like #a8f25a',
+        !value || /^#[0-9a-fA-F]{6}$/.test(value) || 'Use a hex color like #4ce6a5',
       admin: {
         position: 'sidebar',
-        description: 'One color, e.g. #a8f25a — the event theme is derived from it.',
+        description: 'One color, e.g. #4ce6a5 — the event theme is derived from it.',
+      },
+    },
+    {
+      // Second color: main CTAs and icons
+      name: 'accentColor',
+      type: 'text',
+      validate: (value: string | null | undefined) =>
+        !value || /^#[0-9a-fA-F]{6}$/.test(value) || 'Use a hex color like #ff8ad4',
+      admin: {
+        position: 'sidebar',
+        description: 'Accent for buttons and icons, e.g. #ff8ad4.',
       },
     },
     {

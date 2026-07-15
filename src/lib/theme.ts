@@ -7,7 +7,8 @@
  * hairlines. Platform and events each get their own base color.
  */
 
-export const PLATFORM_COLOR = '#a8f25a'
+export const PLATFORM_COLOR = '#4ce6a5'
+export const PLATFORM_ACCENT = '#ff8ad4'
 export const DEFAULT_EVENT_COLOR = PLATFORM_COLOR
 
 type Oklch = { l: number; c: number; h: number }
@@ -89,45 +90,58 @@ function withAlpha(hex: string, alpha: number): string {
 
 export type ThemeTokens = Record<string, string>
 
-/** One color in, the whole system out. */
-export function themeTokens(baseHex: string): ThemeTokens {
+/** One base color (plus an optional accent) in, the whole system out. */
+export function themeTokens(baseHex: string, accentHex?: string | null): ThemeTokens {
   const rgb = hexToRgb(baseHex) ?? hexToRgb(PLATFORM_COLOR)!
   const base = rgbToOklch(rgb)
   const { h } = base
   const chroma = Math.min(base.c, 0.23)
 
-  // The page background is the color itself, nudged into a readable range
-  const bg = css({ l: clamp(base.l, 0.62, 0.92), c: chroma, h })
-  // Bright: the same color, guaranteed light enough to sit on the dark surface
+  // Dark-first: the page is the deep end of the hue, the color itself glows on it
+  const bg = css({ l: 0.16, c: Math.min(chroma * 0.35, 0.05), h })
+  const surface = css({ l: 0.22, c: Math.min(chroma * 0.45, 0.07), h })
+  const surface2 = css({ l: 0.285, c: Math.min(chroma * 0.5, 0.08), h })
+  // Bright: the base color, guaranteed light enough to read on the dark tones
   const bright = css({ l: Math.max(clamp(base.l, 0.62, 0.92), 0.78), c: chroma, h })
-  // Ink doubles as text-on-light and the big dark card surface
-  const ink = css({ l: 0.28, c: Math.min(chroma * 0.55, 0.09), h })
-  const surface = ink
-  const surface2 = css({ l: 0.345, c: Math.min(chroma * 0.5, 0.08), h })
-  // Mid tone: the oversized "texture type" shade from the reference boards
-  const mid = css({ l: 0.5, c: Math.min(chroma * 0.75, 0.13), h })
-  const muted = css({ l: 0.68, c: Math.min(chroma * 0.35, 0.06), h })
+  // Ink: text on bright elements (buttons, calendar)
+  const ink = css({ l: 0.19, c: Math.min(chroma * 0.4, 0.06), h })
+  const mid = css({ l: 0.48, c: Math.min(chroma * 0.75, 0.13), h })
+  const muted = css({ l: 0.64, c: Math.min(chroma * 0.35, 0.06), h })
+
+  // Accent: second color for main CTAs and icons
+  const accentRgb = hexToRgb(accentHex ?? '') ?? hexToRgb(PLATFORM_ACCENT)!
+  const accentBase = rgbToOklch(accentRgb)
+  const accent = css({
+    l: clamp(accentBase.l, 0.66, 0.88),
+    c: Math.min(accentBase.c, 0.24),
+    h: accentBase.h,
+  })
+  const onAccent = css({ l: 0.19, c: Math.min(accentBase.c * 0.4, 0.06), h: accentBase.h })
 
   return {
     '--c-bg': bg,
+    '--c-on-bg': bright,
     '--c-bright': bright,
     '--c-ink': ink,
     '--c-surface': surface,
     '--c-surface-2': surface2,
     '--c-mid': mid,
     '--c-muted': muted,
-    '--c-line': withAlpha(bright, 0.22),
-    '--c-line-strong': withAlpha(bright, 0.45),
-    '--c-line-on-bg': withAlpha(ink, 0.25),
+    '--c-accent': accent,
+    '--c-on-accent': onAccent,
+    '--c-line': withAlpha(bright, 0.18),
+    '--c-line-strong': withAlpha(bright, 0.42),
+    '--c-line-on-bg': withAlpha(bright, 0.2),
   }
 }
 
 /** Inline-style object for React `style` props. */
-export const themeStyle = (baseHex: string) => themeTokens(baseHex) as import('react').CSSProperties
+export const themeStyle = (baseHex: string, accentHex?: string | null) =>
+  themeTokens(baseHex, accentHex) as import('react').CSSProperties
 
 /** CSS text that re-themes the whole page (rendered in a <style> tag). */
-export function themeCss(baseHex: string): string {
-  const tokens = themeTokens(baseHex)
+export function themeCss(baseHex: string, accentHex?: string | null): string {
+  const tokens = themeTokens(baseHex, accentHex)
   const body = Object.entries(tokens)
     .map(([key, value]) => `${key}:${value}`)
     .join(';')

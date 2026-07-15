@@ -78,8 +78,16 @@ export function EventForm({ dict }: { dict: Dictionary['eventForm'] }) {
         </label>
         <label className="field">
           <span>{dict.color}</span>
-          <input name="themeColor" type="color" defaultValue="#a8f25a" className="input input--color" />
+          <input name="themeColor" type="color" defaultValue="#4ce6a5" className="input input--color" />
         </label>
+      </div>
+
+      <div className="event-form__row">
+        <label className="field">
+          <span>{dict.accent}</span>
+          <input name="accentColor" type="color" defaultValue="#ff8ad4" className="input input--color" />
+        </label>
+        <span />
       </div>
 
       <label className="field">

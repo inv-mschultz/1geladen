@@ -7,7 +7,6 @@ import React from 'react'
 
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
-import { DEFAULT_EVENT_COLOR, themeStyle } from '@/lib/theme'
 import type { Event } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
@@ -49,11 +48,7 @@ function EventCard({
 
   return (
     <li>
-      <Link
-        href={`/events/${event.slug}`}
-        className="event-card"
-        style={themeStyle(event.themeColor || DEFAULT_EVENT_COLOR)}
-      >
+      <Link href={`/events/${event.slug}`} className="event-card">
         <div className="event-card__head">
           <div className="event-card__cal" aria-hidden>
             <span className="event-card__cal-weekday">{fmt({ weekday: 'short' })}</span>
