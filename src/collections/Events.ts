@@ -117,6 +117,17 @@ export const Events: CollectionConfig = {
       relationTo: 'media',
     },
     {
+      // Single base color that drives the event's whole theme
+      name: 'themeColor',
+      type: 'text',
+      validate: (value: string | null | undefined) =>
+        !value || /^#[0-9a-fA-F]{6}$/.test(value) || 'Use a hex color like #a8f25a',
+      admin: {
+        position: 'sidebar',
+        description: 'One color, e.g. #a8f25a — the event theme is derived from it.',
+      },
+    },
+    {
       // The guest list: everyone who joined via this event's invite link.
       // Admins are implicit members of every event.
       name: 'members',

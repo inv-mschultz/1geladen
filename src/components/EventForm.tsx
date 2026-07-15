@@ -71,10 +71,16 @@ export function EventForm({ dict }: { dict: Dictionary['eventForm'] }) {
         </label>
       </div>
 
-      <label className="field">
-        <span>{dict.mapsUrl}</span>
-        <input name="mapsUrl" type="url" className="input" />
-      </label>
+      <div className="event-form__row">
+        <label className="field">
+          <span>{dict.mapsUrl}</span>
+          <input name="mapsUrl" type="url" className="input" />
+        </label>
+        <label className="field">
+          <span>{dict.color}</span>
+          <input name="themeColor" type="color" defaultValue="#a8f25a" className="input input--color" />
+        </label>
+      </div>
 
       <label className="field">
         <span>{dict.description}</span>

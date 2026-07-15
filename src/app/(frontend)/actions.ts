@@ -147,6 +147,7 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
   const address = String(formData.get('address') ?? '').trim()
   const mapsUrl = String(formData.get('mapsUrl') ?? '').trim()
   const description = String(formData.get('description') ?? '')
+  const themeColor = String(formData.get('themeColor') ?? '').trim()
 
   let event
   try {
@@ -161,6 +162,7 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
           mapsUrl: mapsUrl || undefined,
         },
         description: textToRichText(description),
+        themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,
         members: [user.id],
       },
       overrideAccess: false,

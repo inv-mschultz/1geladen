@@ -1,10 +1,12 @@
 import config from '@payload-config'
 import type { Metadata } from 'next'
-import { Fraunces, Instrument_Sans } from 'next/font/google'
+import { Archivo } from 'next/font/google'
 import { headers as getHeaders } from 'next/headers'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
+
+import { PLATFORM_COLOR, themeCss } from '@/lib/theme'
 
 import { LangSwitch } from '@/components/LangSwitch'
 import { MainNav } from '@/components/MainNav'
@@ -13,15 +15,10 @@ import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import './styles.css'
 
-const fraunces = Fraunces({
+const archivo = Archivo({
   subsets: ['latin'],
-  axes: ['SOFT', 'WONK', 'opsz'],
-  variable: '--font-display',
-})
-
-const instrumentSans = Instrument_Sans({
-  subsets: ['latin'],
-  variable: '--font-body',
+  axes: ['wdth'],
+  variable: '--font-sans',
 })
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -47,8 +44,8 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
 
   return (
     <html lang={locale}>
-      <body className={`${fraunces.variable} ${instrumentSans.variable}`}>
-        <div className="grain" aria-hidden />
+      <body className={archivo.variable}>
+        <style>{themeCss(PLATFORM_COLOR)}</style>
         <header className="site-header">
           <Link href={user?.role === 'admin' ? '/events' : '/'} className="site-logo">
             <span className="site-logo__one">1</span>geladen

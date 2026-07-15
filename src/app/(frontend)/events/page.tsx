@@ -7,11 +7,10 @@ import React from 'react'
 
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
+import { DEFAULT_EVENT_COLOR, themeStyle } from '@/lib/theme'
 import type { Event } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
-
-const ACCENTS = ['var(--tomato)', 'var(--mustard)', 'var(--olive)', 'var(--plum)']
 
 /** Plain-text excerpt from a lexical rich-text value. */
 function excerpt(description: Event['description'], max = 140): string {
@@ -29,14 +28,12 @@ function excerpt(description: Event['description'], max = 140): string {
 function EventCard({
   event,
   yesCount,
-  accent,
   countdown,
   locale,
   dict,
 }: {
   event: Event
   yesCount: number
-  accent: string
   countdown?: string
   locale: Locale
   dict: Dictionary
@@ -55,7 +52,7 @@ function EventCard({
       <Link
         href={`/events/${event.slug}`}
         className="event-card"
-        style={{ ['--accent' as string]: accent }}
+        style={themeStyle(event.themeColor || DEFAULT_EVENT_COLOR)}
       >
         <div className="event-card__head">
           <div className="event-card__cal" aria-hidden>
@@ -156,14 +153,13 @@ export default async function EventsOverviewPage() {
     return dict.events.countInDays.replace('{n}', String(days))
   }
 
-  const grid = (list: Event[], offset = 0, withCountdown = false) => (
+  const grid = (list: Event[], withCountdown = false) => (
     <ul className="events-grid">
-      {list.map((event, index) => (
+      {list.map((event) => (
         <EventCard
           key={event.id}
           event={event}
           yesCount={yesCounts.get(event.id) ?? 0}
-          accent={ACCENTS[(index + offset) % ACCENTS.length]}
           countdown={withCountdown ? countdown(event) : undefined}
           locale={locale}
           dict={dict}
@@ -188,14 +184,14 @@ export default async function EventsOverviewPage() {
       {upcoming.length > 0 && (
         <>
           <h2 className="events-page__section">{dict.events.upcoming}</h2>
-          {grid(upcoming, 0, true)}
+          {grid(upcoming, true)}
         </>
       )}
 
       {past.length > 0 && (
         <>
           <h2 className="events-page__section">{dict.events.past}</h2>
-          {grid(past, upcoming.length)}
+          {grid(past)}
         </>
       )}
     </div>

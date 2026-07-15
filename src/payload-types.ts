@@ -195,6 +195,10 @@ export interface Event {
     mapsUrl?: string | null;
   };
   coverImage?: (number | null) | Media;
+  /**
+   * One color, e.g. #a8f25a — the event theme is derived from it.
+   */
+  themeColor?: string | null;
   members?: (number | User)[] | null;
   /**
    * Secret for the invite link. Auto-generated.
@@ -459,6 +463,7 @@ export interface EventsSelect<T extends boolean = true> {
         mapsUrl?: T;
       };
   coverImage?: T;
+  themeColor?: T;
   members?: T;
   inviteToken?: T;
   photosOpen?: T;
