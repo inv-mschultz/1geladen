@@ -31,6 +31,7 @@ const de = {
     countToday: 'Heute!',
     countTomorrow: 'Morgen!',
     countInDays: 'In {n} Tagen',
+    edit: 'Bearbeiten',
   },
   eventForm: {
     title: 'Neues Event',
@@ -47,6 +48,8 @@ const de = {
     accent: 'Akzentfarbe (Buttons & Icons)',
     description: 'Was erwartet die Gäste?',
     submit: 'Event erstellen',
+    editTitle: 'Event bearbeiten',
+    save: 'Speichern',
     error: 'Das hat nicht geklappt. Sind alle Pflichtfelder gefüllt?',
   },
   landing: {
@@ -192,6 +195,7 @@ const en: typeof de = {
     countToday: 'Today!',
     countTomorrow: 'Tomorrow!',
     countInDays: 'In {n} days',
+    edit: 'Edit',
   },
   eventForm: {
     title: 'New event',
@@ -208,6 +212,8 @@ const en: typeof de = {
     accent: 'Accent color (buttons & icons)',
     description: 'What can guests expect?',
     submit: 'Create event',
+    editTitle: 'Edit event',
+    save: 'Save',
     error: 'That didn’t work. Are all required fields filled?',
   },
   landing: {

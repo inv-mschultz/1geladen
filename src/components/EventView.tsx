@@ -5,7 +5,9 @@ import React from 'react'
 
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
+import { richTextToPlain } from '@/lib/richtext'
 import { BringList, type BringListItem } from './BringList'
+import { EventEditDrawer } from './EventEditDrawer'
 import { ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
 import { Gallery, type GalleryPhoto } from './Gallery'
@@ -177,6 +179,23 @@ export async function EventView({
   return (
     <article className="event">
       <header id="info" className="event__hero reveal">
+        {user.role === 'admin' && (
+          <EventEditDrawer
+            label={dict.events.edit}
+            dict={dict.eventForm}
+            event={{
+              id: event.id,
+              title: event.title,
+              dateIso: event.date,
+              locationName: event.location?.name,
+              address: event.location?.address,
+              mapsUrl: event.location?.mapsUrl,
+              themeColor: event.themeColor,
+              accentColor: event.accentColor,
+              description: richTextToPlain(event.description),
+            }}
+          />
+        )}
         {isPast && <div className="sticker sticker--past">{dict.hero.pastBadge}</div>}
 
         <div className="event__hero-main">

@@ -8,7 +8,7 @@ import { getPayload } from 'payload'
 
 import { randomBytes } from 'crypto'
 
-import { LOCALE_COOKIE } from '@/i18n/locale'
+import { getLocale, LOCALE_COOKIE } from '@/i18n/locale'
 import { type Locale, locales } from '@/i18n/dictionaries'
 import { syntheticGuestEmail } from '@/lib/guestAuth'
 import { addEventMember } from '@/lib/membership'
@@ -176,6 +176,52 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
 
   revalidatePath('/', 'layout')
   redirect(event.slug ? `/events/${event.slug}` : '/events')
+}
+
+/** Admin-only: update an event from the edit drawer. No redirect — the
+ *  caller refreshes the route so the page updates behind the drawer. */
+export async function updateEvent(
+  eventId: number,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+  if (user.role !== 'admin') return { error: 'forbidden' }
+
+  const title = String(formData.get('title') ?? '').trim()
+  const dateIso = String(formData.get('dateIso') ?? '')
+  if (!title || !dateIso || Number.isNaN(Date.parse(dateIso))) return { error: 'invalid' }
+
+  const themeColor = String(formData.get('themeColor') ?? '').trim()
+  const accentColor = String(formData.get('accentColor') ?? '').trim()
+  const locale = await getLocale()
+
+  try {
+    await payload.update({
+      collection: 'events',
+      id: eventId,
+      locale,
+      data: {
+        title,
+        date: dateIso,
+        location: {
+          name: String(formData.get('locationName') ?? '').trim() || undefined,
+          address: String(formData.get('address') ?? '').trim() || undefined,
+          mapsUrl: String(formData.get('mapsUrl') ?? '').trim() || undefined,
+        },
+        description: textToRichText(String(formData.get('description') ?? '')),
+        themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,
+        accentColor: /^#[0-9a-fA-F]{6}$/.test(accentColor) ? accentColor : undefined,
+      },
+      overrideAccess: false,
+      user,
+    })
+  } catch {
+    return { error: 'invalid' }
+  }
+
+  revalidatePath('/', 'layout')
+  return {}
 }
 
 export async function logout(): Promise<void> {
