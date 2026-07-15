@@ -6,10 +6,9 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { Avatar } from '@/components/Avatar'
 import { LangSwitch } from '@/components/LangSwitch'
-import { LogoutButton } from '@/components/LogoutButton'
 import { MainNav } from '@/components/MainNav'
+import { UserMenu } from '@/components/UserMenu'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import './styles.css'
@@ -51,7 +50,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
       <body className={`${fraunces.variable} ${instrumentSans.variable}`}>
         <div className="grain" aria-hidden />
         <header className="site-header">
-          <Link href="/" className="site-logo">
+          <Link href={user?.role === 'admin' ? '/events' : '/'} className="site-logo">
             <span className="site-logo__one">1</span>geladen
           </Link>
           {user && (
@@ -65,27 +64,21 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
             />
           )}
           <nav className="site-nav">
-            <LangSwitch current={locale} />
             {user ? (
-              <>
-                {user.role === 'admin' && (
-                  <>
-                    <Link href="/events" className="btn btn--ghost btn--small">
-                      {dict.nav.events}
-                    </Link>
-                    <a href="/admin" className="btn btn--ghost btn--small" target="_blank" rel="noopener noreferrer">
-                      {dict.nav.admin}
-                    </a>
-                  </>
-                )}
-                <Link href="/account" className="site-user chip">
-                  <Avatar name={user.name} size={24} />
-                  {user.name}
-                </Link>
-                <LogoutButton label={dict.nav.logout} />
-              </>
+              <UserMenu
+                name={user.name}
+                isAdmin={user.role === 'admin'}
+                locale={locale}
+                labels={{
+                  account: dict.nav.account,
+                  admin: dict.nav.admin,
+                  language: dict.nav.language,
+                  logout: dict.nav.logout,
+                }}
+              />
             ) : (
               <>
+                <LangSwitch current={locale} />
                 <Link href="/login" className="btn btn--ghost btn--small">
                   {dict.nav.login}
                 </Link>

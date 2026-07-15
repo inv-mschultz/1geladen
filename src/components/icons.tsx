@@ -49,6 +49,12 @@ export const X = () => (
   </svg>
 )
 
+export const ChevronDown = () => (
+  <svg {...iconProps}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+)
+
 export const Power = () => (
   <svg {...iconProps}>
     <path d="M12 3v8M6.3 6.3a8 8 0 1 0 11.4 0" />

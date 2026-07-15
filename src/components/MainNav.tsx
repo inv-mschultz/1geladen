@@ -10,6 +10,9 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
   const pathname = usePathname()
   const [active, setActive] = useState<SectionId | null>(null)
 
+  // Anchor links only make sense where an event view is rendered
+  const hasEventView = pathname === '/' || /^\/events\/[^/]+$/.test(pathname)
+
   useEffect(() => {
     const elements = SECTIONS.map((id) => document.getElementById(id)).filter(
       (el): el is HTMLElement => el !== null,
@@ -37,12 +40,14 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
     return () => observer.disconnect()
   }, [pathname])
 
+  if (!hasEventView) return null
+
   return (
     <nav className="site-mainnav">
       {SECTIONS.map((id) => (
         <a
           key={id}
-          href={`/#${id}`}
+          href={`#${id}`}
           className={active === id ? 'is-active' : ''}
           onClick={() => setActive(id)}
         >

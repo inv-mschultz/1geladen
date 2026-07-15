@@ -1,6 +1,7 @@
 import config from '@payload-config'
 import { headers as getHeaders } from 'next/headers'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
@@ -18,6 +19,11 @@ export default async function HomePage() {
   const payload = await getPayload({ config })
   const headers = await getHeaders()
   const { user } = await payload.auth({ headers })
+
+  // Admins start on their event overview
+  if (user?.role === 'admin') {
+    redirect('/events')
+  }
 
   if (!user) {
     return (
