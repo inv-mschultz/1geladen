@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import type { Dictionary } from '@/i18n/dictionaries'
 import { EventForm, type EventFormValues } from './EventForm'
@@ -16,6 +17,10 @@ export function EventEditDrawer({
   event: EventFormValues
 }) {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Portal target only exists in the browser
+  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     if (!open) return
@@ -30,13 +35,13 @@ export function EventEditDrawer({
     }
   }, [open])
 
-  return (
+  if (!mounted) return null
+
+  // Rendered at <body> so the fixed FAB and drawer escape the event card's
+  // transformed (animated) ancestor and sit in the page chrome instead.
+  return createPortal(
     <>
-      <button
-        type="button"
-        className="btn btn--ghost btn--small event__edit"
-        onClick={() => setOpen(true)}
-      >
+      <button type="button" className="fab-edit" onClick={() => setOpen(true)}>
         {label}
       </button>
 
@@ -60,6 +65,7 @@ export function EventEditDrawer({
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body,
   )
 }

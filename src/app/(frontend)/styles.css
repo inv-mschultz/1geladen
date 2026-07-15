@@ -730,14 +730,29 @@ a {
   scroll-margin-top: 92px;
 }
 
-.event__hero {
-  position: relative;
+.fab-edit {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  border: none;
+  border-radius: 999px;
+  padding: 13px 22px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s ease;
 }
 
-.event__edit {
-  position: absolute;
-  top: 24px;
-  right: 24px;
+.fab-edit:hover {
+  transform: translateY(-2px);
 }
 
 .event__hero-main {
@@ -750,19 +765,18 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 2px solid var(--c-ink);
+  border: 2px solid var(--c-bright);
   border-radius: 14px;
   overflow: hidden;
-  background: var(--c-bright);
-  color: var(--c-ink);
+  background: var(--c-bg);
   min-width: 92px;
   flex-shrink: 0;
-  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
 }
 
 .event__calendar-weekday {
-  background: var(--c-accent);
-  color: var(--c-on-accent);
+  background: var(--c-bright);
+  color: var(--c-ink);
   width: 100%;
   text-align: center;
   font-weight: 800;
@@ -778,6 +792,7 @@ a {
   font-size: 2.7rem;
   line-height: 1.05;
   padding: 6px 16px 0;
+  color: var(--c-accent);
 }
 
 .event__calendar-month {
@@ -786,6 +801,7 @@ a {
   letter-spacing: 0.22em;
   font-size: 0.66rem;
   padding-bottom: 10px;
+  color: var(--c-accent);
 }
 
 .event__title {
@@ -1513,19 +1529,18 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 2px solid var(--c-ink);
+  border: 2px solid var(--c-bright);
   border-radius: 12px;
   overflow: hidden;
-  background: var(--c-bright);
-  color: var(--c-ink);
+  background: var(--c-bg);
   min-width: 56px;
   flex-shrink: 0;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
 }
 
 .event-card__cal-weekday {
-  background: var(--c-accent);
-  color: var(--c-on-accent);
+  background: var(--c-bright);
+  color: var(--c-ink);
   width: 100%;
   text-align: center;
   font-weight: 800;
@@ -1541,6 +1556,7 @@ a {
   font-size: 1.5rem;
   line-height: 1.1;
   padding: 3px 8px 0;
+  color: var(--c-accent);
 }
 
 .event-card__cal-month {
@@ -1549,6 +1565,7 @@ a {
   letter-spacing: 0.18em;
   font-size: 0.55rem;
   padding-bottom: 6px;
+  color: var(--c-accent);
 }
 
 .event-card__title {
