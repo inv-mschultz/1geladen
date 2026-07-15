@@ -107,6 +107,73 @@ export async function claimAccount(formData: FormData): Promise<{ error: string 
   redirect('/')
 }
 
+/** Plain textarea → lexical rich text (one paragraph per line). */
+function textToRichText(text: string) {
+  const paragraphs = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+  if (paragraphs.length === 0) return undefined
+  return {
+    root: {
+      type: 'root' as const,
+      format: '' as const,
+      indent: 0,
+      version: 1,
+      direction: 'ltr' as const,
+      children: paragraphs.map((line) => ({
+        type: 'paragraph',
+        format: '' as const,
+        indent: 0,
+        version: 1,
+        direction: 'ltr' as const,
+        children: [{ type: 'text', text: line, version: 1 }],
+      })),
+    },
+  }
+}
+
+/** Admin-only: create an event from the frontend form. */
+export async function createEvent(formData: FormData): Promise<{ error: string } | never> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+  if (user.role !== 'admin') return { error: 'forbidden' }
+
+  const title = String(formData.get('title') ?? '').trim()
+  const dateIso = String(formData.get('dateIso') ?? '')
+  if (!title || !dateIso || Number.isNaN(Date.parse(dateIso))) return { error: 'invalid' }
+
+  const locationName = String(formData.get('locationName') ?? '').trim()
+  const address = String(formData.get('address') ?? '').trim()
+  const mapsUrl = String(formData.get('mapsUrl') ?? '').trim()
+  const description = String(formData.get('description') ?? '')
+
+  let event
+  try {
+    event = await payload.create({
+      collection: 'events',
+      data: {
+        title,
+        date: dateIso,
+        location: {
+          name: locationName || undefined,
+          address: address || undefined,
+          mapsUrl: mapsUrl || undefined,
+        },
+        description: textToRichText(description),
+        members: [user.id],
+      },
+      overrideAccess: false,
+      user,
+    })
+  } catch {
+    return { error: 'invalid' }
+  }
+
+  revalidatePath('/', 'layout')
+  redirect(event.slug ? `/events/${event.slug}` : '/events')
+}
+
 export async function logout(): Promise<void> {
   const store = await cookies()
   store.delete('payload-token')

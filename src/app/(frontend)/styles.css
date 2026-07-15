@@ -1412,10 +1412,54 @@ a {
 
 /* --- events overview -------------------------------------------------------- */
 
+.events-page__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 10px 0 6px;
+}
+
 .events-page__title {
   font-size: clamp(1.9rem, 5vw, 2.6rem);
   font-weight: 900;
-  margin: 10px 0 6px;
+}
+
+.chip--count {
+  background: var(--ink);
+  color: var(--paper-bright);
+}
+
+.auth-card--wide {
+  width: min(620px, 100%);
+  text-align: left;
+}
+
+.auth-card--wide .auth-card__title {
+  text-align: center;
+}
+
+.event-form {
+  display: grid;
+  gap: 16px;
+}
+
+.event-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.event-form__submit {
+  margin-top: 6px;
+  justify-self: center;
+}
+
+@media (max-width: 560px) {
+  .event-form__row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .events-page__section {

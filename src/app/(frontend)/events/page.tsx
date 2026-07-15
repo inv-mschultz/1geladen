@@ -30,12 +30,14 @@ function EventCard({
   event,
   yesCount,
   accent,
+  countdown,
   locale,
   dict,
 }: {
   event: Event
   yesCount: number
   accent: string
+  countdown?: string
   locale: Locale
   dict: Dictionary
 }) {
@@ -89,6 +91,7 @@ function EventCard({
         {what && <p className="event-card__excerpt">{what}</p>}
 
         <div className="event-card__footer">
+          {countdown && <span className="chip chip--count">{countdown}</span>}
           <span className="chip">
             {yesCount} {dict.rsvp.attending}
           </span>
@@ -143,7 +146,17 @@ export default async function EventsOverviewPage() {
   const upcoming = events.filter((event) => !isPast(event))
   const past = events.filter(isPast).reverse()
 
-  const grid = (list: Event[], offset = 0) => (
+  const startOfDay = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  const countdown = (event: Event): string | undefined => {
+    const days = Math.round((startOfDay(new Date(event.date)) - startOfDay(new Date())) / 86400000)
+    if (days < 0) return undefined
+    if (days === 0) return dict.events.countToday
+    if (days === 1) return dict.events.countTomorrow
+    return dict.events.countInDays.replace('{n}', String(days))
+  }
+
+  const grid = (list: Event[], offset = 0, withCountdown = false) => (
     <ul className="events-grid">
       {list.map((event, index) => (
         <EventCard
@@ -151,6 +164,7 @@ export default async function EventsOverviewPage() {
           event={event}
           yesCount={yesCounts.get(event.id) ?? 0}
           accent={ACCENTS[(index + offset) % ACCENTS.length]}
+          countdown={withCountdown ? countdown(event) : undefined}
           locale={locale}
           dict={dict}
         />
@@ -160,14 +174,21 @@ export default async function EventsOverviewPage() {
 
   return (
     <div className="events-page reveal">
-      <h1 className="events-page__title">{dict.events.title}</h1>
+      <div className="events-page__head">
+        <h1 className="events-page__title">{dict.events.title}</h1>
+        {user.role === 'admin' && (
+          <Link href="/events/new" className="btn">
+            + {dict.events.new}
+          </Link>
+        )}
+      </div>
 
       {events.length === 0 && <p className="section__empty">{dict.events.empty}</p>}
 
       {upcoming.length > 0 && (
         <>
           <h2 className="events-page__section">{dict.events.upcoming}</h2>
-          {grid(upcoming)}
+          {grid(upcoming, 0, true)}
         </>
       )}
 

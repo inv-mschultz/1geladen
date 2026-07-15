@@ -11,7 +11,7 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
   const [active, setActive] = useState<SectionId | null>(null)
 
   // Anchor links only make sense where an event view is rendered
-  const hasEventView = pathname === '/' || /^\/events\/[^/]+$/.test(pathname)
+  const hasEventView = pathname === '/' || /^\/events\/(?!new$)[^/]+$/.test(pathname)
 
   useEffect(() => {
     const elements = SECTIONS.map((id) => document.getElementById(id)).filter(
