@@ -1337,6 +1337,151 @@ a {
   color: var(--ink-soft);
 }
 
+/* --- events overview -------------------------------------------------------- */
+
+.events-page__title {
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  font-weight: 900;
+  margin: 10px 0 6px;
+}
+
+.events-page__section {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin: 28px 0 14px;
+}
+
+.events-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+  gap: 24px;
+}
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  background: var(--paper-bright);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--accent, var(--tomato));
+  padding: 22px 24px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.event-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--accent, var(--tomato));
+}
+
+.event-card__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.event-card__cal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--paper-bright);
+  min-width: 58px;
+  flex-shrink: 0;
+  transform: rotate(-3deg);
+}
+
+.event-card__cal-weekday {
+  background: var(--accent, var(--tomato));
+  color: var(--paper-bright);
+  width: 100%;
+  text-align: center;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.58rem;
+  padding: 3px 0;
+}
+
+.event-card__cal-day {
+  font-family: var(--font-display), serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 4px 8px 0;
+}
+
+.event-card__cal-month {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.58rem;
+  padding-bottom: 6px;
+}
+
+.event-card__title {
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.event-card__facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.event-card__facts dt {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--tomato-deep);
+}
+
+.event-card__facts dd {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.event-card__sub {
+  display: block;
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.event-card__excerpt {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.event-card__footer {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.event-card__footer .chip {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+
 /* --- archive ------------------------------------------------------------------------- */
 
 .archive {

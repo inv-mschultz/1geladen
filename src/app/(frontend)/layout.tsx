@@ -69,9 +69,14 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
             {user ? (
               <>
                 {user.role === 'admin' && (
-                  <a href="/admin" className="btn btn--ghost btn--small" target="_blank" rel="noopener noreferrer">
-                    {dict.nav.admin}
-                  </a>
+                  <>
+                    <Link href="/events" className="btn btn--ghost btn--small">
+                      {dict.nav.events}
+                    </Link>
+                    <a href="/admin" className="btn btn--ghost btn--small" target="_blank" rel="noopener noreferrer">
+                      {dict.nav.admin}
+                    </a>
+                  </>
                 )}
                 <Link href="/account" className="site-user chip">
                   <Avatar name={user.name} size={24} />
