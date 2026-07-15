@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { ValidationError } from 'payload'
 
-import { isAdminOrOwner, isLoggedIn } from '@/access'
+import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
 
 /** Only GIFs hosted by GIPHY may be embedded. */
 export const GIF_URL_PATTERN = /^https:\/\/media\d*\.giphy\.com\//
@@ -21,7 +21,7 @@ export const Posts: CollectionConfig = {
     defaultColumns: ['author', 'event', 'deleted', 'createdAt'],
   },
   access: {
-    read: isLoggedIn,
+    read: isEventMember('event'),
     create: isLoggedIn,
     update: isAdminOrOwner('author'),
     delete: isAdminOrOwner('author'),
@@ -34,10 +34,13 @@ export const Posts: CollectionConfig = {
       },
     ],
     beforeChange: [
-      // Guests always post as themselves; admins may edit freely
-      ({ data, operation, req }) => {
-        if (operation === 'create' && req.user && req.user.role !== 'admin') {
-          data.author = req.user.id
+      // Guests always post as themselves and only into their own events
+      async ({ data, operation, req }) => {
+        if (operation === 'create') {
+          await assertEventMember(req, data.event)
+          if (req.user && req.user.role !== 'admin') {
+            data.author = req.user.id
+          }
         }
         return data
       },

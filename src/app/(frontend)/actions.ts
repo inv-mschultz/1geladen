@@ -6,9 +6,12 @@ import { cookies, headers as getHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
+import { randomBytes } from 'crypto'
+
 import { LOCALE_COOKIE } from '@/i18n/locale'
 import { type Locale, locales } from '@/i18n/dictionaries'
-import { derivedGuestPassword, syntheticGuestEmail } from '@/lib/guestAuth'
+import { syntheticGuestEmail } from '@/lib/guestAuth'
+import { addEventMember } from '@/lib/membership'
 
 async function getCtx() {
   const payload = await getPayload({ config })
@@ -60,42 +63,21 @@ export async function joinParty(inviteToken: string, name: string): Promise<{ er
   if (!event) return { error: 'invalid' }
 
   const email = syntheticGuestEmail()
-  const password = derivedGuestPassword(email)
+  const password = randomBytes(24).toString('hex')
 
-  await payload.create({
+  const guest = await payload.create({
     collection: 'users',
     data: { name: trimmed.slice(0, 80), email, password, role: 'guest', guestJoin: true },
     overrideAccess: true,
   })
+  await addEventMember(payload, event, guest.id)
 
   const login = await payload.login({ collection: 'users', data: { email, password } })
   if (!login.token) return { error: 'failed' }
   await setSessionCookie(login.token, login.exp)
 
   revalidatePath('/', 'layout')
-  redirect('/')
-}
-
-/** "Das bin ich" — re-enter as an existing invite-link guest. Trust-based. */
-export async function rejoinParty(inviteToken: string, userId: number): Promise<{ error: string } | never> {
-  const payload = await getPayload({ config })
-
-  const event = await findEventByInviteToken(payload, inviteToken)
-  if (!event) return { error: 'invalid' }
-
-  const guest = await payload.findByID({ collection: 'users', id: userId, overrideAccess: true })
-  // Only invite-link guests are re-enterable; claimed/registered accounts log in normally
-  if (!guest || guest.role !== 'guest' || !guest.guestJoin) return { error: 'invalid' }
-
-  const login = await payload.login({
-    collection: 'users',
-    data: { email: guest.email, password: derivedGuestPassword(guest.email) },
-  })
-  if (!login.token) return { error: 'failed' }
-  await setSessionCookie(login.token, login.exp)
-
-  revalidatePath('/', 'layout')
-  redirect('/')
+  redirect(event.slug ? `/events/${event.slug}` : '/')
 }
 
 /** Upgrade an invite-link guest to a real account (email + password). */

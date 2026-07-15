@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { ValidationError } from 'payload'
 
-import { isAdminOrOwner, isLoggedIn } from '@/access'
+import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
 
 export const RSVPs: CollectionConfig = {
   slug: 'rsvps',
@@ -13,7 +13,7 @@ export const RSVPs: CollectionConfig = {
     defaultColumns: ['user', 'event', 'status'],
   },
   access: {
-    read: isLoggedIn,
+    read: isEventMember('event'),
     create: isLoggedIn,
     update: isAdminOrOwner('user'),
     delete: isAdminOrOwner('user'),
@@ -22,6 +22,7 @@ export const RSVPs: CollectionConfig = {
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation === 'create' && req.user) {
+          await assertEventMember(req, data.event)
           if (req.user.role !== 'admin') {
             data.user = req.user.id
           }

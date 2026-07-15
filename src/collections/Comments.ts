@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { isAdminOrOwner, isLoggedIn } from '@/access'
+import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
 import { GIF_URL_PATTERN, requireSomeContent } from './Posts'
 
 export const Comments: CollectionConfig = {
@@ -9,7 +9,7 @@ export const Comments: CollectionConfig = {
     defaultColumns: ['author', 'post', 'createdAt'],
   },
   access: {
-    read: isLoggedIn,
+    read: isEventMember('post.event'),
     create: isLoggedIn,
     update: isAdminOrOwner('author'),
     delete: isAdminOrOwner('author'),
@@ -22,9 +22,16 @@ export const Comments: CollectionConfig = {
       },
     ],
     beforeChange: [
-      ({ data, operation, req }) => {
-        if (operation === 'create' && req.user && req.user.role !== 'admin') {
-          data.author = req.user.id
+      async ({ data, operation, req }) => {
+        if (operation === 'create') {
+          const postId = typeof data.post === 'object' ? data.post?.id : data.post
+          const post = postId
+            ? await req.payload.findByID({ collection: 'posts', id: postId, depth: 0, overrideAccess: true })
+            : null
+          await assertEventMember(req, post?.event as number | undefined)
+          if (req.user && req.user.role !== 'admin') {
+            data.author = req.user.id
+          }
         }
         return data
       },

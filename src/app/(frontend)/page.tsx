@@ -53,7 +53,7 @@ export default async function HomePage() {
       collection: 'events',
       where: { date: { greater_than_equal: now } },
       sort: 'date',
-      limit: 1,
+      limit: 10,
       locale,
       overrideAccess: false,
       user,
@@ -70,7 +70,9 @@ export default async function HomePage() {
   ])
 
   const featured = upcoming.docs[0] ?? past.docs[0]
-  const archive = past.docs.filter((event) => event.id !== featured?.id)
+  const archive = [...upcoming.docs.slice(1), ...past.docs].filter(
+    (event) => event.id !== featured?.id,
+  )
 
   if (!featured) {
     return (

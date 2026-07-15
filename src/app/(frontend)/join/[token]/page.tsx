@@ -1,5 +1,6 @@
 import config from '@payload-config'
 import { headers as getHeaders } from 'next/headers'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
@@ -7,6 +8,7 @@ import React from 'react'
 import { JoinForm } from '@/components/JoinForm'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
+import { addEventMember } from '@/lib/membership'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +20,6 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
   const payload = await getPayload({ config })
   const headers = await getHeaders()
   const { user } = await payload.auth({ headers })
-  if (user) redirect('/')
 
   const { docs } = await payload.find({
     collection: 'events',
@@ -30,6 +31,7 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
   const event = docs[0]
 
   if (!event) {
+    if (user) redirect('/')
     return (
       <div className="empty-state reveal">
         <span className="empty-state__emoji" aria-hidden>
@@ -41,13 +43,11 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
     )
   }
 
-  const guests = await payload.find({
-    collection: 'users',
-    where: { and: [{ guestJoin: { equals: true } }, { role: { equals: 'guest' } }] },
-    sort: 'name',
-    limit: 100,
-    overrideAccess: true,
-  })
+  // Already have an account? The invite link simply puts you on the guest list.
+  if (user) {
+    await addEventMember(payload, event, user.id)
+    redirect(event.slug ? `/events/${event.slug}` : '/')
+  }
 
   const when = new Intl.DateTimeFormat(locale === 'de' ? 'de-DE' : 'en-GB', {
     weekday: 'long',
@@ -61,11 +61,10 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
         <span className="sticker sticker--invite">{dict.join.kicker} ✦</span>
         <h1 className="landing__title">{event.title}</h1>
         <p className="landing__blurb">{when}</p>
-        <JoinForm
-          inviteToken={token}
-          guests={guests.docs.map((guest) => ({ id: guest.id, name: guest.name }))}
-          dict={dict.join}
-        />
+        <JoinForm inviteToken={token} dict={dict.join} />
+        <p className="join-form__login">
+          <Link href={`/login?next=/join/${token}`}>{dict.join.haveAccount}</Link>
+        </p>
       </div>
     </div>
   )

@@ -8,9 +8,11 @@ import type { Dictionary } from '@/i18n/dictionaries'
 export function AuthForm({
   mode,
   dict,
+  next = '/',
 }: {
   mode: 'login' | 'register'
   dict: Dictionary['auth']
+  next?: string
 }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -44,7 +46,7 @@ export function AuthForm({
       })
       if (!login.ok) throw new Error('login-failed')
 
-      router.push('/')
+      router.push(next)
       router.refresh()
     } catch {
       setError(mode === 'register' ? dict.errorRegister : dict.errorLogin)

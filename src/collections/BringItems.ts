@@ -1,7 +1,7 @@
 import type { CollectionConfig, FieldAccess } from 'payload'
 import { Forbidden } from 'payload'
 
-import { isAdminOrOwner, isLoggedIn } from '@/access'
+import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
 
 const relId = (value: unknown): number | null => {
   if (value == null) return null
@@ -28,18 +28,21 @@ export const BringItems: CollectionConfig = {
     defaultColumns: ['title', 'event', 'claimedBy'],
   },
   access: {
-    read: isLoggedIn,
+    read: isEventMember('event'),
     create: isLoggedIn,
-    // Everyone logged in may update — but guests are limited to claiming/unclaiming
+    // Members may update — but guests are limited to claiming/unclaiming
     // themselves via the field access + hook below.
-    update: isLoggedIn,
+    update: isEventMember('event'),
     delete: isAdminOrOwner('createdBy'),
   },
   hooks: {
     beforeChange: [
-      ({ data, operation, req, originalDoc }) => {
-        if (operation === 'create' && req.user && req.user.role !== 'admin') {
-          data.createdBy = req.user.id
+      async ({ data, operation, req, originalDoc }) => {
+        if (operation === 'create') {
+          await assertEventMember(req, data.event)
+          if (req.user && req.user.role !== 'admin') {
+            data.createdBy = req.user.id
+          }
         }
 
         // Guests may only claim a free item for themselves, or release their own claim.

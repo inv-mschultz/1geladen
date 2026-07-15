@@ -69,6 +69,7 @@ async function seed() {
     data: {
       title: 'Spaghetti-Abend bei Michael',
       slug: 'spaghetti-abend',
+      members: [admin.id, anna.id, ben.id, clara.id],
       date: eventDate.toISOString(),
       location: {
         name: 'Bei Michael',

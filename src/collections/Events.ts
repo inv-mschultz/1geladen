@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto'
 import type { CollectionConfig } from 'payload'
 
-import { isAdmin, isLoggedIn } from '@/access'
+import { isAdmin } from '@/access'
 
 const formatSlug = (value: string): string =>
   value
@@ -20,7 +20,12 @@ export const Events: CollectionConfig = {
     defaultColumns: ['title', 'date', 'slug'],
   },
   access: {
-    read: isLoggedIn,
+    // Guests only see events they are a member of (joined via invite link)
+    read: ({ req: { user } }) => {
+      if (!user) return false
+      if (user.role === 'admin') return true
+      return { members: { in: [user.id] } }
+    },
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
@@ -110,6 +115,19 @@ export const Events: CollectionConfig = {
       name: 'coverImage',
       type: 'upload',
       relationTo: 'media',
+    },
+    {
+      // The guest list: everyone who joined via this event's invite link.
+      // Admins are implicit members of every event.
+      name: 'members',
+      type: 'relationship',
+      relationTo: 'users',
+      hasMany: true,
+      index: true,
+      access: {
+        update: ({ req: { user } }) => user?.role === 'admin',
+      },
+      admin: { position: 'sidebar' },
     },
     {
       // The secret in the invite link (/join/<token>). Guests must not read it

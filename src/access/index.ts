@@ -1,4 +1,5 @@
-import type { Access, FieldAccess } from 'payload'
+import type { Access, FieldAccess, PayloadRequest, Where } from 'payload'
+import { Forbidden } from 'payload'
 
 import type { User } from '@/payload-types'
 
@@ -27,3 +28,45 @@ export const isAdminOrOwner =
 
 export const hasRole = (user: User | null | undefined, role: User['role']): boolean =>
   user?.role === role
+
+/** IDs of all events the user is a member of. */
+export async function memberEventIds(req: PayloadRequest): Promise<number[]> {
+  if (!req.user) return []
+  const { docs } = await req.payload.find({
+    collection: 'events',
+    where: { members: { in: [req.user.id] } },
+    limit: 100,
+    depth: 0,
+    select: {},
+    overrideAccess: true,
+  })
+  return docs.map((event) => event.id)
+}
+
+/**
+ * Read access for collections that hang off an event (posts, rsvps, …):
+ * admins see everything, guests only content of events they belong to.
+ * `path` is the query path to the event id, e.g. 'event' or 'post.event'.
+ */
+export const isEventMember =
+  (path: string): Access =>
+  async ({ req }) => {
+    if (!req.user) return false
+    if (req.user.role === 'admin') return true
+    const ids = await memberEventIds(req)
+    if (ids.length === 0) return false
+    return { [path]: { in: ids } } as Where
+  }
+
+/** Throws unless the user is an admin or a member of the given event. */
+export async function assertEventMember(
+  req: PayloadRequest,
+  event: number | { id: number } | null | undefined,
+): Promise<void> {
+  if (!req.user) throw new Forbidden()
+  if (req.user.role === 'admin') return
+  const eventId = typeof event === 'object' && event !== null ? event.id : event
+  if (!eventId) throw new Forbidden()
+  const ids = await memberEventIds(req)
+  if (!ids.includes(eventId)) throw new Forbidden()
+}

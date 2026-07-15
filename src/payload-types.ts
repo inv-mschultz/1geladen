@@ -195,6 +195,7 @@ export interface Event {
     mapsUrl?: string | null;
   };
   coverImage?: (number | null) | Media;
+  members?: (number | User)[] | null;
   /**
    * Secret for the invite link. Auto-generated.
    */
@@ -458,6 +459,7 @@ export interface EventsSelect<T extends boolean = true> {
         mapsUrl?: T;
       };
   coverImage?: T;
+  members?: T;
   inviteToken?: T;
   photosOpen?: T;
   updatedAt?: T;
