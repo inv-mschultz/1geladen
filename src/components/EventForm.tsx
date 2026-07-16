@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState, useTransition } from 'react'
+import React, { useEffect, useRef, useState, useTransition } from 'react'
 
 import { createEvent, updateEvent } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
@@ -24,19 +24,63 @@ const pad = (n: number) => String(n).padStart(2, '0')
 export function EventForm({
   dict,
   event,
-  onSaved,
 }: {
   dict: Dictionary['eventForm']
   event?: EventFormValues
-  onSaved?: () => void
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const formRef = useRef<HTMLFormElement>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [themeColor, setThemeColor] = useState(event?.themeColor || '#4ce6a5')
   const [accentColor, setAccentColor] = useState(event?.accentColor || '#ff8ad4')
+
+  // Reads current form values; returns null if the required fields aren't valid
+  const buildFormData = (): FormData | null => {
+    const form = formRef.current
+    if (!form) return null
+    const formData = new FormData(form)
+    const date = String(formData.get('date') ?? '')
+    const time = String(formData.get('time') ?? '19:00')
+    const local = new Date(`${date}T${time || '19:00'}`)
+    if (!String(formData.get('title') ?? '').trim() || !date || Number.isNaN(local.getTime())) {
+      return null
+    }
+    formData.set('dateIso', local.toISOString())
+    return formData
+  }
+
+  // Edit mode: persist every change (debounced) — no save button.
+  const scheduleSave = () => {
+    if (!event) return
+    if (timer.current) clearTimeout(timer.current)
+    setStatus('saving')
+    timer.current = setTimeout(() => {
+      const formData = buildFormData()
+      if (!formData) {
+        setStatus('idle')
+        return
+      }
+      startTransition(async () => {
+        const result = await updateEvent(event.id, formData)
+        if (result?.error) {
+          setError(dict.error)
+          setStatus('idle')
+          return
+        }
+        setError(null)
+        router.refresh()
+        setStatus('saved')
+      })
+    }, 600)
+  }
+
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current)
+  }, [])
 
   // Edit mode: live-preview the colors on the page behind the drawer.
   // Cleanup falls back to the server-rendered theme (unsaved picks revert).
@@ -62,35 +106,21 @@ export function EventForm({
 
   return (
     <form
+      ref={formRef}
       className="event-form"
+      onInput={event ? scheduleSave : undefined}
       onSubmit={(e) => {
         e.preventDefault()
-        if (pending) return
+        if (event || pending) return // edit mode auto-saves; only create submits
         setError(null)
-        const formData = new FormData(e.currentTarget)
-        const date = String(formData.get('date') ?? '')
-        const time = String(formData.get('time') ?? '19:00')
-        const local = new Date(`${date}T${time || '19:00'}`)
-        if (!date || Number.isNaN(local.getTime())) {
+        const formData = buildFormData()
+        if (!formData) {
           setError(dict.error)
           return
         }
-        formData.set('dateIso', local.toISOString())
         startTransition(async () => {
-          if (event) {
-            const result = await updateEvent(event.id, formData)
-            if (result?.error) {
-              setError(dict.error)
-              return
-            }
-            router.refresh()
-            setSaved(true)
-            setTimeout(() => setSaved(false), 2000)
-            onSaved?.()
-          } else {
-            const result = await createEvent(formData)
-            if (result?.error) setError(dict.error)
-          }
+          const result = await createEvent(formData)
+          if (result?.error) setError(dict.error)
         })
       }}
     >
@@ -162,9 +192,15 @@ export function EventForm({
 
       {error && <p className="auth-form__error">{error}</p>}
 
-      <button type="submit" className="btn btn--big btn--yes event-form__submit" disabled={pending}>
-        {saved ? '✓' : event ? dict.save : dict.submit}
-      </button>
+      {event ? (
+        <p className="event-form__status" aria-live="polite">
+          {status === 'saving' ? dict.saving : status === 'saved' ? dict.saved : ''}
+        </p>
+      ) : (
+        <button type="submit" className="btn btn--big btn--yes event-form__submit" disabled={pending}>
+          {dict.submit}
+        </button>
+      )}
     </form>
   )
 }

@@ -50,6 +50,8 @@ const de = {
     submit: 'Event erstellen',
     editTitle: 'Event bearbeiten',
     save: 'Speichern',
+    saving: 'Speichert …',
+    saved: 'Gespeichert ✓',
     error: 'Das hat nicht geklappt. Sind alle Pflichtfelder gefüllt?',
   },
   landing: {
@@ -214,6 +216,8 @@ const en: typeof de = {
     submit: 'Create event',
     editTitle: 'Edit event',
     save: 'Save',
+    saving: 'Saving …',
+    saved: 'Saved ✓',
     error: 'That didn’t work. Are all required fields filled?',
   },
   landing: {

@@ -950,13 +950,14 @@ a {
 .section__title::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: -4px;
-  bottom: -7px;
-  height: 5px;
+  left: -2px;
+  right: -6px;
+  bottom: 3px;
+  height: 0.34em;
   background: var(--c-accent);
-  transform: rotate(-1.4deg);
-  transform-origin: left;
+  z-index: -1;
+  transform: rotate(-1.2deg);
+  opacity: 0.85;
 }
 
 .section__subtitle {
@@ -1749,6 +1750,17 @@ a {
 .event-form__submit {
   margin-top: 6px;
   justify-self: center;
+}
+
+.event-form__status {
+  margin: 0;
+  min-height: 1.2em;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--c-muted);
 }
 
 /* --- edit drawer ------------------------------------------------------------------------------------------------------ */
