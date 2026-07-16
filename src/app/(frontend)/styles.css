@@ -26,6 +26,10 @@
 
   --radius-card: 16px;
   --radius-el: 12px;
+
+  --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.38);
+  --shadow-hard: 5px 5px 0 rgba(0, 0, 0, 0.4);
+  --shadow-drawer: -24px 0 60px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -264,7 +268,7 @@ a {
   border-radius: 16px;
   padding: 8px;
   z-index: 60;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-soft);
   display: grid;
   gap: 2px;
 }
@@ -722,7 +726,7 @@ a {
 
 .event__hero {
   background: var(--c-surface);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-soft);
   color: var(--c-bright);
   border-radius: var(--radius-card);
   padding: 40px 38px;
@@ -746,7 +750,7 @@ a {
   overflow: hidden;
   background: var(--c-surface-2);
   border: 1px solid var(--c-line);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-soft);
 }
 
 .view-switch__btn {
@@ -780,7 +784,7 @@ a {
   border-radius: 999px;
   padding: 13px 22px;
   cursor: pointer;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-soft);
   transition: transform 0.12s ease;
 }
 
@@ -804,7 +808,7 @@ a {
   background: var(--c-bg);
   min-width: 92px;
   flex-shrink: 0;
-  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-hard);
 }
 
 .event__calendar-weekday {
@@ -962,7 +966,7 @@ a {
 
 .section {
   background: var(--c-surface);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-soft);
   color: var(--c-bright);
   border-radius: var(--radius-card);
   padding: 32px 34px;
@@ -1523,7 +1527,7 @@ a {
 }
 
 .event-card {
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1556,7 +1560,7 @@ a {
   background: var(--c-bg);
   min-width: 56px;
   flex-shrink: 0;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-hard);
 }
 
 .event-card__cal-weekday {
@@ -1832,7 +1836,7 @@ a {
   background: var(--c-surface);
   color: var(--c-bright);
   border-left: 1px solid var(--c-line);
-  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-drawer);
   padding: 26px 26px 40px;
   overflow-y: auto;
   animation: drawer-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;

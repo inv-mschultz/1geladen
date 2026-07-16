@@ -104,15 +104,17 @@ export function themeTokens(
   const { h } = base
   const chroma = Math.min(base.c, 0.23)
 
-  // Accent: second color for main CTAs and icons (same in both polarities)
-  const accentRgb = hexToRgb(accentHex ?? '') ?? hexToRgb(PLATFORM_ACCENT)!
+  // Accent: used EXACTLY as given — no lightness/chroma filtering. Only the
+  // text color on top is derived, picking light or dark for contrast.
+  const accentValid =
+    accentHex && /^#[0-9a-fA-F]{6}$/.test(accentHex) ? accentHex.toLowerCase() : PLATFORM_ACCENT
+  const accentRgb = hexToRgb(accentValid)!
   const accentBase = rgbToOklch(accentRgb)
-  const accent = css({
-    l: clamp(accentBase.l, 0.66, 0.88),
-    c: Math.min(accentBase.c, 0.24),
-    h: accentBase.h,
-  })
-  const onAccent = css({ l: 0.19, c: Math.min(accentBase.c * 0.4, 0.06), h: accentBase.h })
+  const accent = accentValid
+  const onAccent =
+    accentBase.l < 0.68
+      ? css({ l: 0.98, c: 0, h: accentBase.h })
+      : css({ l: 0.2, c: Math.min(accentBase.c * 0.4, 0.06), h: accentBase.h })
 
   if (light) {
     // Light-first, mirror of dark mode: the page is the LIGHTEST tint, and
@@ -127,6 +129,8 @@ export function themeTokens(
     const mid = css({ l: 0.55, c: Math.min(chroma * 0.6, 0.11), h })
     const muted = css({ l: 0.46, c: Math.min(chroma * 0.3, 0.05), h })
     const darkForLines = css({ l: 0.24, c: Math.min(chroma * 0.4, 0.06), h })
+    // Soft, hue-tinted shadows for light mode (black drop shadows read too heavy)
+    const sc = css({ l: 0.3, c: Math.min(chroma * 0.5, 0.08), h })
 
     return {
       '--c-bg': bg,
@@ -142,6 +146,9 @@ export function themeTokens(
       '--c-line': withAlpha(darkForLines, 0.12),
       '--c-line-strong': withAlpha(darkForLines, 0.28),
       '--c-line-on-bg': withAlpha(darkForLines, 0.22),
+      '--shadow-soft': `0 10px 26px ${withAlpha(sc, 0.12)}`,
+      '--shadow-hard': `4px 4px 0 ${withAlpha(sc, 0.14)}`,
+      '--shadow-drawer': `-24px 0 50px ${withAlpha(sc, 0.13)}`,
     }
   }
 
@@ -170,6 +177,9 @@ export function themeTokens(
     '--c-line': withAlpha(bright, 0.18),
     '--c-line-strong': withAlpha(bright, 0.42),
     '--c-line-on-bg': withAlpha(bright, 0.2),
+    '--shadow-soft': '0 16px 40px rgba(0, 0, 0, 0.38)',
+    '--shadow-hard': '5px 5px 0 rgba(0, 0, 0, 0.4)',
+    '--shadow-drawer': '-24px 0 60px rgba(0, 0, 0, 0.45)',
   }
 }
 
