@@ -7,6 +7,13 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Photo uploads go through a Server Action; the default 1 MB body limit
+    // rejects real photos. Raise it so gallery/wall image uploads work.
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   images: {
     localPatterns: [
       {
