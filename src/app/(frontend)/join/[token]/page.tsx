@@ -58,7 +58,7 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
 
   return (
     <div className="landing">
-      {event.themeColor && <style>{themeCss(event.themeColor, event.accentColor)}</style>}
+      {event.themeColor && <style>{themeCss(event.themeColor, event.accentColor, Boolean(event.invertTheme))}</style>}
       <div className="landing__poster reveal">
         <span className="sticker sticker--invite">{dict.join.kicker} ✦</span>
         <h1 className="landing__title">{event.title}</h1>

@@ -95,7 +95,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {featured.themeColor && <style>{themeCss(featured.themeColor, featured.accentColor)}</style>}
+      {featured.themeColor && <style>{themeCss(featured.themeColor, featured.accentColor, Boolean(featured.invertTheme))}</style>}
       <p className="home-kicker reveal">
         {upcoming.docs[0] ? dict.home.nextUp : dict.home.lastParty} <ArrowDown />
       </p>

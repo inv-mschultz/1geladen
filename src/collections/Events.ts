@@ -139,6 +139,16 @@ export const Events: CollectionConfig = {
       },
     },
     {
+      // Flip the theme polarity: dark-on-light instead of light-on-dark
+      name: 'invertTheme',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Light mode — dark content on a light background.',
+      },
+    },
+    {
       // The guest list: everyone who joined via this event's invite link.
       // Admins are implicit members of every event.
       name: 'members',

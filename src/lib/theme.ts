@@ -90,12 +90,60 @@ function withAlpha(hex: string, alpha: number): string {
 
 export type ThemeTokens = Record<string, string>
 
-/** One base color (plus an optional accent) in, the whole system out. */
-export function themeTokens(baseHex: string, accentHex?: string | null): ThemeTokens {
+/**
+ * One base color (plus optional accent) in, the whole system out.
+ * `light` flips the polarity: dark-on-light instead of light-on-dark.
+ */
+export function themeTokens(
+  baseHex: string,
+  accentHex?: string | null,
+  light = false,
+): ThemeTokens {
   const rgb = hexToRgb(baseHex) ?? hexToRgb(PLATFORM_COLOR)!
   const base = rgbToOklch(rgb)
   const { h } = base
   const chroma = Math.min(base.c, 0.23)
+
+  // Accent: second color for main CTAs and icons (same in both polarities)
+  const accentRgb = hexToRgb(accentHex ?? '') ?? hexToRgb(PLATFORM_ACCENT)!
+  const accentBase = rgbToOklch(accentRgb)
+  const accent = css({
+    l: clamp(accentBase.l, 0.66, 0.88),
+    c: Math.min(accentBase.c, 0.24),
+    h: accentBase.h,
+  })
+  const onAccent = css({ l: 0.19, c: Math.min(accentBase.c * 0.4, 0.06), h: accentBase.h })
+
+  if (light) {
+    // Light-first, mirror of dark mode: the page is the LIGHTEST tint, and
+    // surfaces step up (darker / more saturated) as they stack. Dark ink content.
+    const bg = css({ l: 0.93, c: Math.min(chroma * 0.55, 0.09), h })
+    const surface = css({ l: 0.87, c: Math.min(chroma * 0.6, 0.11), h })
+    const surface2 = css({ l: 0.81, c: Math.min(chroma * 0.65, 0.13), h })
+    // "bright" role = prominent dark text/fills on light cards
+    const bright = css({ l: 0.26, c: Math.min(chroma * 0.5, 0.08), h })
+    const onBg = css({ l: 0.22, c: Math.min(chroma * 0.5, 0.08), h })
+    const ink = css({ l: 0.965, c: Math.min(chroma * 0.2, 0.03), h }) // light text on dark fills
+    const mid = css({ l: 0.55, c: Math.min(chroma * 0.6, 0.11), h })
+    const muted = css({ l: 0.46, c: Math.min(chroma * 0.3, 0.05), h })
+    const darkForLines = css({ l: 0.24, c: Math.min(chroma * 0.4, 0.06), h })
+
+    return {
+      '--c-bg': bg,
+      '--c-on-bg': onBg,
+      '--c-bright': bright,
+      '--c-ink': ink,
+      '--c-surface': surface,
+      '--c-surface-2': surface2,
+      '--c-mid': mid,
+      '--c-muted': muted,
+      '--c-accent': accent,
+      '--c-on-accent': onAccent,
+      '--c-line': withAlpha(darkForLines, 0.12),
+      '--c-line-strong': withAlpha(darkForLines, 0.28),
+      '--c-line-on-bg': withAlpha(darkForLines, 0.22),
+    }
+  }
 
   // Dark-first: the page is the deep end of the hue, the color itself glows on it
   const bg = css({ l: 0.16, c: Math.min(chroma * 0.35, 0.05), h })
@@ -107,16 +155,6 @@ export function themeTokens(baseHex: string, accentHex?: string | null): ThemeTo
   const ink = css({ l: 0.19, c: Math.min(chroma * 0.4, 0.06), h })
   const mid = css({ l: 0.48, c: Math.min(chroma * 0.75, 0.13), h })
   const muted = css({ l: 0.64, c: Math.min(chroma * 0.35, 0.06), h })
-
-  // Accent: second color for main CTAs and icons
-  const accentRgb = hexToRgb(accentHex ?? '') ?? hexToRgb(PLATFORM_ACCENT)!
-  const accentBase = rgbToOklch(accentRgb)
-  const accent = css({
-    l: clamp(accentBase.l, 0.66, 0.88),
-    c: Math.min(accentBase.c, 0.24),
-    h: accentBase.h,
-  })
-  const onAccent = css({ l: 0.19, c: Math.min(accentBase.c * 0.4, 0.06), h: accentBase.h })
 
   return {
     '--c-bg': bg,
@@ -136,12 +174,12 @@ export function themeTokens(baseHex: string, accentHex?: string | null): ThemeTo
 }
 
 /** Inline-style object for React `style` props. */
-export const themeStyle = (baseHex: string, accentHex?: string | null) =>
-  themeTokens(baseHex, accentHex) as import('react').CSSProperties
+export const themeStyle = (baseHex: string, accentHex?: string | null, light = false) =>
+  themeTokens(baseHex, accentHex, light) as import('react').CSSProperties
 
 /** CSS text that re-themes the whole page (rendered in a <style> tag). */
-export function themeCss(baseHex: string, accentHex?: string | null): string {
-  const tokens = themeTokens(baseHex, accentHex)
+export function themeCss(baseHex: string, accentHex?: string | null, light = false): string {
+  const tokens = themeTokens(baseHex, accentHex, light)
   const body = Object.entries(tokens)
     .map(([key, value]) => `${key}:${value}`)
     .join(';')

@@ -844,6 +844,7 @@ a {
   letter-spacing: -0.01em;
   font-size: clamp(1.9rem, 5.5vw, 3rem);
   margin-bottom: 22px;
+  color: var(--c-accent);
 }
 
 .event__facts {
@@ -1777,6 +1778,24 @@ a {
 .event-form__submit {
   margin-top: 6px;
   justify-self: center;
+}
+
+.field--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.field--check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--c-accent);
+  cursor: pointer;
 }
 
 .event-form__status {

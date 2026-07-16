@@ -16,6 +16,7 @@ export type EventFormValues = {
   mapsUrl?: string | null
   themeColor?: string | null
   accentColor?: string | null
+  invertTheme?: boolean | null
   description: string
 }
 
@@ -37,6 +38,7 @@ export function EventForm({
 
   const [themeColor, setThemeColor] = useState(event?.themeColor || '#4ce6a5')
   const [accentColor, setAccentColor] = useState(event?.accentColor || '#ff8ad4')
+  const [invert, setInvert] = useState(Boolean(event?.invertTheme))
 
   // Reads current form values; returns null if the required fields aren't valid
   const buildFormData = (): FormData | null => {
@@ -86,7 +88,7 @@ export function EventForm({
   // Cleanup falls back to the server-rendered theme (unsaved picks revert).
   useEffect(() => {
     if (!event) return
-    const tokens = themeTokens(themeColor, accentColor)
+    const tokens = themeTokens(themeColor, accentColor, invert)
     for (const [key, value] of Object.entries(tokens)) {
       document.documentElement.style.setProperty(key, value)
     }
@@ -95,7 +97,7 @@ export function EventForm({
         document.documentElement.style.removeProperty(key)
       }
     }
-  }, [event, themeColor, accentColor])
+  }, [event, themeColor, accentColor, invert])
 
   // Initial date/time in the browser's timezone, not the server's
   const initial = event ? new Date(event.dateIso) : null
@@ -184,6 +186,16 @@ export function EventForm({
         </label>
         <span />
       </div>
+
+      <label className="field field--check">
+        <input
+          name="invertTheme"
+          type="checkbox"
+          checked={invert}
+          onChange={(e) => setInvert(e.target.checked)}
+        />
+        <span>{dict.invert}</span>
+      </label>
 
       <label className="field">
         <span>{dict.description}</span>

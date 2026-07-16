@@ -42,7 +42,7 @@ export default async function EventPage(props: { params: Promise<{ slug: string 
 
   return (
     <>
-      {event.themeColor && <style>{themeCss(event.themeColor, event.accentColor)}</style>}
+      {event.themeColor && <style>{themeCss(event.themeColor, event.accentColor, Boolean(event.invertTheme))}</style>}
       <p className="home-kicker reveal">
         <Link href="/">
           <ArrowLeft /> 1geladen

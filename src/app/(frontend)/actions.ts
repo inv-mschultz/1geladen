@@ -149,6 +149,7 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
   const description = String(formData.get('description') ?? '')
   const themeColor = String(formData.get('themeColor') ?? '').trim()
   const accentColor = String(formData.get('accentColor') ?? '').trim()
+  const invertTheme = formData.get('invertTheme') === 'on'
 
   let event
   try {
@@ -165,6 +166,7 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
         description: textToRichText(description),
         themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,
         accentColor: /^#[0-9a-fA-F]{6}$/.test(accentColor) ? accentColor : undefined,
+        invertTheme,
         members: [user.id],
       },
       overrideAccess: false,
@@ -194,6 +196,7 @@ export async function updateEvent(
 
   const themeColor = String(formData.get('themeColor') ?? '').trim()
   const accentColor = String(formData.get('accentColor') ?? '').trim()
+  const invertTheme = formData.get('invertTheme') === 'on'
   const locale = await getLocale()
 
   try {
@@ -212,6 +215,7 @@ export async function updateEvent(
         description: textToRichText(String(formData.get('description') ?? '')),
         themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,
         accentColor: /^#[0-9a-fA-F]{6}$/.test(accentColor) ? accentColor : undefined,
+        invertTheme,
       },
       overrideAccess: false,
       user,

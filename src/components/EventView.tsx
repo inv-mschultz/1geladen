@@ -200,6 +200,7 @@ export async function EventView({
               mapsUrl: event.location?.mapsUrl,
               themeColor: event.themeColor,
               accentColor: event.accentColor,
+              invertTheme: event.invertTheme,
               description: richTextToPlain(event.description),
             }}
           />

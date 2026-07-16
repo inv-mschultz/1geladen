@@ -203,6 +203,10 @@ export interface Event {
    * Accent for buttons and icons, e.g. #ff8ad4.
    */
   accentColor?: string | null;
+  /**
+   * Light mode — dark content on a light background.
+   */
+  invertTheme?: boolean | null;
   members?: (number | User)[] | null;
   /**
    * Secret for the invite link. Auto-generated.
@@ -469,6 +473,7 @@ export interface EventsSelect<T extends boolean = true> {
   coverImage?: T;
   themeColor?: T;
   accentColor?: T;
+  invertTheme?: T;
   members?: T;
   inviteToken?: T;
   photosOpen?: T;
