@@ -32,6 +32,8 @@ const de = {
     countTomorrow: 'Morgen!',
     countInDays: 'In {n} Tagen',
     edit: 'Bearbeiten',
+    viewAdmin: 'Admin',
+    viewGuest: 'Gast',
   },
   eventForm: {
     title: 'Neues Event',
@@ -198,6 +200,8 @@ const en: typeof de = {
     countTomorrow: 'Tomorrow!',
     countInDays: 'In {n} days',
     edit: 'Edit',
+    viewAdmin: 'Admin',
+    viewGuest: 'Guest',
   },
   eventForm: {
     title: 'New event',

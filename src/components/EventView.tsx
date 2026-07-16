@@ -6,8 +6,9 @@ import React from 'react'
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
 import { richTextToPlain } from '@/lib/richtext'
+import { getViewAsGuest } from '@/lib/viewas'
+import { AdminDock } from './AdminDock'
 import { BringList, type BringListItem } from './BringList'
-import { EventEditDrawer } from './EventEditDrawer'
 import { ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
 import { Gallery, type GalleryPhoto } from './Gallery'
@@ -51,6 +52,11 @@ export async function EventView({
 }) {
   const payload = await getPayload({ config })
 
+  // Admins can preview the event as a regular invited guest (bugfixing tool).
+  const isRealAdmin = user.role === 'admin'
+  const viewAsGuest = isRealAdmin && (await getViewAsGuest())
+  const isAdmin = isRealAdmin && !viewAsGuest
+
   const [rsvps, posts, comments, items, photos] = await Promise.all([
     payload.find({
       collection: 'rsvps',
@@ -62,10 +68,9 @@ export async function EventView({
     }),
     payload.find({
       collection: 'posts',
-      where:
-        user.role === 'admin'
-          ? { event: { equals: event.id } }
-          : { and: [{ event: { equals: event.id } }, { deleted: { not_equals: true } }] },
+      where: isAdmin
+        ? { event: { equals: event.id } }
+        : { and: [{ event: { equals: event.id } }, { deleted: { not_equals: true } }] },
       sort: '-createdAt',
       depth: 1,
       limit: 200,
@@ -157,7 +162,7 @@ export async function EventView({
       note: item.note,
       claimedByName: claimedBy?.name ?? null,
       claimedByMe: claimedBy?.id === user.id,
-      canDelete: user.role === 'admin' || createdById === user.id,
+      canDelete: isAdmin || createdById === user.id,
     }
   })
 
@@ -179,9 +184,12 @@ export async function EventView({
   return (
     <article className="event">
       <header id="info" className="event__hero reveal">
-        {user.role === 'admin' && (
-          <EventEditDrawer
-            label={dict.events.edit}
+        {isRealAdmin && (
+          <AdminDock
+            viewAsGuest={viewAsGuest}
+            canEdit={isAdmin}
+            editLabel={dict.events.edit}
+            viewLabels={{ admin: dict.events.viewAdmin, guest: dict.events.viewGuest }}
             dict={dict.eventForm}
             event={{
               id: event.id,
@@ -253,7 +261,7 @@ export async function EventView({
           <Rsvp eventId={event.id} myStatus={myStatus} names={rsvpNames} dict={dict.rsvp} />
         </div>
 
-        {user.role === 'admin' && event.inviteToken && (
+        {isAdmin && event.inviteToken && (
           <div className="event__invite">
             <InviteLink token={event.inviteToken} dict={dict.invite} />
           </div>
@@ -275,7 +283,7 @@ export async function EventView({
           eventId={event.id}
           posts={wallPosts}
           userName={user.name}
-          isAdmin={user.role === 'admin'}
+          isAdmin={isAdmin}
           locale={locale}
           dict={dict.wall}
         />

@@ -1,25 +1,32 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 
+import { setViewAsGuest } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
 import { EventForm, type EventFormValues } from './EventForm'
 import { X } from './icons'
 
-export function EventEditDrawer({
-  label,
+export function AdminDock({
+  viewAsGuest,
+  canEdit,
+  editLabel,
+  viewLabels,
   dict,
   event,
 }: {
-  label: string
+  viewAsGuest: boolean
+  canEdit: boolean
+  editLabel: string
+  viewLabels: { admin: string; guest: string }
   dict: Dictionary['eventForm']
   event: EventFormValues
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [pending, startTransition] = useTransition()
 
-  // Portal target only exists in the browser
   useEffect(() => setMounted(true), [])
 
   useEffect(() => {
@@ -37,13 +44,38 @@ export function EventEditDrawer({
 
   if (!mounted) return null
 
-  // Rendered at <body> so the fixed FAB and drawer escape the event card's
-  // transformed (animated) ancestor and sit in the page chrome instead.
+  const setView = (guest: boolean) => {
+    if (guest === viewAsGuest || pending) return
+    startTransition(() => setViewAsGuest(guest))
+  }
+
+  // Portaled to <body> so the fixed dock escapes the event card's animated
+  // (transformed) ancestor and sits in the page chrome.
   return createPortal(
     <>
-      <button type="button" className="fab-edit" onClick={() => setOpen(true)}>
-        {label}
-      </button>
+      <div className="admin-dock">
+        <div className="view-switch" role="group" aria-label="View as">
+          <button
+            type="button"
+            className={`view-switch__btn ${!viewAsGuest ? 'is-active' : ''}`}
+            onClick={() => setView(false)}
+          >
+            {viewLabels.admin}
+          </button>
+          <button
+            type="button"
+            className={`view-switch__btn ${viewAsGuest ? 'is-active' : ''}`}
+            onClick={() => setView(true)}
+          >
+            {viewLabels.guest}
+          </button>
+        </div>
+        {canEdit && (
+          <button type="button" className="fab-edit" onClick={() => setOpen(true)}>
+            {editLabel}
+          </button>
+        )}
+      </div>
 
       {open && (
         <div className="drawer" role="dialog" aria-modal="true" aria-label={dict.editTitle}>
@@ -60,7 +92,6 @@ export function EventEditDrawer({
                 <X />
               </button>
             </div>
-            {/* key resets the form (and its live preview) per open */}
             <EventForm key={String(open)} dict={dict} event={event} />
           </div>
         </div>

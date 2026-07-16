@@ -224,6 +224,20 @@ export async function updateEvent(
   return {}
 }
 
+/** Admin bugfixing tool: preview the event as a regular invited guest. */
+export async function setViewAsGuest(guest: boolean): Promise<void> {
+  const { user } = await getCtx()
+  requireUser(user)
+  if (user.role !== 'admin') return
+  const store = await cookies()
+  if (guest) {
+    store.set('1geladen-viewas', 'guest', { path: '/', maxAge: 60 * 60 * 24 })
+  } else {
+    store.delete('1geladen-viewas')
+  }
+  revalidatePath('/', 'layout')
+}
+
 export async function logout(): Promise<void> {
   const store = await cookies()
   store.delete('payload-token')
