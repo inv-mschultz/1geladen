@@ -28,11 +28,17 @@ export async function generateMetadata(): Promise<Metadata> {
     title: dict.meta.title,
     description: dict.meta.description,
     icons: {
+      // Pink pixel sparkle (the logo mark) on the platform-dark background
       icon: `data:image/svg+xml,${encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
-          '<rect width="100" height="100" rx="24" fill="#4ce6a5"/>' +
-          '<text x="50" y="50" dy=".34em" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="900" fill="#ff8ad4">1</text>' +
-          '</svg>',
+          '<rect width="100" height="100" rx="24" fill="#0d1f17"/>' +
+          '<g fill="#ff8ad4">' +
+          '<rect x="15" y="15" width="14" height="14"/><rect x="43" y="15" width="14" height="14"/>' +
+          '<rect x="29" y="29" width="14" height="14"/><rect x="43" y="29" width="14" height="14"/><rect x="57" y="29" width="14" height="14"/>' +
+          '<rect x="15" y="43" width="14" height="14"/><rect x="29" y="43" width="14" height="14"/><rect x="43" y="43" width="14" height="14"/><rect x="57" y="43" width="14" height="14"/><rect x="71" y="43" width="14" height="14"/>' +
+          '<rect x="29" y="57" width="14" height="14"/><rect x="43" y="57" width="14" height="14"/><rect x="57" y="57" width="14" height="14"/>' +
+          '<rect x="43" y="71" width="14" height="14"/>' +
+          '</g></svg>',
       )}`,
     },
   }
