@@ -974,6 +974,17 @@ a {
   scroll-margin-top: 92px;
 }
 
+/* Feed-style sections (wall + gallery) drop the outer container — their items
+   are independent cards that sit directly on the page. */
+.section--wall,
+.section--gallery {
+  background: transparent;
+  box-shadow: none;
+  color: var(--c-on-bg);
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .section__title {
   display: inline-block;
   font-variation-settings: 'wdth' 120;
