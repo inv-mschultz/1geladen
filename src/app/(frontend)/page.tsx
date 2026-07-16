@@ -30,7 +30,7 @@ export default async function HomePage() {
     return (
       <div className="landing">
         <div className="landing__poster reveal">
-          <span className="sticker sticker--invite">{dict.landing.kicker} ✦</span>
+          <span className="sticker sticker--invite">{dict.landing.kicker}</span>
           <h1 className="landing__title">
             {dict.landing.tagline}
             <br />
@@ -44,9 +44,6 @@ export default async function HomePage() {
             <Link href="/login" className="btn btn--big btn--ghost">
               {dict.landing.ctaSecondary}
             </Link>
-          </div>
-          <div className="landing__confetti" aria-hidden>
-            🥘 🍷 📸 🎶 🥗 🍰
           </div>
         </div>
       </div>
@@ -84,9 +81,6 @@ export default async function HomePage() {
   if (!featured) {
     return (
       <div className="empty-state reveal">
-        <span className="empty-state__emoji" aria-hidden>
-          🕯️
-        </span>
         <h1>{dict.home.noEvents}</h1>
         <p>{dict.home.noEventsHint}</p>
       </div>

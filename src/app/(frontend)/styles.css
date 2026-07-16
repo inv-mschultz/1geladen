@@ -1446,11 +1446,6 @@ a {
   color: var(--c-muted);
 }
 
-.gallery__lock {
-  display: block;
-  font-size: 2rem;
-  margin-bottom: 8px;
-}
 
 .gallery__upload {
   margin-bottom: 22px;
@@ -1479,6 +1474,15 @@ a {
   background: var(--c-surface-2);
 }
 
+.gallery__photo button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
 .gallery__photo img {
   display: block;
   width: 100%;
@@ -1496,6 +1500,130 @@ a {
   font-size: 0.78rem;
   padding: 8px 10px;
   color: var(--c-muted);
+}
+
+/* --- lightbox --------------------------------------------------------------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3vh 4vw;
+  background: rgba(0, 0, 0, 0.88);
+  animation: fade-in 0.15s ease both;
+}
+
+.lightbox__stage {
+  margin: 0;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.lightbox__stage img {
+  max-width: 100%;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.lightbox__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  color: #fff;
+}
+
+.lightbox__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+
+.lightbox__count {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.lightbox__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.lightbox__close:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.lightbox__nav:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox__nav--prev {
+  left: 20px;
+}
+
+.lightbox__nav--next {
+  right: 20px;
+}
+
+@media (max-width: 640px) {
+  .lightbox__nav {
+    width: 44px;
+    height: 44px;
+  }
+  .lightbox__nav--prev {
+    left: 8px;
+  }
+  .lightbox__nav--next {
+    right: 8px;
+  }
 }
 
 /* --- events overview ------------------------------------------------------------------------------------------ */

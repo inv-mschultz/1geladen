@@ -54,7 +54,7 @@ const de = {
     editTitle: 'Event bearbeiten',
     save: 'Speichern',
     saving: 'Speichert …',
-    saved: 'Gespeichert ✓',
+    saved: 'Gespeichert',
     error: 'Das hat nicht geklappt. Sind alle Pflichtfelder gefüllt?',
   },
   landing: {
@@ -131,6 +131,11 @@ const de = {
     upload: 'Fotos hochladen',
     uploading: 'Lädt hoch …',
     empty: 'Noch keine Fotos. Wer hat welche gemacht?',
+    download: 'Herunterladen',
+    close: 'Schließen',
+    prev: 'Vorheriges',
+    next: 'Nächstes',
+    by: 'von',
   },
   join: {
     kicker: 'Du bist eingeladen',
@@ -139,7 +144,7 @@ const de = {
     haveAccount: 'Schon ein Konto? Anmelden',
     invalidTitle: 'Hoppla.',
     invalid: 'Dieser Einladungslink ist ungültig. Frag den Host nach einem neuen!',
-    nameMissing: 'Sag uns wenigstens deinen Namen 🙂',
+    nameMissing: 'Sag uns wenigstens deinen Namen',
     failed: 'Das hat nicht geklappt. Versuch es nochmal.',
   },
   invite: {
@@ -223,7 +228,7 @@ const en: typeof de = {
     editTitle: 'Edit event',
     save: 'Save',
     saving: 'Saving …',
-    saved: 'Saved ✓',
+    saved: 'Saved',
     error: 'That didn’t work. Are all required fields filled?',
   },
   landing: {
@@ -300,6 +305,11 @@ const en: typeof de = {
     upload: 'Upload photos',
     uploading: 'Uploading …',
     empty: 'No photos yet. Who took some?',
+    download: 'Download',
+    close: 'Close',
+    prev: 'Previous',
+    next: 'Next',
+    by: 'by',
   },
   join: {
     kicker: 'You are invited',
@@ -308,7 +318,7 @@ const en: typeof de = {
     haveAccount: 'Already have an account? Log in',
     invalidTitle: 'Oops.',
     invalid: 'This invite link is invalid. Ask the host for a fresh one!',
-    nameMissing: 'At least tell us your name 🙂',
+    nameMissing: 'At least tell us your name',
     failed: 'That didn’t work. Try again.',
   },
   invite: {

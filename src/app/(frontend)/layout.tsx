@@ -28,7 +28,12 @@ export async function generateMetadata(): Promise<Metadata> {
     title: dict.meta.title,
     description: dict.meta.description,
     icons: {
-      icon: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎉</text></svg>')}`,
+      icon: `data:image/svg+xml,${encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+          '<rect width="100" height="100" rx="24" fill="#4ce6a5"/>' +
+          '<text x="50" y="50" dy=".34em" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="900" fill="#ff8ad4">1</text>' +
+          '</svg>',
+      )}`,
     },
   }
 }

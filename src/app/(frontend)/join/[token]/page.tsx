@@ -35,9 +35,6 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
     if (user) redirect('/')
     return (
       <div className="empty-state reveal">
-        <span className="empty-state__emoji" aria-hidden>
-          🫥
-        </span>
         <h1>{dict.join.invalidTitle}</h1>
         <p>{dict.join.invalid}</p>
       </div>
@@ -60,7 +57,7 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
     <div className="landing">
       {event.themeColor && <style>{themeCss(event.themeColor, event.accentColor, Boolean(event.invertTheme))}</style>}
       <div className="landing__poster reveal">
-        <span className="sticker sticker--invite">{dict.join.kicker} ✦</span>
+        <span className="sticker sticker--invite">{dict.join.kicker}</span>
         <h1 className="landing__title">{event.title}</h1>
         <p className="landing__blurb">{when}</p>
         <JoinForm inviteToken={token} dict={dict.join} />
