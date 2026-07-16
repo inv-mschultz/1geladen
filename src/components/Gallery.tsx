@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 
 import { uploadPhotos } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
+import { resizeImage } from '@/lib/resizeImage'
 import { ArrowLeft, ArrowRight, X } from './icons'
 
 export type GalleryPhoto = {
@@ -129,9 +130,11 @@ export function Gallery({
 
   const onFiles = (files: FileList | null) => {
     if (!files || files.length === 0 || pending) return
-    const formData = new FormData()
-    Array.from(files).forEach((file) => formData.append('photos', file))
     startTransition(async () => {
+      const formData = new FormData()
+      for (const file of Array.from(files)) {
+        formData.append('photos', await resizeImage(file))
+      }
       await uploadPhotos(eventId, formData)
       if (inputRef.current) inputRef.current.value = ''
     })

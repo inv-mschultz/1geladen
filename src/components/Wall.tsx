@@ -4,6 +4,7 @@ import React, { useRef, useState, useTransition } from 'react'
 
 import { createComment, createPost, deletePost, restorePost } from '@/app/(frontend)/actions'
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
+import { resizeImage } from '@/lib/resizeImage'
 import { Avatar } from './Avatar'
 import { GifPicker } from './GifPicker'
 import { ArrowUp, ImageIcon, Restore, Trash, X } from './icons'
@@ -37,8 +38,10 @@ function useAttachment() {
   const [attachment, setAttachment] = useState<Attachment | null>(null)
 
   const attachGif = (url: string, alt: string) => setAttachment({ kind: 'gif', url, alt })
-  const attachImage = (file: File) =>
-    setAttachment({ kind: 'image', file, previewUrl: URL.createObjectURL(file) })
+  const attachImage = async (file: File) => {
+    const resized = await resizeImage(file)
+    setAttachment({ kind: 'image', file: resized, previewUrl: URL.createObjectURL(resized) })
+  }
   const clear = () => {
     if (attachment?.kind === 'image') URL.revokeObjectURL(attachment.previewUrl)
     setAttachment(null)
