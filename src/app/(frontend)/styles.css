@@ -1119,9 +1119,21 @@ a {
 .wall__composer {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 12px;
+  gap: 12px 14px;
   align-items: start;
   margin-bottom: 28px;
+  background: var(--c-surface-2);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+/* Match the pattern: input sits as the darkest swatch inside the lighter box */
+.wall__textarea {
+  background: var(--c-surface);
+}
+
+.wall__composer .btn--icon {
+  background: var(--c-surface);
 }
 
 .wall__composer-extra {
