@@ -301,7 +301,7 @@ export async function EventView({
         <section id="mitbringen" className="section section--bring reveal" style={{ animationDelay: '0.1s' }}>
           <h2 className="section__title">{dict.bring.title}</h2>
           <p className="section__subtitle">{dict.bring.subtitle}</p>
-          <BringList eventId={event.id} items={bringItems} dict={dict.bring} />
+          <BringList eventId={event.id} items={bringItems} hostName={host?.name} dict={dict.bring} />
         </section>
       )}
 
@@ -312,6 +312,7 @@ export async function EventView({
           eventId={event.id}
           posts={wallPosts}
           userName={user.name}
+          hostName={host?.name}
           isAdmin={isAdmin}
           locale={locale}
           dict={dict.wall}

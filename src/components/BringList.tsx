@@ -19,10 +19,12 @@ export type BringListItem = {
 export function BringList({
   eventId,
   items,
+  hostName,
   dict,
 }: {
   eventId: number
   items: BringListItem[]
+  hostName?: string | null
   dict: Dictionary['bring']
 }) {
   const [pending, startTransition] = useTransition()
@@ -53,7 +55,7 @@ export function BringList({
               <div className="bring__status">
                 {item.claimedByName ? (
                   <span className="chip chip--claimed">
-                    <Avatar name={item.claimedByName} size={22} />
+                    <Avatar name={item.claimedByName} size={22} host={item.claimedByName === hostName} />
                     {item.claimedByName} {dict.claimedBy}
                   </span>
                 ) : (

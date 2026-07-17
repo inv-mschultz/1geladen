@@ -269,6 +269,7 @@ export function Wall({
   eventId,
   posts,
   userName,
+  hostName,
   isAdmin,
   locale,
   dict,
@@ -276,6 +277,7 @@ export function Wall({
   eventId: number
   posts: WallPost[]
   userName: string
+  hostName?: string | null
   isAdmin: boolean
   locale: Locale
   dict: Dictionary['wall']
@@ -301,7 +303,7 @@ export function Wall({
   return (
     <div className="wall">
       <div className="wall__composer">
-        <Avatar name={userName} />
+        <Avatar name={userName} host={userName === hostName} />
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -350,7 +352,7 @@ export function Wall({
           {posts.map((post) => (
             <li key={post.id} className={`wall__post ${post.deleted ? 'wall__post--deleted' : ''}`}>
               <div className="wall__post-head">
-                <Avatar name={post.authorName} />
+                <Avatar name={post.authorName} host={post.authorName === hostName} />
                 <div className="wall__post-meta">
                   <strong>{post.authorName}</strong>
                   <time dateTime={post.createdAt} className="wall__time" suppressHydrationWarning>
@@ -392,7 +394,7 @@ export function Wall({
                 <ul className="wall__comments">
                   {post.comments.map((comment) => (
                     <li key={comment.id} className="wall__comment">
-                      <Avatar name={comment.authorName} size={24} />
+                      <Avatar name={comment.authorName} size={24} host={comment.authorName === hostName} />
                       <div className="wall__comment-body">
                         <div className="wall__comment-head">
                           <strong>{comment.authorName}</strong>

@@ -73,8 +73,8 @@ export function Rsvp({
                 <h4>{label}</h4>
                 <ul>
                   {entries[status].map(({ name, isHost }) => (
-                    <li key={name} className={`chip ${isHost ? 'chip--host' : ''}`}>
-                      <Avatar name={name} size={22} />
+                    <li key={name} className="chip">
+                      <Avatar name={name} size={22} host={isHost} />
                       {name}
                       {isHost && <span className="chip__tag">{dict.host}</span>}
                     </li>

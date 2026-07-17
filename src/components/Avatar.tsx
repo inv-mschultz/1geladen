@@ -1,6 +1,14 @@
 import React from 'react'
 
-export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
+export function Avatar({
+  name,
+  size = 36,
+  host = false,
+}: {
+  name: string
+  size?: number
+  host?: boolean
+}) {
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -10,7 +18,7 @@ export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
 
   return (
     <span
-      className="avatar"
+      className={`avatar ${host ? 'avatar--host' : ''}`}
       style={{ width: size, height: size, fontSize: size * 0.42 }}
       aria-hidden
     >

@@ -929,7 +929,11 @@ a {
 }
 
 .event__invite {
-  margin-top: 28px;
+  margin-top: 40px;
+}
+
+.event__rsvp .rsvp__groups {
+  padding-bottom: 8px;
 }
 
 .invite-link {
@@ -1961,6 +1965,8 @@ a {
   box-shadow: var(--shadow-drawer);
   padding: 26px 26px 40px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-line-strong) transparent;
   animation: drawer-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -2046,25 +2052,19 @@ a {
 
 /* --- host chip -------------------------------------------------------------------------------------------------------- */
 
-.chip--host {
-  background: var(--c-bright);
-  color: var(--c-ink);
-}
-
-.chip--host .avatar {
+.avatar--host {
   background: var(--c-ink);
   color: var(--c-bright);
+  box-shadow: inset 0 0 0 1.5px var(--c-bright);
 }
 
 .chip__tag {
-  font-size: 0.6rem;
-  font-weight: 900;
+  font-size: 0.62rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  border: 1.5px solid currentColor;
-  border-radius: 999px;
-  padding: 1px 7px;
-  margin-left: 2px;
+  color: var(--c-muted);
+  margin-left: 1px;
 }
 
 /* --- custom color picker ---------------------------------------------------------------------------------------------- */
@@ -2247,5 +2247,106 @@ a {
 
   .user-menu__panel {
     right: 0;
+  }
+}
+
+/* --- drawer color section --------------------------------------------------------------------------------------------- */
+
+.event-form__section {
+  border-top: 1px solid var(--c-line);
+  padding-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.event-form__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.event-form__section-head h3 {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.event-form__row--colors {
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+}
+
+.event-form__row--colors .color-field__hex {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- full color picker ------------------------------------------------------------------------------------------------ */
+
+.color-field__area {
+  position: relative;
+  height: 130px;
+  border-radius: 10px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.color-field__cursor {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.color-field__hue {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #f00 0%,
+    #ff0 17%,
+    #0f0 33%,
+    #0ff 50%,
+    #00f 67%,
+    #f0f 83%,
+    #f00 100%
+  );
+  cursor: pointer;
+  outline: none;
+}
+
+.color-field__hue::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid rgba(0, 0, 0, 0.35);
+  cursor: grab;
+}
+
+.color-field__hue::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid rgba(0, 0, 0, 0.35);
+  cursor: grab;
+}
+
+@media (max-width: 640px) {
+  .event-form__row--colors {
+    grid-template-columns: 1fr;
   }
 }
