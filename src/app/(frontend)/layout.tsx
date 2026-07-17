@@ -91,15 +91,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
                 }}
               />
             ) : (
-              <>
-                <LangSwitch current={locale} />
-                <Link href="/login" className="btn btn--ghost btn--small">
-                  {dict.nav.login}
-                </Link>
-                <Link href="/register" className="btn btn--small">
-                  {dict.nav.register}
-                </Link>
-              </>
+              <LangSwitch current={locale} />
             )}
           </nav>
         </header>
