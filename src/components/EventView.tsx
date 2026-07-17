@@ -7,6 +7,7 @@ import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
 import { getThemeMode } from '@/lib/mode'
 import { richTextToPlain } from '@/lib/richtext'
+import { EVENT_TIMEZONE } from '@/lib/time'
 import { getViewAsGuest } from '@/lib/viewas'
 import { AdminDock } from './AdminDock'
 import { BringList, type BringListItem } from './BringList'
@@ -25,18 +26,20 @@ const asMedia = (value: number | Media | null | undefined): Media | null =>
 function formatEventDate(date: string, locale: Locale): { full: string; time: string; day: string; month: string; weekday: string } {
   const d = new Date(date)
   const intlLocale = locale === 'de' ? 'de-DE' : 'en-GB'
+  const timeZone = EVENT_TIMEZONE
   const full = new Intl.DateTimeFormat(intlLocale, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone,
   }).format(d)
   const time =
-    new Intl.DateTimeFormat(intlLocale, { hour: '2-digit', minute: '2-digit' }).format(d) +
+    new Intl.DateTimeFormat(intlLocale, { hour: '2-digit', minute: '2-digit', timeZone }).format(d) +
     (locale === 'de' ? ' Uhr' : '')
-  const day = new Intl.DateTimeFormat(intlLocale, { day: '2-digit' }).format(d)
-  const month = new Intl.DateTimeFormat(intlLocale, { month: 'short' }).format(d)
-  const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: 'short' }).format(d)
+  const day = new Intl.DateTimeFormat(intlLocale, { day: '2-digit', timeZone }).format(d)
+  const month = new Intl.DateTimeFormat(intlLocale, { month: 'short', timeZone }).format(d)
+  const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: 'short', timeZone }).format(d)
   return { full, time, day, month, weekday }
 }
 

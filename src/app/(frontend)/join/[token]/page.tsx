@@ -10,6 +10,7 @@ import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import { addEventMember } from '@/lib/membership'
 import { getThemeMode, resolveEventTheme } from '@/lib/mode'
+import { EVENT_TIMEZONE } from '@/lib/time'
 import { themeCss } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -52,6 +53,7 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    timeZone: EVENT_TIMEZONE,
   }).format(new Date(event.date))
 
   const theme = resolveEventTheme(event, await getThemeMode())

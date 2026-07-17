@@ -33,19 +33,33 @@ const noAutofill = {
   'data-form-type': 'other',
 } as const
 
-/** Strict "TT.MM.JJJJ" + "HH:MM" → Date. Must be real, future, and 2026+. */
-function parseEventDate(date: string, time: string): Date | null {
+/** Strict "TT.MM.JJJJ" + "HH:MM" → Date. Must be real, future, and 2026+.
+ *  Date and time report their validity separately so the error can say
+ *  which one is actually wrong. */
+function parseEventDate(
+  date: string,
+  time: string,
+): { value: Date | null; dateOk: boolean; timeOk: boolean } {
+  const tm = /^(\d{1,2}):(\d{2})$/.exec(time.trim())
+  const timeOk = Boolean(tm && Number(tm[1]) <= 23 && Number(tm[2]) <= 59)
+
   const dm = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(date.trim())
-  const tm = /^(\d{1,2}):(\d{2})$/.exec(time.trim() || '19:00')
-  if (!dm || !tm) return null
-  const [day, month, year] = [Number(dm[1]), Number(dm[2]), Number(dm[3])]
-  const [hours, minutes] = [Number(tm[1]), Number(tm[2])]
-  if (year < 2026 || hours > 23 || minutes > 59) return null
-  const parsed = new Date(year, month - 1, day, hours, minutes)
-  // Reject rollovers like 31.02. (Date silently wraps them into March)
-  if (parsed.getDate() !== day || parsed.getMonth() !== month - 1) return null
-  if (parsed.getTime() <= Date.now()) return null
-  return parsed
+  let dateOk = false
+  let value: Date | null = null
+  if (dm) {
+    const [day, month, year] = [Number(dm[1]), Number(dm[2]), Number(dm[3])]
+    const hours = timeOk ? Number(tm![1]) : 19
+    const minutes = timeOk ? Number(tm![2]) : 0
+    const parsed = new Date(year, month - 1, day, hours, minutes)
+    // Reject rollovers like 31.02. (Date silently wraps them into March)
+    dateOk =
+      year >= 2026 &&
+      parsed.getDate() === day &&
+      parsed.getMonth() === month - 1 &&
+      parsed.getTime() > Date.now()
+    if (dateOk && timeOk) value = parsed
+  }
+  return { value, dateOk, timeOk }
 }
 
 export function EventForm({
@@ -61,6 +75,7 @@ export function EventForm({
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [dateError, setDateError] = useState(false)
+  const [timeError, setTimeError] = useState(false)
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const formRef = useRef<HTMLFormElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -78,13 +93,14 @@ export function EventForm({
     const form = formRef.current
     if (!form) return null
     const formData = new FormData(form)
-    const local = parseEventDate(
+    const { value, dateOk, timeOk } = parseEventDate(
       String(formData.get('date') ?? ''),
       String(formData.get('time') ?? ''),
     )
-    setDateError(!local)
-    if (!String(formData.get('title') ?? '').trim() || !local) return null
-    formData.set('dateIso', local.toISOString())
+    setDateError(!dateOk)
+    setTimeError(!timeOk)
+    if (!String(formData.get('title') ?? '').trim() || !value) return null
+    formData.set('dateIso', value.toISOString())
     return formData
   }
 
@@ -206,11 +222,12 @@ export function EventForm({
             placeholder={dict.timePlaceholder}
             defaultValue={initialTime}
             {...noAutofill}
-            className={`input ${dateError ? 'input--invalid' : ''}`}
+            className={`input ${timeError ? 'input--invalid' : ''}`}
           />
         </label>
       </div>
       {dateError && <p className="event-form__hint event-form__hint--error">{dict.dateInvalid}</p>}
+      {timeError && <p className="event-form__hint event-form__hint--error">{dict.timeInvalid}</p>}
 
       <label className="field">
         <span>{dict.locationName}</span>

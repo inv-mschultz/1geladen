@@ -1047,6 +1047,11 @@ a {
   gap: 16px;
 }
 
+/* Host view has no buttons row, which normally provides this gap */
+.rsvp__groups:first-child {
+  margin-top: 20px;
+}
+
 .rsvp__group h4 {
   font-size: 0.72rem;
   font-weight: 800;

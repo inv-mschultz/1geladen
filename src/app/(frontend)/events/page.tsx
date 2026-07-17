@@ -8,6 +8,7 @@ import React from 'react'
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import type { Event } from '@/payload-types'
+import { EVENT_TIMEZONE } from '@/lib/time'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,7 +41,7 @@ function EventCard({
   const intlLocale = locale === 'de' ? 'de-DE' : 'en-GB'
   const date = new Date(event.date)
   const fmt = (options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, options).format(date)
+    new Intl.DateTimeFormat(intlLocale, { ...options, timeZone: EVENT_TIMEZONE }).format(date)
 
   const guestCount = event.members?.length ?? 0
   const what = excerpt(event.description)

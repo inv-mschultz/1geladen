@@ -10,6 +10,7 @@ import { ArrowDown, ArrowRight } from '@/components/icons'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import { getThemeMode, resolveEventTheme } from '@/lib/mode'
+import { EVENT_TIMEZONE } from '@/lib/time'
 import { themeCss } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -110,6 +111,7 @@ export default async function HomePage() {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
+                      timeZone: EVENT_TIMEZONE,
                     }).format(new Date(event.date))}
                   </span>
                   <span className="archive__title">{event.title}</span>
