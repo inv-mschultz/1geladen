@@ -240,6 +240,11 @@ export function EventForm({
         </label>
       </div>
 
+      <label className="field">
+        <span>{dict.description}</span>
+        <textarea name="description" rows={5} maxLength={2000} defaultValue={event?.description} {...noAutofill} className="input" />
+      </label>
+
       {event ? (
         <section className="event-form__section">
           <div className="event-form__section-head">
@@ -288,11 +293,6 @@ export function EventForm({
       ) : (
         <p className="event-form__hint">{dict.colorsHint}</p>
       )}
-
-      <label className="field">
-        <span>{dict.description}</span>
-        <textarea name="description" rows={5} maxLength={2000} defaultValue={event?.description} {...noAutofill} className="input" />
-      </label>
 
       {error && <p className="auth-form__error">{error}</p>}
 
