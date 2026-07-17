@@ -393,6 +393,19 @@ a {
   box-shadow: 0 0 0 3px var(--c-surface), 0 0 0 6px var(--c-accent);
 }
 
+/* Maybe/No keep their own look when selected — the ring alone marks the choice */
+.btn--maybe.is-selected {
+  background: var(--c-surface-2);
+  color: var(--c-bright);
+  border: 2px solid var(--c-bright);
+}
+
+.btn--no.is-selected {
+  background: transparent;
+  color: var(--c-bright);
+  border: 2px solid var(--c-bright);
+}
+
 .btn--icon {
   padding: 9px;
   border-radius: var(--radius-el);
