@@ -119,12 +119,15 @@ export async function EventView({
 
   const rsvpEntries: Record<'yes' | 'maybe' | 'no', RsvpEntry[]> = { yes: [], maybe: [], no: [] }
   if (host) rsvpEntries.yes.push({ name: host.name, isHost: true })
-  let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsHost ? 'yes' : null
+  // In guest preview the host's clicks reflect in the buttons like any guest's;
+  // outside of it their answer is pinned to yes.
+  let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsHost && !viewAsGuest ? 'yes' : null
   for (const doc of rsvps.docs) {
     const rsvpUser = asUser(doc.user)
-    if (!rsvpUser || rsvpUser.id === host?.id) continue
+    if (!rsvpUser) continue
+    if (rsvpUser.id === user.id && (!viewerIsHost || viewAsGuest)) myStatus = doc.status
+    if (rsvpUser.id === host?.id) continue
     rsvpEntries[doc.status].push({ name: rsvpUser.name })
-    if (rsvpUser.id === user.id) myStatus = doc.status
   }
 
   const mediaUrl = (value: number | Media | null | undefined): string | null => {
