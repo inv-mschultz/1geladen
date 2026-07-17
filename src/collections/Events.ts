@@ -45,6 +45,15 @@ export const Events: CollectionConfig = {
         return data
       },
     ],
+    beforeChange: [
+      // Remember who created the event — the host is always attending
+      ({ data, operation, req }) => {
+        if (operation === 'create' && data && !data.createdBy && req.user) {
+          data.createdBy = req.user.id
+        }
+        return data
+      },
+    ],
   },
   fields: [
     {
@@ -101,7 +110,15 @@ export const Events: CollectionConfig = {
           admin: { description: 'e.g. "Chez Michael"' },
         },
         {
-          name: 'address',
+          name: 'street',
+          type: 'text',
+        },
+        {
+          name: 'zip',
+          type: 'text',
+        },
+        {
+          name: 'city',
           type: 'text',
         },
       ],
@@ -134,7 +151,29 @@ export const Events: CollectionConfig = {
       },
     },
     {
-      // Flip the theme polarity: dark-on-light instead of light-on-dark
+      // Accent used when the viewer switches to light mode (falls back to accentColor)
+      name: 'accentColorLight',
+      type: 'text',
+      validate: (value: string | null | undefined) =>
+        !value || /^#[0-9a-fA-F]{6}$/.test(value) || 'Use a hex color like #ff8ad4',
+      admin: {
+        position: 'sidebar',
+        description: 'Accent for light mode. Falls back to the regular accent.',
+      },
+    },
+    {
+      // The host — auto-set on create, always shown as attending
+      name: 'createdBy',
+      type: 'relationship',
+      relationTo: 'users',
+      index: true,
+      access: {
+        update: ({ req: { user } }) => user?.role === 'admin',
+      },
+      admin: { position: 'sidebar' },
+    },
+    {
+      // Default theme polarity for viewers who never picked a mode themselves
       name: 'invertTheme',
       type: 'checkbox',
       defaultValue: false,

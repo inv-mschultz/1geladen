@@ -9,6 +9,7 @@ import { EventView } from '@/components/EventView'
 import { ArrowLeft } from '@/components/icons'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
+import { getThemeMode, resolveEventTheme } from '@/lib/mode'
 import { themeCss } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -40,9 +41,11 @@ export default async function EventPage(props: { params: Promise<{ slug: string 
     notFound()
   }
 
+  const theme = resolveEventTheme(event, await getThemeMode())
+
   return (
     <>
-      {event.themeColor && <style>{themeCss(event.themeColor, event.accentColor, Boolean(event.invertTheme))}</style>}
+      {theme.base && <style>{themeCss(theme.base, theme.accent, theme.light)}</style>}
       <p className="home-kicker reveal">
         <Link href="/">
           <ArrowLeft /> 1geladen

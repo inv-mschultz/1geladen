@@ -5,6 +5,7 @@ import React from 'react'
 
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
+import { getThemeMode } from '@/lib/mode'
 import { richTextToPlain } from '@/lib/richtext'
 import { getViewAsGuest } from '@/lib/viewas'
 import { AdminDock } from './AdminDock'
@@ -12,7 +13,7 @@ import { BringList, type BringListItem } from './BringList'
 import { ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
 import { Gallery, type GalleryPhoto } from './Gallery'
-import { Rsvp } from './Rsvp'
+import { Rsvp, type RsvpEntry } from './Rsvp'
 import { Wall, type WallPost } from './Wall'
 
 const asUser = (value: number | User | null | undefined): User | null =>
@@ -112,12 +113,17 @@ export async function EventView({
   const isPast = (eventEnd ?? eventStart).getTime() < now.getTime()
   const photosUnlocked = Boolean(event.photosOpen) || isPast
 
-  const rsvpNames: Record<'yes' | 'maybe' | 'no', string[]> = { yes: [], maybe: [], no: [] }
-  let myStatus: 'yes' | 'maybe' | 'no' | null = null
+  // The host is always in — their RSVP is implicit and can't be taken back.
+  const host = asUser(event.createdBy)
+  const viewerIsHost = host?.id === user.id
+
+  const rsvpEntries: Record<'yes' | 'maybe' | 'no', RsvpEntry[]> = { yes: [], maybe: [], no: [] }
+  if (host) rsvpEntries.yes.push({ name: host.name, isHost: true })
+  let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsHost ? 'yes' : null
   for (const doc of rsvps.docs) {
     const rsvpUser = asUser(doc.user)
-    if (!rsvpUser) continue
-    rsvpNames[doc.status].push(rsvpUser.name)
+    if (!rsvpUser || rsvpUser.id === host?.id) continue
+    rsvpEntries[doc.status].push({ name: rsvpUser.name })
     if (rsvpUser.id === user.id) myStatus = doc.status
   }
 
@@ -181,6 +187,14 @@ export async function EventView({
 
   const when = formatEventDate(event.date, locale)
   const location = event.location
+  const addressLine = [location?.street, [location?.zip, location?.city].filter(Boolean).join(' ')]
+    .filter(Boolean)
+    .join(', ')
+  // Maps gets ONLY the address — the location's nickname would confuse it
+  const mapsQuery = addressLine
+
+  const themeMode = await getThemeMode()
+  const lightMode = themeMode ? themeMode === 'light' : Boolean(event.invertTheme)
 
   return (
     <article className="event">
@@ -192,15 +206,18 @@ export async function EventView({
             editLabel={dict.events.edit}
             viewLabels={{ admin: dict.events.viewAdmin, guest: dict.events.viewGuest }}
             dict={dict.eventForm}
+            light={lightMode}
             event={{
               id: event.id,
               title: event.title,
               dateIso: event.date,
               locationName: event.location?.name,
-              address: event.location?.address,
+              street: event.location?.street,
+              zip: event.location?.zip,
+              city: event.location?.city,
               themeColor: event.themeColor,
               accentColor: event.accentColor,
-              invertTheme: event.invertTheme,
+              accentColorLight: event.accentColorLight,
               description: richTextToPlain(event.description),
             }}
           />
@@ -225,17 +242,15 @@ export async function EventView({
                   <span className="event__fact-sub">{when.time}</span>
                 </dd>
               </div>
-              {(location?.name || location?.address) && (
+              {(location?.name || addressLine) && (
                 <div className="event__fact">
                   <dt>{dict.hero.where}</dt>
                   <dd>
                     {location?.name}
-                    {location?.address && <span className="event__fact-sub">{location.address}</span>}
-                    {(location?.address || location?.name) && (
+                    {addressLine && <span className="event__fact-sub">{addressLine}</span>}
+                    {mapsQuery && (
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          [location?.name, location?.address].filter(Boolean).join(', '),
-                        )}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="event__map-link"
@@ -266,7 +281,13 @@ export async function EventView({
 
         <div className="event__rsvp">
           <h2 className="section__title">{dict.rsvp.title}</h2>
-          <Rsvp eventId={event.id} myStatus={myStatus} names={rsvpNames} dict={dict.rsvp} />
+          <Rsvp
+            eventId={event.id}
+            myStatus={myStatus}
+            entries={rsvpEntries}
+            canRespond={!viewerIsHost || viewAsGuest}
+            dict={dict.rsvp}
+          />
         </div>
 
         {isAdmin && event.inviteToken && (

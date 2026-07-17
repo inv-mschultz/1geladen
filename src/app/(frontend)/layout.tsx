@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { PLATFORM_COLOR, themeCss } from '@/lib/theme'
+import { getThemeMode } from '@/lib/mode'
+import { PLATFORM_ACCENT, PLATFORM_COLOR, themeCss } from '@/lib/theme'
 
 import { LangSwitch } from '@/components/LangSwitch'
 import { MainNav } from '@/components/MainNav'
@@ -52,11 +53,12 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
   const payload = await getPayload({ config })
   const headers = await getHeaders()
   const { user } = await payload.auth({ headers })
+  const mode = (await getThemeMode()) ?? 'dark'
 
   return (
     <html lang={locale}>
       <body className={archivo.variable}>
-        <style>{themeCss(PLATFORM_COLOR)}</style>
+        <style>{themeCss(PLATFORM_COLOR, PLATFORM_ACCENT, mode === 'light')}</style>
         <header className="site-header">
           <Link href={user?.role === 'admin' ? '/events' : '/'} className="site-logo">
             <span className="site-logo__one">1</span>geladen
@@ -77,11 +79,15 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
                 name={user.name}
                 isAdmin={user.role === 'admin'}
                 locale={locale}
+                mode={mode}
                 labels={{
                   account: dict.nav.account,
                   admin: dict.nav.admin,
                   language: dict.nav.language,
                   logout: dict.nav.logout,
+                  mode: dict.nav.mode,
+                  modeDark: dict.nav.modeDark,
+                  modeLight: dict.nav.modeLight,
                 }}
               />
             ) : (

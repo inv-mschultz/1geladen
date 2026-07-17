@@ -15,6 +15,7 @@ export function AdminDock({
   viewLabels,
   dict,
   event,
+  light = false,
 }: {
   viewAsGuest: boolean
   canEdit: boolean
@@ -22,6 +23,7 @@ export function AdminDock({
   viewLabels: { admin: string; guest: string }
   dict: Dictionary['eventForm']
   event: EventFormValues
+  light?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -92,7 +94,7 @@ export function AdminDock({
                 <X />
               </button>
             </div>
-            <EventForm key={String(open)} dict={dict} event={event} />
+            <EventForm key={String(open)} dict={dict} event={event} light={light} />
           </div>
         </div>
       )}

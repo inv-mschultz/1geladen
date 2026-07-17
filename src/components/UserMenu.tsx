@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useRef, useState, useTransition } from 'react'
 
-import { logout } from '@/app/(frontend)/actions'
+import { logout, setThemeMode } from '@/app/(frontend)/actions'
 import type { Locale } from '@/i18n/dictionaries'
 import { Avatar } from './Avatar'
 import { ChevronDown, Power } from './icons'
@@ -14,17 +14,35 @@ export function UserMenu({
   name,
   isAdmin,
   locale,
+  mode,
   labels,
 }: {
   name: string
   isAdmin: boolean
   locale: Locale
-  labels: { account: string; admin: string; language: string; logout: string }
+  mode: 'dark' | 'light'
+  labels: {
+    account: string
+    admin: string
+    language: string
+    logout: string
+    mode: string
+    modeDark: string
+    modeLight: string
+  }
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const ref = useRef<HTMLDivElement>(null)
+
+  const pickMode = (next: 'dark' | 'light') => {
+    if (next === mode || pending) return
+    startTransition(async () => {
+      await setThemeMode(next)
+      router.refresh()
+    })
+  }
 
   useEffect(() => {
     if (!open) return
@@ -76,6 +94,25 @@ export function UserMenu({
           <div className="user-menu__row">
             <span>{labels.language}</span>
             <LangSwitch current={locale} />
+          </div>
+          <div className="user-menu__row">
+            <span>{labels.mode}</span>
+            <div className="mode-switch" role="group" aria-label={labels.mode}>
+              <button
+                type="button"
+                className={`mode-switch__btn ${mode === 'dark' ? 'is-active' : ''}`}
+                onClick={() => pickMode('dark')}
+              >
+                {labels.modeDark}
+              </button>
+              <button
+                type="button"
+                className={`mode-switch__btn ${mode === 'light' ? 'is-active' : ''}`}
+                onClick={() => pickMode('light')}
+              >
+                {labels.modeLight}
+              </button>
+            </div>
           </div>
           <div className="user-menu__divider" />
           <button

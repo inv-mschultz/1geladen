@@ -8,15 +8,19 @@ import { Avatar } from './Avatar'
 
 type Status = 'yes' | 'maybe' | 'no'
 
+export type RsvpEntry = { name: string; isHost?: boolean }
+
 export function Rsvp({
   eventId,
   myStatus,
-  names,
+  entries,
+  canRespond,
   dict,
 }: {
   eventId: number
   myStatus: Status | null
-  names: Record<Status, string[]>
+  entries: Record<Status, RsvpEntry[]>
+  canRespond: boolean
   dict: Dictionary['rsvp']
 }) {
   const [pending, startTransition] = useTransition()
@@ -38,40 +42,41 @@ export function Rsvp({
     { status: 'no', label: dict.declined },
   ]
 
-  const total = names.yes.length + names.maybe.length + names.no.length
+  const total = entries.yes.length + entries.maybe.length + entries.no.length
 
   return (
     <div className="rsvp">
-      <div className="rsvp__buttons">
-        {buttons.map(({ status, label, className }) => (
-          <button
-            key={status}
-            type="button"
-            disabled={pending}
-            aria-pressed={myStatus === status}
-            className={`btn btn--big ${className} ${myStatus === status ? 'is-selected' : ''}`}
-            onClick={() => answer(status)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {canRespond && (
+        <div className="rsvp__buttons">
+          {buttons.map(({ status, label, className }) => (
+            <button
+              key={status}
+              type="button"
+              disabled={pending}
+              aria-pressed={myStatus === status}
+              className={`btn btn--big ${className} ${myStatus === status ? 'is-selected' : ''}`}
+              onClick={() => answer(status)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {total === 0 ? (
         <p className="rsvp__empty">{dict.nobodyYet}</p>
       ) : (
         <div className="rsvp__groups">
           {groups.map(({ status, label }) =>
-            names[status].length === 0 ? null : (
+            entries[status].length === 0 ? null : (
               <div key={status} className={`rsvp__group rsvp__group--${status}`}>
-                <h4>
-                  {label} <span className="rsvp__count">{names[status].length}</span>
-                </h4>
+                <h4>{label}</h4>
                 <ul>
-                  {names[status].map((name) => (
-                    <li key={name} className="chip">
+                  {entries[status].map(({ name, isHost }) => (
+                    <li key={name} className={`chip ${isHost ? 'chip--host' : ''}`}>
                       <Avatar name={name} size={22} />
                       {name}
+                      {isHost && <span className="chip__tag">{dict.host}</span>}
                     </li>
                   ))}
                 </ul>

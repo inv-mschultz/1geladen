@@ -9,6 +9,7 @@ import { JoinForm } from '@/components/JoinForm'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import { addEventMember } from '@/lib/membership'
+import { getThemeMode, resolveEventTheme } from '@/lib/mode'
 import { themeCss } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -53,9 +54,11 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
     month: 'long',
   }).format(new Date(event.date))
 
+  const theme = resolveEventTheme(event, await getThemeMode())
+
   return (
     <div className="landing">
-      {event.themeColor && <style>{themeCss(event.themeColor, event.accentColor, Boolean(event.invertTheme))}</style>}
+      {theme.base && <style>{themeCss(theme.base, theme.accent, theme.light)}</style>}
       <div className="landing__poster reveal">
         <span className="sticker sticker--invite">{dict.join.kicker}</span>
         <h1 className="landing__title">{event.title}</h1>

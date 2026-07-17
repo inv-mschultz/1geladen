@@ -188,7 +188,9 @@ export interface Event {
      * e.g. "Chez Michael"
      */
     name?: string | null;
-    address?: string | null;
+    street?: string | null;
+    zip?: string | null;
+    city?: string | null;
   };
   coverImage?: (number | null) | Media;
   /**
@@ -199,6 +201,11 @@ export interface Event {
    * Accent for buttons and icons, e.g. #ff8ad4.
    */
   accentColor?: string | null;
+  /**
+   * Accent for light mode. Falls back to the regular accent.
+   */
+  accentColorLight?: string | null;
+  createdBy?: (number | null) | User;
   /**
    * Light mode — dark content on a light background.
    */
@@ -463,11 +470,15 @@ export interface EventsSelect<T extends boolean = true> {
     | T
     | {
         name?: T;
-        address?: T;
+        street?: T;
+        zip?: T;
+        city?: T;
       };
   coverImage?: T;
   themeColor?: T;
   accentColor?: T;
+  accentColorLight?: T;
+  createdBy?: T;
   invertTheme?: T;
   members?: T;
   inviteToken?: T;

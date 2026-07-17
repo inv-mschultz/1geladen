@@ -69,12 +69,12 @@ function EventCard({
               </span>
             </dd>
           </div>
-          {(location?.name || location?.address) && (
+          {(location?.name || location?.city) && (
             <div>
               <dt>{dict.hero.where}</dt>
               <dd>
                 {location?.name}
-                {location?.address && <span className="event-card__sub">{location.address}</span>}
+                {location?.city && <span className="event-card__sub">{location.city}</span>}
               </dd>
             </div>
           )}

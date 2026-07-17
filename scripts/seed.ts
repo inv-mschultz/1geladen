@@ -70,10 +70,13 @@ async function seed() {
       title: 'Spaghetti-Abend bei Michael',
       slug: 'spaghetti-abend',
       members: [admin.id, anna.id, ben.id, clara.id],
+      createdBy: admin.id,
       date: eventDate.toISOString(),
       location: {
         name: 'Bei Michael',
-        address: 'Musterstraße 12, Berlin',
+        street: 'Musterstraße 12',
+        zip: '10115',
+        city: 'Berlin',
       },
       description: richText(
         'Es gibt drei Sorten Pasta, eine davon ist geheim. Kommt hungrig, geht glücklich. Musikwünsche werden wohlwollend geprüft und dann trotzdem abgelehnt.',

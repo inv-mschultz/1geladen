@@ -12,6 +12,24 @@ import { getLocale, LOCALE_COOKIE } from '@/i18n/locale'
 import { type Locale, locales } from '@/i18n/dictionaries'
 import { syntheticGuestEmail } from '@/lib/guestAuth'
 import { addEventMember } from '@/lib/membership'
+import { MODE_COOKIE } from '@/lib/mode'
+import { PLATFORM_ACCENT, PLATFORM_COLOR } from '@/lib/theme'
+
+/** Events must be in the future — and never in a pre-2026 year (typo guard). */
+const isValidEventDate = (dateIso: string): boolean => {
+  const date = new Date(dateIso)
+  if (Number.isNaN(date.getTime()) || date.getFullYear() < 2026) return false
+  return date.getTime() > Date.now()
+}
+
+const HEX = /^#[0-9a-fA-F]{6}$/
+
+const locationFromForm = (formData: FormData) => ({
+  name: String(formData.get('locationName') ?? '').trim() || undefined,
+  street: String(formData.get('street') ?? '').trim() || undefined,
+  zip: String(formData.get('zip') ?? '').trim() || undefined,
+  city: String(formData.get('city') ?? '').trim() || undefined,
+})
 
 async function getCtx() {
   const payload = await getPayload({ config })
@@ -141,30 +159,21 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
 
   const title = String(formData.get('title') ?? '').trim()
   const dateIso = String(formData.get('dateIso') ?? '')
-  if (!title || !dateIso || Number.isNaN(Date.parse(dateIso))) return { error: 'invalid' }
-
-  const locationName = String(formData.get('locationName') ?? '').trim()
-  const address = String(formData.get('address') ?? '').trim()
-  const description = String(formData.get('description') ?? '')
-  const themeColor = String(formData.get('themeColor') ?? '').trim()
-  const accentColor = String(formData.get('accentColor') ?? '').trim()
-  const invertTheme = formData.get('invertTheme') === 'on'
+  if (!title || !isValidEventDate(dateIso)) return { error: 'invalid' }
 
   let event
   try {
+    // New events always start with the locked-in standard colors — the host
+    // tweaks them later in the edit drawer, where the live preview exists.
     event = await payload.create({
       collection: 'events',
       data: {
         title,
         date: dateIso,
-        location: {
-          name: locationName || undefined,
-          address: address || undefined,
-        },
-        description: textToRichText(description),
-        themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,
-        accentColor: /^#[0-9a-fA-F]{6}$/.test(accentColor) ? accentColor : undefined,
-        invertTheme,
+        location: locationFromForm(formData),
+        description: textToRichText(String(formData.get('description') ?? '')),
+        themeColor: PLATFORM_COLOR,
+        accentColor: PLATFORM_ACCENT,
         members: [user.id],
       },
       overrideAccess: false,
@@ -190,11 +199,11 @@ export async function updateEvent(
 
   const title = String(formData.get('title') ?? '').trim()
   const dateIso = String(formData.get('dateIso') ?? '')
-  if (!title || !dateIso || Number.isNaN(Date.parse(dateIso))) return { error: 'invalid' }
+  if (!title || !isValidEventDate(dateIso)) return { error: 'invalid' }
 
   const themeColor = String(formData.get('themeColor') ?? '').trim()
   const accentColor = String(formData.get('accentColor') ?? '').trim()
-  const invertTheme = formData.get('invertTheme') === 'on'
+  const accentColorLight = String(formData.get('accentColorLight') ?? '').trim()
   const locale = await getLocale()
 
   try {
@@ -205,14 +214,11 @@ export async function updateEvent(
       data: {
         title,
         date: dateIso,
-        location: {
-          name: String(formData.get('locationName') ?? '').trim() || undefined,
-          address: String(formData.get('address') ?? '').trim() || undefined,
-        },
+        location: locationFromForm(formData),
         description: textToRichText(String(formData.get('description') ?? '')),
-        themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,
-        accentColor: /^#[0-9a-fA-F]{6}$/.test(accentColor) ? accentColor : undefined,
-        invertTheme,
+        themeColor: HEX.test(themeColor) ? themeColor : undefined,
+        accentColor: HEX.test(accentColor) ? accentColor : undefined,
+        accentColorLight: HEX.test(accentColorLight) ? accentColorLight : undefined,
       },
       overrideAccess: false,
       user,
@@ -236,6 +242,14 @@ export async function setViewAsGuest(guest: boolean): Promise<void> {
   } else {
     store.delete('1geladen-viewas')
   }
+  revalidatePath('/', 'layout')
+}
+
+/** Everyone picks their own polarity: dark on light, or light on dark. */
+export async function setThemeMode(mode: 'dark' | 'light'): Promise<void> {
+  if (mode !== 'dark' && mode !== 'light') return
+  const store = await cookies()
+  store.set(MODE_COOKIE, mode, { path: '/', maxAge: 60 * 60 * 24 * 365 })
   revalidatePath('/', 'layout')
 }
 

@@ -9,6 +9,7 @@ import { EventView } from '@/components/EventView'
 import { ArrowDown, ArrowRight } from '@/components/icons'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
+import { getThemeMode, resolveEventTheme } from '@/lib/mode'
 import { themeCss } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -87,9 +88,11 @@ export default async function HomePage() {
     )
   }
 
+  const theme = resolveEventTheme(featured, await getThemeMode())
+
   return (
     <>
-      {featured.themeColor && <style>{themeCss(featured.themeColor, featured.accentColor, Boolean(featured.invertTheme))}</style>}
+      {theme.base && <style>{themeCss(theme.base, theme.accent, theme.light)}</style>}
       <p className="home-kicker reveal">
         {upcoming.docs[0] ? dict.home.nextUp : dict.home.lastParty} <ArrowDown />
       </p>
