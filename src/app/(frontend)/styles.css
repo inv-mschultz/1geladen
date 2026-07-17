@@ -864,6 +864,8 @@ a {
   font-size: clamp(1.9rem, 5.5vw, 3rem);
   margin-bottom: 22px;
   color: var(--c-accent);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .event__facts {
@@ -2046,6 +2048,11 @@ a {
   .event__hero-main {
     flex-direction: column;
     gap: 20px;
+  }
+
+  .event__facts {
+    flex-direction: column;
+    gap: 18px;
   }
 
   .section {
