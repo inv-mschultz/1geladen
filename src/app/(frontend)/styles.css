@@ -2245,15 +2245,15 @@ a {
 
   .rsvp__buttons {
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 12px;
   }
 
   .rsvp__buttons .btn--big {
     flex: 1;
     justify-content: center;
     text-align: center;
-    font-size: 0.88rem;
-    padding: 11px 8px;
+    font-size: 0.82rem;
+    padding: 10px 6px;
   }
 
   .gallery__upload {
