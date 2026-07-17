@@ -2028,11 +2028,11 @@ a {
     padding: 24px 20px;
   }
 
-  /* unboxed sections keep full-width entries (same as the cards above) */
-  .section--wall,
-  .section--gallery {
-    padding-left: 0;
-    padding-right: 0;
+  /* unboxed sections: title keeps the section inset, the cards bleed to full width */
+  .section--wall .wall,
+  .section--gallery .gallery {
+    margin-left: -20px;
+    margin-right: -20px;
   }
 
   .wall__composer {
@@ -2196,23 +2196,23 @@ a {
 
 /* --- theme mode switch (user menu) ------------------------------------------------------------------------------------ */
 
+/* Sized to match the language switch exactly */
 .mode-switch {
   display: inline-flex;
+  border: 2px solid var(--c-line-strong);
   border-radius: 999px;
   overflow: hidden;
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-line);
 }
 
 .mode-switch__btn {
   border: none;
   background: transparent;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 7px 12px;
+  letter-spacing: 0.1em;
+  padding: 5px 10px;
   cursor: pointer;
   color: var(--c-muted);
 }
