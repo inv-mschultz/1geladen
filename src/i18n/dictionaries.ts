@@ -119,7 +119,7 @@ const de = {
   },
   wall: {
     title: 'Die Pinnwand',
-    subtitle: 'Fragen, Vorfreude, Mitfahrgelegenheiten — hier rein.',
+    subtitle: 'Fragen, Vorfreude, Memes: Yes.',
     placeholder: 'Schreib etwas an die Wand …',
     post: 'Anpinnen',
     commentPlaceholder: 'Antworten …',
@@ -306,7 +306,7 @@ const en: typeof de = {
   },
   wall: {
     title: 'The Wall',
-    subtitle: 'Questions, hype, ride shares — post it here.',
+    subtitle: 'Questions, hype, memes: Yes.',
     placeholder: 'Write something on the wall …',
     post: 'Pin it',
     commentPlaceholder: 'Reply …',

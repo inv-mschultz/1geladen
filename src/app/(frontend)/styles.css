@@ -2028,6 +2028,13 @@ a {
     padding: 24px 20px;
   }
 
+  /* unboxed sections keep full-width entries (same as the cards above) */
+  .section--wall,
+  .section--gallery {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .wall__composer {
     grid-template-columns: 1fr;
   }
