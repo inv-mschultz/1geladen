@@ -2350,3 +2350,23 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- anchor scroll offset --------------------------------------------------------------------------------------------- */
+
+/* Keep anchored sections clear of the sticky header */
+#info,
+#mitbringen,
+#pinnwand,
+#fotos {
+  scroll-margin-top: 96px;
+}
+
+@media (max-width: 960px) {
+  /* the main nav wraps to a second header row here */
+  #info,
+  #mitbringen,
+  #pinnwand,
+  #fotos {
+    scroll-margin-top: 140px;
+  }
+}
