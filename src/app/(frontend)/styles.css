@@ -991,6 +991,10 @@ a {
   padding-right: 0;
 }
 
+.section--gallery {
+  position: relative;
+}
+
 .section__title {
   display: inline-block;
   font-variation-settings: 'wdth' 120;
@@ -1435,7 +1439,9 @@ a {
 
 
 .gallery__upload {
-  margin-bottom: 22px;
+  position: absolute;
+  top: 32px;
+  right: 0;
 }
 
 .gallery__input {
@@ -2238,7 +2244,26 @@ a {
   }
 
   .rsvp__buttons {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .rsvp__buttons .btn--big {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.88rem;
+    padding: 11px 8px;
+  }
+
+  .gallery__upload {
+    top: 24px;
+    right: 20px;
+  }
+
+  .gallery__upload .btn {
+    font-size: 0.78rem;
+    padding: 8px 16px;
   }
 
   .drawer__panel {
