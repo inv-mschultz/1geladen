@@ -27,6 +27,7 @@
   --radius-card: 16px;
   --radius-el: 12px;
 
+  --color-scheme: dark;
   --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.38);
   --shadow-hard: 5px 5px 0 rgba(0, 0, 0, 0.4);
   --shadow-drawer: -24px 0 60px rgba(0, 0, 0, 0.45);
@@ -43,6 +44,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  color-scheme: var(--color-scheme, dark);
   background: var(--c-bg);
   color: var(--c-on-bg);
   font-family: var(--font-sans), sans-serif;
@@ -370,13 +372,13 @@ a {
 .btn--maybe {
   background: var(--c-surface-2);
   color: var(--c-bright);
-  border: 2px solid var(--c-line-strong);
+  border: 2px solid var(--c-bright);
 }
 
 .btn--no {
   background: transparent;
   color: var(--c-bright);
-  border: 2px solid var(--c-line-strong);
+  border: 2px solid var(--c-bright);
 }
 
 .btn--claim {

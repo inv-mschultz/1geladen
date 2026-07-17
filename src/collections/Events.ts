@@ -104,11 +104,6 @@ export const Events: CollectionConfig = {
           name: 'address',
           type: 'text',
         },
-        {
-          name: 'mapsUrl',
-          type: 'text',
-          admin: { description: 'Google Maps / OpenStreetMap link' },
-        },
       ],
     },
     {

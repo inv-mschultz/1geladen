@@ -74,7 +74,6 @@ async function seed() {
       location: {
         name: 'Bei Michael',
         address: 'Musterstraße 12, Berlin',
-        mapsUrl: 'https://maps.google.com/?q=Berlin',
       },
       description: richText(
         'Es gibt drei Sorten Pasta, eine davon ist geheim. Kommt hungrig, geht glücklich. Musikwünsche werden wohlwollend geprüft und dann trotzdem abgelehnt.',

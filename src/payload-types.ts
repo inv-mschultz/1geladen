@@ -189,10 +189,6 @@ export interface Event {
      */
     name?: string | null;
     address?: string | null;
-    /**
-     * Google Maps / OpenStreetMap link
-     */
-    mapsUrl?: string | null;
   };
   coverImage?: (number | null) | Media;
   /**
@@ -468,7 +464,6 @@ export interface EventsSelect<T extends boolean = true> {
     | {
         name?: T;
         address?: T;
-        mapsUrl?: T;
       };
   coverImage?: T;
   themeColor?: T;

@@ -145,7 +145,6 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
 
   const locationName = String(formData.get('locationName') ?? '').trim()
   const address = String(formData.get('address') ?? '').trim()
-  const mapsUrl = String(formData.get('mapsUrl') ?? '').trim()
   const description = String(formData.get('description') ?? '')
   const themeColor = String(formData.get('themeColor') ?? '').trim()
   const accentColor = String(formData.get('accentColor') ?? '').trim()
@@ -161,7 +160,6 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
         location: {
           name: locationName || undefined,
           address: address || undefined,
-          mapsUrl: mapsUrl || undefined,
         },
         description: textToRichText(description),
         themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,
@@ -210,7 +208,6 @@ export async function updateEvent(
         location: {
           name: String(formData.get('locationName') ?? '').trim() || undefined,
           address: String(formData.get('address') ?? '').trim() || undefined,
-          mapsUrl: String(formData.get('mapsUrl') ?? '').trim() || undefined,
         },
         description: textToRichText(String(formData.get('description') ?? '')),
         themeColor: /^#[0-9a-fA-F]{6}$/.test(themeColor) ? themeColor : undefined,

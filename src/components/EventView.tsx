@@ -198,7 +198,6 @@ export async function EventView({
               dateIso: event.date,
               locationName: event.location?.name,
               address: event.location?.address,
-              mapsUrl: event.location?.mapsUrl,
               themeColor: event.themeColor,
               accentColor: event.accentColor,
               invertTheme: event.invertTheme,
@@ -232,8 +231,15 @@ export async function EventView({
                   <dd>
                     {location?.name}
                     {location?.address && <span className="event__fact-sub">{location.address}</span>}
-                    {location?.mapsUrl && (
-                      <a href={location.mapsUrl} target="_blank" rel="noopener noreferrer" className="event__map-link">
+                    {(location?.address || location?.name) && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          [location?.name, location?.address].filter(Boolean).join(', '),
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="event__map-link"
+                      >
                         {dict.hero.mapLink} <ArrowUpRight />
                       </a>
                     )}

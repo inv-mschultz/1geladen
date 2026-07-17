@@ -13,7 +13,6 @@ export type EventFormValues = {
   dateIso: string
   locationName?: string | null
   address?: string | null
-  mapsUrl?: string | null
   themeColor?: string | null
   accentColor?: string | null
   invertTheme?: boolean | null
@@ -135,6 +134,7 @@ export function EventForm({
           maxLength={120}
           defaultValue={event?.title}
           placeholder={dict.namePlaceholder}
+          autoComplete="off"
           className="input"
         />
       </label>
@@ -159,32 +159,25 @@ export function EventForm({
             maxLength={120}
             defaultValue={event?.locationName ?? ''}
             placeholder={dict.locationPlaceholder}
+            autoComplete="off"
             className="input"
           />
         </label>
         <label className="field">
           <span>{dict.address}</span>
-          <input name="address" type="text" maxLength={200} defaultValue={event?.address ?? ''} className="input" />
+          <input name="address" type="text" maxLength={200} defaultValue={event?.address ?? ''} autoComplete="off" className="input" />
         </label>
       </div>
 
       <div className="event-form__row">
-        <label className="field">
-          <span>{dict.mapsUrl}</span>
-          <input name="mapsUrl" type="url" defaultValue={event?.mapsUrl ?? ''} className="input" />
-        </label>
         <label className="field">
           <span>{dict.color}</span>
           <input name="themeColor" type="color" value={themeColor} onChange={(e) => setThemeColor(e.target.value)} className="input input--color" />
         </label>
-      </div>
-
-      <div className="event-form__row">
         <label className="field">
           <span>{dict.accent}</span>
           <input name="accentColor" type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="input input--color" />
         </label>
-        <span />
       </div>
 
       <label className="field field--check">
@@ -199,7 +192,7 @@ export function EventForm({
 
       <label className="field">
         <span>{dict.description}</span>
-        <textarea name="description" rows={5} maxLength={2000} defaultValue={event?.description} className="input" />
+        <textarea name="description" rows={5} maxLength={2000} defaultValue={event?.description} autoComplete="off" className="input" />
       </label>
 
       {error && <p className="auth-form__error">{error}</p>}
