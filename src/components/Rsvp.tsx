@@ -46,6 +46,8 @@ export function Rsvp({
 
   return (
     <div className="rsvp">
+      {canRespond && myStatus === null && <p className="rsvp__nudge">{dict.nudge}</p>}
+
       {canRespond && (
         <div className="rsvp__buttons">
           {buttons.map(({ status, label, className }) => (

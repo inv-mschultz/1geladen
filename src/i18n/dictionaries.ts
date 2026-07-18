@@ -103,6 +103,7 @@ const de = {
     declined: 'Abgesagt',
     youAre: 'Deine Antwort:',
     host: 'Host',
+    nudge: 'Du hast noch nicht geantwortet!',
     nobodyYet: 'Noch hat niemand zugesagt. Sei Trendsetter:in!',
   },
   bring: {
@@ -291,6 +292,7 @@ const en: typeof de = {
     declined: 'Can’t come',
     youAre: 'Your answer:',
     host: 'Host',
+    nudge: 'You haven’t answered yet!',
     nobodyYet: 'Nobody has RSVPed yet. Be the trendsetter!',
   },
   bring: {

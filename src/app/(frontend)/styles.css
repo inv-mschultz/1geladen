@@ -1044,6 +1044,45 @@ a {
   color: var(--c-muted);
 }
 
+/* Members who joined but never answered get a gentle poke */
+.rsvp__nudge {
+  display: inline-block;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  border-radius: 999px;
+  padding: 7px 16px;
+  margin: 10px 0 2px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  animation: rsvp-nudge 2.4s ease-in-out infinite;
+  transform-origin: 14px center;
+}
+
+@keyframes rsvp-nudge {
+  0%,
+  86%,
+  100% {
+    transform: rotate(0);
+  }
+  90% {
+    transform: rotate(-2.5deg);
+  }
+  94% {
+    transform: rotate(2deg);
+  }
+  98% {
+    transform: rotate(-1deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rsvp__nudge {
+    animation: none;
+  }
+}
+
 .rsvp__groups {
   display: grid;
   gap: 16px;
