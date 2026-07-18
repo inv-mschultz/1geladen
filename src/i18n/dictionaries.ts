@@ -161,6 +161,7 @@ const de = {
     invalid: 'Dieser Einladungslink ist ungültig. Frag den Host nach einem neuen!',
     nameMissing: 'Sag uns wenigstens deinen Namen',
     failed: 'Das hat nicht geklappt. Versuch es nochmal.',
+    rsvpHint: 'Damit stehst du erstmal nur auf der Gästeliste — ob du wirklich kommst, sagst du im nächsten Schritt.',
   },
   invite: {
     title: 'Gäste einladen',
@@ -350,6 +351,7 @@ const en: typeof de = {
     invalid: 'This invite link is invalid. Ask the host for a fresh one!',
     nameMissing: 'At least tell us your name',
     failed: 'That didn’t work. Try again.',
+    rsvpHint: 'This just puts you on the guest list — whether you’re actually coming, you’ll tell us in the next step.',
   },
   invite: {
     title: 'Invite guests',

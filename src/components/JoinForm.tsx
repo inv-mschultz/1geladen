@@ -54,6 +54,8 @@ export function JoinForm({
       </form>
 
       {error && <p className="join-form__error">{error}</p>}
+
+      <p className="join-form__hint">{dict.rsvpHint}</p>
     </div>
   )
 }
