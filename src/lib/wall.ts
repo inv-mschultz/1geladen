@@ -79,6 +79,7 @@ export async function fetchWallPosts({
       imageUrl: mediaUrl(comment.image),
       gifUrl: comment.gifUrl,
       createdAt: comment.createdAt,
+      mine: asUser(comment.author)?.id === user.id,
     })
     commentsByPost.set(postId, list)
   }

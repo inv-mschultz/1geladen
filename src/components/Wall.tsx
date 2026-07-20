@@ -5,6 +5,7 @@ import React, { useMemo, useOptimistic, useRef, useState, useTransition } from '
 import {
   createComment,
   createPost,
+  deleteComment,
   deletePost,
   loadOlderPosts,
   restorePost,
@@ -22,6 +23,8 @@ export type WallComment = {
   imageUrl?: string | null
   gifUrl?: string | null
   createdAt: string
+  /** Written by the viewer — only they (and admins) get the delete button. */
+  mine: boolean
 }
 
 export type WallPost = {
@@ -39,6 +42,7 @@ export type WallPost = {
 type OptimisticAction =
   | { type: 'post'; post: WallPost }
   | { type: 'comment'; postId: number; comment: WallComment }
+  | { type: 'delete-comment'; commentId: number }
 
 type Attachment =
   | { kind: 'gif'; url: string; alt: string }
@@ -222,6 +226,7 @@ function CommentForm({
         authorName: userName,
         content: content || undefined,
         createdAt: new Date().toISOString(),
+        mine: true,
         ...preview,
       })
       await createComment(postId, formData)
@@ -359,18 +364,36 @@ export function Wall({
   // version when the action's revalidation lands.
   const [optimisticPosts, applyOptimistic] = useOptimistic(
     allPosts,
-    (state: WallPost[], action: OptimisticAction): WallPost[] =>
-      action.type === 'post'
-        ? [action.post, ...state]
-        : state.map((post) =>
-            post.id === action.postId
-              ? { ...post, comments: [...post.comments, action.comment] }
-              : post,
-          ),
+    (state: WallPost[], action: OptimisticAction): WallPost[] => {
+      if (action.type === 'post') return [action.post, ...state]
+      if (action.type === 'delete-comment')
+        return state.map((post) => ({
+          ...post,
+          comments: post.comments.filter((comment) => comment.id !== action.commentId),
+        }))
+      return state.map((post) =>
+        post.id === action.postId
+          ? { ...post, comments: [...post.comments, action.comment] }
+          : post,
+      )
+    },
   )
 
   const addOptimisticComment = (postId: number, comment: WallComment) =>
     applyOptimistic({ type: 'comment', postId, comment })
+
+  const removeComment = (commentId: number) => {
+    if (pending) return
+    startTransition(async () => {
+      applyOptimistic({ type: 'delete-comment', commentId })
+      try {
+        await deleteComment(commentId)
+      } catch {
+        // Server said no (or it was already gone) — the optimistic removal
+        // reverts on its own and revalidation restores the truth.
+      }
+    })
+  }
 
   const submitPost = () => {
     if ((!draft.trim() && !attachment) || pending) return
@@ -505,6 +528,18 @@ export function Wall({
                           <time dateTime={comment.createdAt} className="wall__time" suppressHydrationWarning>
                             {formatTime(comment.createdAt, locale, dict)}
                           </time>
+                          {comment.id > 0 && (comment.mine || isAdmin) && (
+                            <button
+                              type="button"
+                              className="btn-quiet wall__comment-delete"
+                              disabled={pending}
+                              aria-label={dict.deleteComment}
+                              title={dict.deleteComment}
+                              onClick={() => removeComment(comment.id)}
+                            >
+                              <Trash />
+                            </button>
+                          )}
                         </div>
                         {comment.content && <p className="wall__comment-text">{comment.content}</p>}
                         {(comment.gifUrl || comment.imageUrl) && (

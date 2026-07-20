@@ -381,6 +381,25 @@ export async function createComment(postId: number, formData: FormData): Promise
   revalidateEventViews()
 }
 
+/**
+ * Guests can remove their own comments; admins can remove any. Enforcement is
+ * Payload's — `overrideAccess: false` applies the collection's
+ * `delete: isAdminOrOwner('author')`, so a forged id fails server-side.
+ * Comments are removed outright (no soft-delete field, unlike posts).
+ */
+export async function deleteComment(commentId: number): Promise<void> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+
+  await payload.delete({
+    collection: 'comments',
+    id: commentId,
+    overrideAccess: false,
+    user,
+  })
+  revalidateEventViews()
+}
+
 export async function deletePost(postId: number): Promise<void> {
   const { payload, user } = await getCtx()
   requireUser(user)

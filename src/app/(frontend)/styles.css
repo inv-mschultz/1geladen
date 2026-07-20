@@ -1507,6 +1507,9 @@ a {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  /* Fill the row so the header's trailing delete button lands at the far
+     right of the comment, not right after the timestamp. */
+  flex: 1;
 }
 
 .wall__comment-head {
@@ -1518,6 +1521,37 @@ a {
 
 .wall__comment-head strong {
   line-height: 24px;
+}
+
+/* Far right of the comment's header row, centred on the name rather than
+   sitting on the text baseline (the icon's own baseline offset drops it). */
+.wall__comment-delete {
+  margin-left: auto;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.wall__comment-delete svg {
+  vertical-align: middle;
+}
+
+/* Revealed on hover where hovering exists; always visible on touch, where
+   there is no hover state to reveal it with. */
+@media (hover: hover) {
+  .wall__comment-delete {
+    opacity: 0;
+  }
+
+  .wall__comment:hover .wall__comment-delete,
+  .wall__comment-delete:focus-visible {
+    opacity: 1;
+  }
 }
 
 .wall__comment-text {
