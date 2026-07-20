@@ -46,12 +46,19 @@ export default async function EventPage(props: { params: Promise<{ slug: string 
   return (
     <>
       {theme.base && <style>{themeCss(theme.base, theme.accent, theme.light)}</style>}
-      <p className="home-kicker reveal">
-        <Link href="/">
-          <ArrowLeft /> 1geladen
-        </Link>
-      </p>
-      <EventView event={event} user={user} dict={dict} locale={locale} />
+      <EventView
+        event={event}
+        user={user}
+        dict={dict}
+        locale={locale}
+        kicker={
+          <p className="home-kicker reveal">
+            <Link href="/">
+              <ArrowLeft /> 1geladen
+            </Link>
+          </p>
+        }
+      />
     </>
   )
 }

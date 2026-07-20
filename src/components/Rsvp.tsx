@@ -46,8 +46,6 @@ export function Rsvp({
 
   return (
     <div className="rsvp">
-      {canRespond && myStatus === null && <p className="rsvp__nudge">{dict.nudge}</p>}
-
       {canRespond && (
         <div className="rsvp__buttons">
           {buttons.map(({ status, label, className }) => (
@@ -77,7 +75,7 @@ export function Rsvp({
                   {entries[status].map(({ name, isHost }) => (
                     <li key={name} className="chip">
                       <Avatar name={name} size={22} host={isHost} />
-                      {name}
+                      <span className="chip__name">{name}</span>
                       {isHost && <span className="chip__tag">{dict.host}</span>}
                     </li>
                   ))}

@@ -11,7 +11,7 @@ import { EVENT_TIMEZONE } from '@/lib/time'
 import { getViewAsGuest } from '@/lib/viewas'
 import { AdminDock } from './AdminDock'
 import { BringList, type BringListItem } from './BringList'
-import { ArrowUpRight } from './icons'
+import { ArrowDown, ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
 import { Gallery, type GalleryPhoto } from './Gallery'
 import { Rsvp, type RsvpEntry } from './Rsvp'
@@ -48,11 +48,13 @@ export async function EventView({
   user,
   dict,
   locale,
+  kicker,
 }: {
   event: Event
   user: User
   dict: Dictionary
   locale: Locale
+  kicker?: React.ReactNode
 }) {
   const payload = await getPayload({ config })
 
@@ -202,8 +204,18 @@ export async function EventView({
   const themeMode = await getThemeMode()
   const lightMode = themeMode ? themeMode === 'light' : Boolean(event.invertTheme)
 
+  const needsRsvp = (!viewerIsHost || viewAsGuest) && myStatus === null
+
   return (
     <article className="event">
+      {needsRsvp && (
+        <a href="#rsvp" className="rsvp-nudgebar">
+          <span className="rsvp-nudgebar__inner">
+            {dict.rsvp.nudge} <ArrowDown />
+          </span>
+        </a>
+      )}
+      {kicker}
       <header id="info" className="event__hero reveal">
         {isRealAdmin && (
           <AdminDock
@@ -285,7 +297,7 @@ export async function EventView({
           </div>
         )}
 
-        <div className="event__rsvp">
+        <div id="rsvp" className="event__rsvp">
           <h2 className="section__title">{dict.rsvp.title}</h2>
           <Rsvp
             eventId={event.id}

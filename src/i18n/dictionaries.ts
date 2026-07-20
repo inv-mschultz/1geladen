@@ -155,7 +155,7 @@ const de = {
   join: {
     kicker: 'Du bist eingeladen',
     namePlaceholder: 'Dein Name',
-    cta: 'Mitfeiern!',
+    cta: 'Zum Event (RSVP)',
     haveAccount: 'Schon ein Konto? Anmelden',
     invalidTitle: 'Hoppla.',
     invalid: 'Dieser Einladungslink ist ungültig. Frag den Host nach einem neuen!',
@@ -345,7 +345,7 @@ const en: typeof de = {
   join: {
     kicker: 'You are invited',
     namePlaceholder: 'Your name',
-    cta: 'Count me in!',
+    cta: 'To the event (RSVP)',
     haveAccount: 'Already have an account? Log in',
     invalidTitle: 'Oops.',
     invalid: 'This invite link is invalid. Ask the host for a fresh one!',

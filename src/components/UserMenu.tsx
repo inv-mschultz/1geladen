@@ -70,7 +70,7 @@ export function UserMenu({
         onClick={() => setOpen((v) => !v)}
       >
         <Avatar name={name} size={24} />
-        {name}
+        <span className="chip__name">{name}</span>
         <ChevronDown />
       </button>
 

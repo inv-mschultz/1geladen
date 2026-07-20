@@ -56,7 +56,7 @@ export function BringList({
                 {item.claimedByName ? (
                   <span className="chip chip--claimed">
                     <Avatar name={item.claimedByName} size={22} host={item.claimedByName === hostName} />
-                    {item.claimedByName} {dict.claimedBy}
+                    <span className="chip__name">{item.claimedByName}</span> {dict.claimedBy}
                   </span>
                 ) : (
                   <>

@@ -9,6 +9,7 @@ import React from 'react'
 import { getThemeMode } from '@/lib/mode'
 import { PLATFORM_ACCENT, PLATFORM_COLOR, themeCss } from '@/lib/theme'
 
+import { HeaderMeasure } from '@/components/HeaderMeasure'
 import { LangSwitch } from '@/components/LangSwitch'
 import { MainNav } from '@/components/MainNav'
 import { UserMenu } from '@/components/UserMenu'
@@ -60,6 +61,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
       <body className={archivo.variable}>
         <style>{themeCss(PLATFORM_COLOR, PLATFORM_ACCENT, mode === 'light')}</style>
         <header className="site-header">
+          <HeaderMeasure />
           <Link href={user?.role === 'admin' ? '/events' : '/'} className="site-logo">
             <span className="site-logo__one">1</span>geladen
           </Link>

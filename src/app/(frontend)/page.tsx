@@ -94,10 +94,17 @@ export default async function HomePage() {
   return (
     <>
       {theme.base && <style>{themeCss(theme.base, theme.accent, theme.light)}</style>}
-      <p className="home-kicker reveal">
-        {upcoming.docs[0] ? dict.home.nextUp : dict.home.lastParty} <ArrowDown />
-      </p>
-      <EventView event={featured} user={user} dict={dict} locale={locale} />
+      <EventView
+        event={featured}
+        user={user}
+        dict={dict}
+        locale={locale}
+        kicker={
+          <p className="home-kicker reveal">
+            {upcoming.docs[0] ? dict.home.nextUp : dict.home.lastParty} <ArrowDown />
+          </p>
+        }
+      />
 
       {archive.length > 0 && (
         <section className="archive">
