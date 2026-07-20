@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
+import { deleteReactionsFor } from '@/lib/cascade'
 import { GIF_URL_PATTERN, requireSomeContent } from './Posts'
 
 export const Comments: CollectionConfig = {
@@ -34,6 +35,11 @@ export const Comments: CollectionConfig = {
           }
         }
         return data
+      },
+    ],
+    beforeDelete: [
+      async ({ id, req }) => {
+        await deleteReactionsFor(req, { comment: Number(id) })
       },
     ],
   },

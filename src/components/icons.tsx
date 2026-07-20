@@ -69,6 +69,14 @@ export const ImageIcon = () => (
   </svg>
 )
 
+export const Smiley = () => (
+  <svg {...iconProps}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8.5 14.5a4.5 4.5 0 0 0 7 0" />
+    <path d="M9 9.5h.01M15 9.5h.01" />
+  </svg>
+)
+
 export const Restore = () => (
   <svg {...iconProps}>
     <path d="M3 12a9 9 0 1 0 2.8-6.5L3 8" />

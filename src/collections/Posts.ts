@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { ValidationError } from 'payload'
 
 import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
+import { releasePostContent } from '@/lib/cascade'
 
 /** Only GIFs hosted by GIPHY may be embedded. */
 export const GIF_URL_PATTERN = /^https:\/\/media\d*\.giphy\.com\//
@@ -43,6 +44,12 @@ export const Posts: CollectionConfig = {
           }
         }
         return data
+      },
+    ],
+    beforeDelete: [
+      // Comments and reactions have to go first — see releasePostContent.
+      async ({ id, req }) => {
+        await releasePostContent(req, Number(id))
       },
     ],
   },

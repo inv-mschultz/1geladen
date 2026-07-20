@@ -57,6 +57,15 @@ export async function releaseUserContent(req: PayloadRequest, userId: number): P
     req,
   })
 
+  // Reactions go with the guest rather than moving to the placeholder — a count
+  // is only meaningful while the people behind it still exist.
+  await req.payload.delete({
+    collection: 'reactions',
+    where: { user: { equals: userId } },
+    overrideAccess: true,
+    req,
+  })
+
   const placeholder = await getDeletedGuestId(req)
 
   for (const collection of ['posts', 'comments'] as const) {

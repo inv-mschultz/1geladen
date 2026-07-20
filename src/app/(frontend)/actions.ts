@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies, headers as getHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
+import type { Where } from 'payload'
 
 import { randomBytes } from 'crypto'
 
@@ -12,6 +13,7 @@ import type { GalleryPhoto } from '@/components/Gallery'
 import type { WallPost } from '@/components/Wall'
 import { getLocale, LOCALE_COOKIE } from '@/i18n/locale'
 import { type Locale, locales } from '@/i18n/dictionaries'
+import { isAllowedReaction } from '@/lib/emoji'
 import { syntheticGuestEmail } from '@/lib/guestAuth'
 import { addEventMember } from '@/lib/membership'
 import { MODE_COOKIE } from '@/lib/mode'
@@ -426,6 +428,55 @@ export async function restorePost(postId: number): Promise<void> {
     overrideAccess: false,
     user,
   })
+  revalidateEventViews()
+}
+
+/**
+ * Adds the viewer's reaction, or removes it if it's already there — the UI only
+ * ever offers a toggle, so both directions live in one action.
+ *
+ * The collection's own hooks handle event membership and pin the row to the
+ * logged-in guest, so this stays a thin wrapper with access checks left on.
+ */
+export async function toggleReaction(
+  target: { kind: 'post' | 'comment'; id: number },
+  emoji: string,
+): Promise<void> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+  if (!isAllowedReaction(emoji)) throw new Error('Unknown reaction')
+
+  const targetFilter: Where =
+    target.kind === 'post' ? { post: { equals: target.id } } : { comment: { equals: target.id } }
+
+  const existing = await payload.find({
+    collection: 'reactions',
+    where: { and: [{ user: { equals: user.id } }, { emoji: { equals: emoji } }, targetFilter] },
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user,
+  })
+
+  if (existing.docs[0]) {
+    await payload.delete({
+      collection: 'reactions',
+      id: existing.docs[0].id,
+      overrideAccess: false,
+      user,
+    })
+  } else {
+    await payload.create({
+      collection: 'reactions',
+      data: {
+        emoji,
+        user: user.id,
+        ...(target.kind === 'post' ? { post: target.id } : { comment: target.id }),
+      },
+      overrideAccess: false,
+      user,
+    })
+  }
   revalidateEventViews()
 }
 

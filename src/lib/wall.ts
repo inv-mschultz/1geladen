@@ -1,6 +1,6 @@
 import type { Payload, TypedUser } from 'payload'
 
-import type { WallPost } from '@/components/Wall'
+import type { WallPost, WallReaction } from '@/components/Wall'
 import type { Media, User } from '@/payload-types'
 
 /**
@@ -68,6 +68,51 @@ export async function fetchWallPosts({
       })
     : { docs: [] as never[] }
 
+  const commentIds = comments.docs.map((comment) => comment.id)
+
+  // One query covers both targets on this page; grouping happens in memory
+  // rather than as a query per post and per comment.
+  const reactions =
+    postIds.length || commentIds.length
+      ? await payload.find({
+          collection: 'reactions',
+          where: {
+            or: [
+              ...(postIds.length ? [{ post: { in: postIds } }] : []),
+              ...(commentIds.length ? [{ comment: { in: commentIds } }] : []),
+            ],
+          },
+          depth: 0,
+          limit: 2000,
+          overrideAccess: false,
+          user,
+        })
+      : { docs: [] as never[] }
+
+  /** emoji → { count, mine }, keyed by target, preserving first-reaction order. */
+  const byPost = new Map<number, Map<string, WallReaction>>()
+  const byComment = new Map<number, Map<string, WallReaction>>()
+
+  for (const reaction of reactions.docs) {
+    const postId = typeof reaction.post === 'object' ? reaction.post?.id : reaction.post
+    const commentId = typeof reaction.comment === 'object' ? reaction.comment?.id : reaction.comment
+    const reactorId = typeof reaction.user === 'object' ? reaction.user?.id : reaction.user
+
+    // A row whose target was deleted has a nulled FK — skip rather than group it.
+    const [bucket, targetId] = postId ? [byPost, postId] : [byComment, commentId]
+    if (!targetId) continue
+
+    const group = bucket.get(targetId) ?? new Map<string, WallReaction>()
+    const entry = group.get(reaction.emoji) ?? { emoji: reaction.emoji, count: 0, mine: false }
+    entry.count += 1
+    if (reactorId === user.id) entry.mine = true
+    group.set(reaction.emoji, entry)
+    bucket.set(targetId, group)
+  }
+
+  const listFor = (bucket: Map<number, Map<string, WallReaction>>, id: number): WallReaction[] =>
+    Array.from(bucket.get(id)?.values() ?? [])
+
   const commentsByPost = new Map<number, WallPost['comments']>()
   for (const comment of comments.docs) {
     const postId = typeof comment.post === 'object' ? comment.post.id : comment.post
@@ -80,6 +125,7 @@ export async function fetchWallPosts({
       gifUrl: comment.gifUrl,
       createdAt: comment.createdAt,
       mine: asUser(comment.author)?.id === user.id,
+      reactions: listFor(byComment, comment.id),
     })
     commentsByPost.set(postId, list)
   }
@@ -95,6 +141,7 @@ export async function fetchWallPosts({
       mine: asUser(post.author)?.id === user.id,
       createdAt: post.createdAt,
       comments: commentsByPost.get(post.id) ?? [],
+      reactions: listFor(byPost, post.id),
     })),
     hasMore: posts.hasNextPage ?? false,
   }

@@ -9,12 +9,22 @@ import {
   deletePost,
   loadOlderPosts,
   restorePost,
+  toggleReaction,
 } from '@/app/(frontend)/actions'
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import { resizeImage } from '@/lib/resizeImage'
 import { Avatar } from './Avatar'
+import { EmojiPicker } from './EmojiPicker'
 import { GifPicker } from './GifPicker'
-import { ArrowUp, ImageIcon, Restore, Trash, X } from './icons'
+import { ArrowUp, ImageIcon, Restore, Smiley, Trash, X } from './icons'
+
+/** One emoji on one post or comment, already aggregated across guests. */
+export type WallReaction = {
+  emoji: string
+  count: number
+  /** The viewer is among the reactors — their pill is highlighted and toggles off. */
+  mine: boolean
+}
 
 export type WallComment = {
   id: number
@@ -25,6 +35,7 @@ export type WallComment = {
   createdAt: string
   /** Written by the viewer — only they (and admins) get the delete button. */
   mine: boolean
+  reactions: WallReaction[]
 }
 
 export type WallPost = {
@@ -37,16 +48,34 @@ export type WallPost = {
   mine: boolean
   createdAt: string
   comments: WallComment[]
+  reactions: WallReaction[]
 }
 
 type OptimisticAction =
   | { type: 'post'; post: WallPost }
   | { type: 'comment'; postId: number; comment: WallComment }
   | { type: 'delete-comment'; commentId: number }
+  | { type: 'react'; target: ReactionTarget; emoji: string }
+
+export type ReactionTarget = { kind: 'post' | 'comment'; id: number }
 
 type Attachment =
   | { kind: 'gif'; url: string; alt: string }
   | { kind: 'image'; file: File; previewUrl: string }
+
+/**
+ * Applies the viewer's toggle to an aggregated list: their own reaction flips
+ * off (count down), anything else flips on (count up, appended if new).
+ */
+function toggleReactionList(reactions: WallReaction[], emoji: string): WallReaction[] {
+  const existing = reactions.find((reaction) => reaction.emoji === emoji)
+  if (!existing) return [...reactions, { emoji, count: 1, mine: true }]
+  return reactions.map((reaction) =>
+    reaction.emoji === emoji
+      ? { ...reaction, count: reaction.count + (reaction.mine ? -1 : 1), mine: !reaction.mine }
+      : reaction,
+  )
+}
 
 /** Optimistic rows get negative ids so they can never collide with real ones. */
 let optimisticIdSeq = -1
@@ -112,10 +141,12 @@ function AttachmentPreview({
 function AttachButtons({
   onImage,
   onGifToggle,
+  onEmojiToggle,
   dict,
 }: {
   onImage: (file: File) => void
   onGifToggle: () => void
+  onEmojiToggle: () => void
   dict: Dictionary['wall']
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
@@ -140,6 +171,15 @@ function AttachButtons({
         onClick={() => fileRef.current?.click()}
       >
         <ImageIcon />
+      </button>
+      <button
+        type="button"
+        className="btn btn--icon"
+        aria-label={dict.addEmoji}
+        title={dict.addEmoji}
+        onClick={onEmojiToggle}
+      >
+        <Smiley />
       </button>
       <button
         type="button"
@@ -180,6 +220,101 @@ function formatTime(iso: string, locale: Locale, dict: Dictionary['wall']): stri
   return `${new Intl.DateTimeFormat(intlLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(then)}, ${clock}`
 }
 
+/**
+ * Inserts an emoji at the caret rather than appending it, and puts the caret
+ * back after it — appending feels broken the moment someone edits mid-sentence.
+ */
+function useEmojiInsert<T extends HTMLInputElement | HTMLTextAreaElement>(
+  setValue: React.Dispatch<React.SetStateAction<string>>,
+) {
+  const ref = useRef<T>(null)
+
+  const insert = (emoji: string) => {
+    const field = ref.current
+    if (!field) {
+      setValue((prev) => prev + emoji)
+      return
+    }
+    const start = field.selectionStart ?? field.value.length
+    const end = field.selectionEnd ?? start
+    setValue((prev) => prev.slice(0, start) + emoji + prev.slice(end))
+    // The value lands on the next render; move the caret once it has.
+    requestAnimationFrame(() => {
+      field.focus()
+      const caret = start + emoji.length
+      field.setSelectionRange(caret, caret)
+    })
+  }
+
+  return { ref, insert }
+}
+
+/**
+ * Reaction pills plus an "add" button that opens the same picker the composers
+ * use. Counts come pre-aggregated; this only renders and toggles them.
+ */
+function Reactions({
+  reactions,
+  target,
+  onToggle,
+  disabled,
+  dict,
+}: {
+  reactions: WallReaction[]
+  target: ReactionTarget
+  onToggle: (target: ReactionTarget, emoji: string) => void
+  disabled: boolean
+  dict: Dictionary['wall']
+}) {
+  const [showPicker, setShowPicker] = useState(false)
+
+  // Optimistic toggles can drop a pill to zero before the server confirms.
+  const visible = reactions.filter((reaction) => reaction.count > 0)
+
+  return (
+    <>
+      <div className="reactions">
+        {visible.map((reaction) => (
+          <button
+            key={reaction.emoji}
+            type="button"
+            className={`reactions__pill ${reaction.mine ? 'is-mine' : ''}`}
+            disabled={disabled}
+            aria-pressed={reaction.mine}
+            title={`${dict.reactionBy} ${reaction.count}`}
+            onClick={() => onToggle(target, reaction.emoji)}
+          >
+            <span className="reactions__emoji">{reaction.emoji}</span>
+            <span className="reactions__count">{reaction.count}</span>
+          </button>
+        ))}
+        <button
+          type="button"
+          className="reactions__add"
+          disabled={disabled}
+          aria-label={dict.react}
+          title={dict.react}
+          onClick={() => setShowPicker((v) => !v)}
+        >
+          <Smiley />
+        </button>
+      </div>
+      {showPicker && (
+        <div className="reactions__picker">
+          <EmojiPicker
+            dict={dict}
+            onClose={() => setShowPicker(false)}
+            onPick={(emoji) => {
+              onToggle(target, emoji)
+              setShowPicker(false)
+            }}
+          />
+        </div>
+      )}
+    </>
+  )
+}
+
 function PostMedia({ imageUrl, gifUrl }: { imageUrl?: string | null; gifUrl?: string | null }) {
   const src = gifUrl || imageUrl
   if (!src) return null
@@ -204,9 +339,11 @@ function CommentForm({
 }) {
   const [pending, startTransition] = useTransition()
   const [showGifs, setShowGifs] = useState(false)
+  const [showEmoji, setShowEmoji] = useState(false)
   const [value, setValue] = useState('')
   const { attachment, attachGif, attachImage, clear, appendTo } = useAttachment()
   const fileRef = useRef<HTMLInputElement>(null)
+  const { ref: inputRef, insert: insertEmoji } = useEmojiInsert<HTMLInputElement>(setValue)
 
   const canSend = Boolean(value.trim() || attachment)
 
@@ -227,6 +364,7 @@ function CommentForm({
         content: content || undefined,
         createdAt: new Date().toISOString(),
         mine: true,
+        reactions: [],
         ...preview,
       })
       await createComment(postId, formData)
@@ -247,6 +385,13 @@ function CommentForm({
           }}
         />
       )}
+      {showEmoji && (
+        <EmojiPicker
+          dict={dict}
+          onClose={() => setShowEmoji(false)}
+          onPick={(emoji) => insertEmoji(emoji)}
+        />
+      )}
       <form
         className="wall__comment-form"
         onSubmit={(e) => {
@@ -256,6 +401,7 @@ function CommentForm({
       >
         <div className="input-shell">
           <input
+            ref={inputRef}
             type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -286,10 +432,25 @@ function CommentForm({
             </button>
             <button
               type="button"
+              className="btn-quiet"
+              aria-label={dict.addEmoji}
+              title={dict.addEmoji}
+              onClick={() => {
+                setShowEmoji((v) => !v)
+                setShowGifs(false)
+              }}
+            >
+              <Smiley />
+            </button>
+            <button
+              type="button"
               className="btn-quiet btn-quiet--gif"
               aria-label={dict.attachGif}
               title={dict.attachGif}
-              onClick={() => setShowGifs((v) => !v)}
+              onClick={() => {
+                setShowGifs((v) => !v)
+                setShowEmoji(false)
+              }}
             >
               GIF
             </button>
@@ -335,7 +496,9 @@ export function Wall({
   const [draft, setDraft] = useState('')
   const [posting, setPosting] = useState(false)
   const [showGifs, setShowGifs] = useState(false)
+  const [showEmoji, setShowEmoji] = useState(false)
   const { attachment, attachGif, attachImage, clear, appendTo } = useAttachment()
+  const { ref: draftRef, insert: insertEmoji } = useEmojiInsert<HTMLTextAreaElement>(setDraft)
 
   // Older pages pulled on demand. `posts` stays the server's freshest window,
   // so dedupe by id — a new post can push an older one across the page edge.
@@ -371,6 +534,25 @@ export function Wall({
           ...post,
           comments: post.comments.filter((comment) => comment.id !== action.commentId),
         }))
+      if (action.type === 'react') {
+        const { target, emoji } = action
+        return state.map((post) => {
+          if (target.kind === 'post') {
+            return post.id === target.id
+              ? { ...post, reactions: toggleReactionList(post.reactions, emoji) }
+              : post
+          }
+          if (!post.comments.some((comment) => comment.id === target.id)) return post
+          return {
+            ...post,
+            comments: post.comments.map((comment) =>
+              comment.id === target.id
+                ? { ...comment, reactions: toggleReactionList(comment.reactions, emoji) }
+                : comment,
+            ),
+          }
+        })
+      }
       return state.map((post) =>
         post.id === action.postId
           ? { ...post, comments: [...post.comments, action.comment] }
@@ -381,6 +563,20 @@ export function Wall({
 
   const addOptimisticComment = (postId: number, comment: WallComment) =>
     applyOptimistic({ type: 'comment', postId, comment })
+
+  const react = (target: ReactionTarget, emoji: string) => {
+    // Optimistic rows have negative ids and don't exist server-side yet.
+    if (target.id < 0 || pending) return
+    startTransition(async () => {
+      applyOptimistic({ type: 'react', target, emoji })
+      try {
+        await toggleReaction(target, emoji)
+      } catch {
+        // Rejected (or already toggled elsewhere) — the optimistic state reverts
+        // on its own and revalidation restores the server's truth.
+      }
+    })
+  }
 
   const removeComment = (commentId: number) => {
     if (pending) return
@@ -417,6 +613,7 @@ export function Wall({
           mine: true,
           createdAt: new Date().toISOString(),
           comments: [],
+          reactions: [],
           ...preview,
         },
       })
@@ -431,6 +628,7 @@ export function Wall({
       <div className="wall__composer">
         <Avatar name={userName} host={userName === hostName} />
         <textarea
+          ref={draftRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={dict.placeholder}
@@ -458,8 +656,28 @@ export function Wall({
             />
           </div>
         )}
+        {showEmoji && (
+          <div className="wall__composer-extra">
+            <EmojiPicker
+              dict={dict}
+              onClose={() => setShowEmoji(false)}
+              onPick={(emoji) => insertEmoji(emoji)}
+            />
+          </div>
+        )}
         <div className="wall__composer-actions">
-          <AttachButtons onImage={attachImage} onGifToggle={() => setShowGifs((v) => !v)} dict={dict} />
+          <AttachButtons
+            onImage={attachImage}
+            onGifToggle={() => {
+              setShowGifs((v) => !v)
+              setShowEmoji(false)
+            }}
+            onEmojiToggle={() => {
+              setShowEmoji((v) => !v)
+              setShowGifs(false)
+            }}
+            dict={dict}
+          />
           <button
             type="button"
             className={`btn ${posting ? 'is-loading' : ''}`}
@@ -517,6 +735,16 @@ export function Wall({
               {post.content && <p className="wall__content">{post.content}</p>}
               <PostMedia imageUrl={post.imageUrl} gifUrl={post.gifUrl} />
 
+              {!post.deleted && (
+                <Reactions
+                  reactions={post.reactions}
+                  target={{ kind: 'post', id: post.id }}
+                  onToggle={react}
+                  disabled={pending || post.id < 0}
+                  dict={dict}
+                />
+              )}
+
               {post.comments.length > 0 && (
                 <ul className="wall__comments">
                   {post.comments.map((comment) => (
@@ -548,6 +776,13 @@ export function Wall({
                             <img src={comment.gifUrl || comment.imageUrl || ''} alt="" loading="lazy" />
                           </div>
                         )}
+                        <Reactions
+                          reactions={comment.reactions}
+                          target={{ kind: 'comment', id: comment.id }}
+                          onToggle={react}
+                          disabled={pending || comment.id < 0}
+                          dict={dict}
+                        />
                       </div>
                     </li>
                   ))}

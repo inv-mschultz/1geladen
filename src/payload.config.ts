@@ -12,6 +12,7 @@ import { Comments } from './collections/Comments'
 import { Events } from './collections/Events'
 import { Media } from './collections/Media'
 import { Posts } from './collections/Posts'
+import { Reactions } from './collections/Reactions'
 import { RSVPs } from './collections/RSVPs'
 import { Users } from './collections/Users'
 
@@ -41,7 +42,7 @@ export default buildConfig({
       titleSuffix: ' — 1geladen',
     },
   },
-  collections: [Users, Events, Posts, Comments, BringItems, RSVPs, Media],
+  collections: [Users, Events, Posts, Comments, BringItems, RSVPs, Reactions, Media],
   localization: {
     locales: [
       { label: 'Deutsch', code: 'de' },

@@ -73,6 +73,7 @@ export interface Config {
     comments: Comment;
     'bring-items': BringItem;
     rsvps: Rsvp;
+    reactions: Reaction;
     media: Media;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -87,6 +88,7 @@ export interface Config {
     comments: CommentsSelect<false> | CommentsSelect<true>;
     'bring-items': BringItemsSelect<false> | BringItemsSelect<true>;
     rsvps: RsvpsSelect<false> | RsvpsSelect<true>;
+    reactions: ReactionsSelect<false> | ReactionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -339,6 +341,20 @@ export interface Rsvp {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reactions".
+ */
+export interface Reaction {
+  id: number;
+  emoji: string;
+  user?: (number | null) | User;
+  post?: (number | null) | Post;
+  comment?: (number | null) | Comment;
+  event?: (number | null) | Event;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -384,6 +400,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rsvps';
         value: number | Rsvp;
+      } | null)
+    | ({
+        relationTo: 'reactions';
+        value: number | Reaction;
       } | null)
     | ({
         relationTo: 'media';
@@ -534,6 +554,19 @@ export interface RsvpsSelect<T extends boolean = true> {
   event?: T;
   user?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reactions_select".
+ */
+export interface ReactionsSelect<T extends boolean = true> {
+  emoji?: T;
+  user?: T;
+  post?: T;
+  comment?: T;
+  event?: T;
   updatedAt?: T;
   createdAt?: T;
 }
