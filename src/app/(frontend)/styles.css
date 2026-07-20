@@ -360,11 +360,12 @@ a {
   position: relative;
 }
 
+/* The label keeps its box (so the button keeps its exact width) but goes
+   invisible, and the spinner sits centred in its place. Truncating the label
+   instead is circular — the button is sized BY the label, so a percentage
+   max-width on it has no stable answer and browsers drop it. */
 .btn.is-loading .btn__label {
-  max-width: calc(100% - 1.3em);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  visibility: hidden;
 }
 
 .btn.is-loading::after,
@@ -372,21 +373,14 @@ a {
   content: '';
   position: absolute;
   top: 50%;
-  right: 0.9em;
-  margin-top: -0.425em;
+  left: 50%;
+  margin: -0.425em 0 0 -0.425em;
   width: 0.85em;
   height: 0.85em;
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   animation: btn-spin 0.6s linear infinite;
-}
-
-/* Icon-only buttons have no label — center the spinner where the glyph was */
-.btn--icon.is-loading::after,
-.btn-quiet.is-loading::after {
-  right: 50%;
-  margin-right: -0.425em;
 }
 
 /* Icon-only buttons swap their glyph for the spinner instead of showing both.
