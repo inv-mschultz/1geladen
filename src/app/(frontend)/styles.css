@@ -348,10 +348,10 @@ a {
   cursor: wait;
 }
 
-/* The button that's actually working keeps full contrast and grows a spinner;
-   its siblings just dim via :disabled above. The spinner is absolutely
-   positioned so the button keeps its exact width — the label truncates
-   instead of the button growing and swallowing its own padding. */
+/* The button that's actually working keeps full contrast and shows a loader;
+   its siblings just dim via :disabled above. Everything is absolutely
+   positioned and the label only goes invisible (keeping its box), so the
+   button's geometry never changes. */
 .btn.is-loading,
 .btn-quiet.is-loading {
   opacity: 1;
@@ -360,44 +360,90 @@ a {
   position: relative;
 }
 
-/* The label keeps its box (so the button keeps its exact width) but goes
-   invisible, and the spinner sits centred in its place. Truncating the label
-   instead is circular — the button is sized BY the label, so a percentage
-   max-width on it has no stable answer and browsers drop it. */
 .btn.is-loading .btn__label {
   visibility: hidden;
 }
 
-.btn.is-loading::after,
+/* Three breathing dots for buttons with a text label. The dots are the
+   label's two pseudo-elements plus the button's own — no extra markup.
+   (visibility:visible re-shows them inside the hidden label.) */
+.btn.is-loading:has(.btn__label)::after,
+.btn.is-loading .btn__label::before,
+.btn.is-loading .btn__label::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.4em;
+  height: 0.4em;
+  border-radius: 50%;
+  background: currentColor;
+  visibility: visible;
+  animation: btn-dot 1.1s ease-in-out infinite;
+}
+
+.btn.is-loading .btn__label::before {
+  margin-left: -0.62em;
+  animation-delay: -0.22s;
+}
+
+.btn.is-loading .btn__label::after {
+  margin-left: 0.62em;
+  animation-delay: 0.22s;
+}
+
+@keyframes btn-dot {
+  0%,
+  70%,
+  100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  35% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Icon-only buttons have no label to hide — their glyph goes invisible
+   (keeping its box) and a spinner takes its place. */
+.btn--icon.is-loading svg,
+.btn-quiet.is-loading svg {
+  visibility: hidden;
+}
+
+.btn--icon.is-loading::after,
 .btn-quiet.is-loading::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  margin: -0.425em 0 0 -0.425em;
-  width: 0.85em;
-  height: 0.85em;
+  box-sizing: border-box;
+  width: 0.95em;
+  height: 0.95em;
+  transform: translate(-50%, -50%);
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   animation: btn-spin 0.6s linear infinite;
 }
 
-/* Icon-only buttons swap their glyph for the spinner instead of showing both.
-   visibility (not display) keeps the glyph's box so the button holds its size. */
-.btn--icon.is-loading svg,
-.btn-quiet.is-loading svg {
-  visibility: hidden;
-}
-
 @keyframes btn-spin {
   to {
-    transform: rotate(360deg);
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn.is-loading::after,
+  .btn.is-loading:has(.btn__label)::after,
+  .btn.is-loading .btn__label::before,
+  .btn.is-loading .btn__label::after {
+    animation: none;
+    opacity: 0.6;
+    transform: translate(-50%, -50%);
+  }
+
+  .btn--icon.is-loading::after,
   .btn-quiet.is-loading::after {
     animation: none;
     border-right-color: currentColor;
