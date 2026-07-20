@@ -78,10 +78,14 @@ export function ColorField({
 
   // Keep internal state in sync when the value changes from outside;
   // don't reset hue/saturation for the same color (grays lose hue info).
-  useEffect(() => {
+  // Adjusted during render rather than in an effect: React re-runs this
+  // component immediately, before painting, instead of rendering stale state.
+  const [syncedValue, setSyncedValue] = useState(value)
+  if (syncedValue !== value) {
+    setSyncedValue(value)
     setHexDraft(value)
     setHsv((current) => (hsvToHex(current) === value.toLowerCase() ? current : hexToHsv(value)))
-  }, [value])
+  }
 
   useEffect(() => {
     if (!open) return

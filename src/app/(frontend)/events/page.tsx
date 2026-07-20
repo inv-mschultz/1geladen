@@ -136,6 +136,9 @@ export default async function EventsOverviewPage() {
     }
   }
 
+  // Server Component: rendered once per request, so reading the clock here is
+  // deterministic for that render. The purity rule targets client re-renders.
+  // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
   const isPast = (event: Event) =>
     new Date(event.endDate ?? event.date).getTime() < now

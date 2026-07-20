@@ -159,11 +159,6 @@ export function EventForm({
     : ''
   const initialTime = initial ? `${pad(initial.getHours())}:${pad(initial.getMinutes())}` : '19:00'
 
-  const pickColor = (setter: (hex: string) => void) => (hex: string) => {
-    setter(hex)
-    scheduleSave()
-  }
-
   return (
     <form
       ref={formRef}
@@ -289,21 +284,30 @@ export function EventForm({
               name="themeColor"
               value={themeColor}
               customLabel={dict.customColor}
-              onChange={pickColor(setThemeColor)}
+              onChange={(hex) => {
+                setThemeColor(hex)
+                scheduleSave()
+              }}
             />
             <ColorField
               label={dict.accent}
               name="accentColor"
               value={accentColor}
               customLabel={dict.customColor}
-              onChange={pickColor(setAccentColor)}
+              onChange={(hex) => {
+                setAccentColor(hex)
+                scheduleSave()
+              }}
             />
             <ColorField
               label={dict.accentLight}
               name="accentColorLight"
               value={accentColorLight}
               customLabel={dict.customColor}
-              onChange={pickColor(setAccentColorLight)}
+              onChange={(hex) => {
+                setAccentColorLight(hex)
+                scheduleSave()
+              }}
             />
           </div>
         </section>

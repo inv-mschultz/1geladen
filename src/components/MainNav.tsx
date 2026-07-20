@@ -8,7 +8,10 @@ type SectionId = (typeof SECTIONS)[number]
 
 export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
   const pathname = usePathname()
-  const [active, setActive] = useState<SectionId | null>(null)
+  // Tagged with the path it was observed on, so a stale section from the
+  // previous page is ignored on navigation without resetting state in an effect.
+  const [active, setActive] = useState<{ path: string; id: SectionId } | null>(null)
+  const activeId = active?.path === pathname ? active.id : null
 
   // Anchor links only make sense where an event view is rendered
   const hasEventView = pathname === '/' || /^\/events\/(?!new$)[^/]+$/.test(pathname)
@@ -17,10 +20,7 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
     const elements = SECTIONS.map((id) => document.getElementById(id)).filter(
       (el): el is HTMLElement => el !== null,
     )
-    if (elements.length === 0) {
-      setActive(null)
-      return
-    }
+    if (elements.length === 0) return
 
     const visible = new Set<string>()
     const observer = new IntersectionObserver(
@@ -30,7 +30,7 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
           else visible.delete(entry.target.id)
         }
         const current = SECTIONS.find((id) => visible.has(id))
-        if (current) setActive(current)
+        if (current) setActive({ path: pathname, id: current })
       },
       // Top offset matches the sticky header; a section counts as "current"
       // once it enters the upper half of the viewport.
@@ -48,8 +48,8 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
         <a
           key={id}
           href={`#${id}`}
-          className={active === id ? 'is-active' : ''}
-          onClick={() => setActive(id)}
+          className={activeId === id ? 'is-active' : ''}
+          onClick={() => setActive({ path: pathname, id })}
         >
           {labels[id]}
         </a>

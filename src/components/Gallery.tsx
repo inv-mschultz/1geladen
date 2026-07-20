@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom'
 import { uploadPhotos } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
 import { resizeImage } from '@/lib/resizeImage'
+import { useMounted } from '@/lib/useMounted'
 import { ArrowLeft, ArrowRight, X } from './icons'
 
 export type GalleryPhoto = {
@@ -30,8 +31,7 @@ function Lightbox({
   onNav: (next: number) => void
   dict: Dictionary['gallery']
 }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

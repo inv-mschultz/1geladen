@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 
 import { setViewAsGuest } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
+import { useMounted } from '@/lib/useMounted'
 import { EventForm, type EventFormValues } from './EventForm'
 import { X } from './icons'
 
@@ -26,10 +27,9 @@ export function AdminDock({
   light?: boolean
 }) {
   const [open, setOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const [pending, startTransition] = useTransition()
 
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   useEffect(() => {
     if (!open) return
