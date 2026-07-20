@@ -1,7 +1,13 @@
 import type { CollectionConfig } from 'payload'
 import { ValidationError } from 'payload'
 
-import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
+import {
+  assertEventMember,
+  isAdminFieldLevel,
+  isAdminOrOwner,
+  isEventMember,
+  isLoggedIn,
+} from '@/access'
 
 export const RSVPs: CollectionConfig = {
   slug: 'rsvps',
@@ -65,7 +71,11 @@ export const RSVPs: CollectionConfig = {
       required: true,
       index: true,
       defaultValue: ({ user }) => user?.id,
-      admin: { readOnly: true },
+      // Admins may RSVP on a guest's behalf; guests are pinned to themselves by
+      // the beforeChange hook on create, and locked out of reassigning on update.
+      access: {
+        update: isAdminFieldLevel,
+      },
     },
     {
       name: 'status',

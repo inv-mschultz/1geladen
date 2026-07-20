@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { isAdmin, isAdminFieldLevel, isAdminOrSelf } from '@/access'
+import { releaseUserContent } from '@/lib/deletedGuest'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -32,6 +33,13 @@ export const Users: CollectionConfig = {
           }
         }
         return data
+      },
+    ],
+    beforeDelete: [
+      // Hand off the guest's content before the row goes, or the delete fails on
+      // the NOT NULL author/user columns. See releaseUserContent.
+      async ({ id, req }) => {
+        await releaseUserContent(req, Number(id))
       },
     ],
   },
