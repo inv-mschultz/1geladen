@@ -349,30 +349,51 @@ a {
 }
 
 /* The button that's actually working keeps full contrast and grows a spinner;
-   its siblings just dim via :disabled above. */
+   its siblings just dim via :disabled above. The spinner is absolutely
+   positioned so the button keeps its exact width — the label truncates
+   instead of the button growing and swallowing its own padding. */
 .btn.is-loading,
 .btn-quiet.is-loading {
   opacity: 1;
   cursor: wait;
   pointer-events: none;
+  position: relative;
+}
+
+.btn.is-loading .btn__label {
+  max-width: calc(100% - 1.3em);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .btn.is-loading::after,
 .btn-quiet.is-loading::after {
   content: '';
+  position: absolute;
+  top: 50%;
+  right: 0.9em;
+  margin-top: -0.425em;
   width: 0.85em;
   height: 0.85em;
-  flex-shrink: 0;
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   animation: btn-spin 0.6s linear infinite;
 }
 
-/* Icon-only buttons swap their glyph for the spinner instead of showing both */
+/* Icon-only buttons have no label — center the spinner where the glyph was */
+.btn--icon.is-loading::after,
+.btn-quiet.is-loading::after {
+  right: 50%;
+  margin-right: -0.425em;
+}
+
+/* Icon-only buttons swap their glyph for the spinner instead of showing both.
+   visibility (not display) keeps the glyph's box so the button holds its size. */
 .btn--icon.is-loading svg,
 .btn-quiet.is-loading svg {
-  display: none;
+  visibility: hidden;
 }
 
 @keyframes btn-spin {

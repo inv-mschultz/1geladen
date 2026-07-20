@@ -345,7 +345,7 @@ export function Wall({
             aria-busy={posting}
             onClick={submitPost}
           >
-            {dict.post}
+            <span className="btn__label">{dict.post}</span>
           </button>
         </div>
       </div>

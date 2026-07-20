@@ -54,7 +54,7 @@ export function JoinForm({
           disabled={pending}
           aria-busy={pending}
         >
-          {dict.cta}
+          <span className="btn__label">{dict.cta}</span>
         </button>
       </form>
 

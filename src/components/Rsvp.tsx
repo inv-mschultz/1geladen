@@ -66,7 +66,7 @@ export function Rsvp({
               }`}
               onClick={() => answer(status)}
             >
-              {label}
+              <span className="btn__label">{label}</span>
             </button>
           ))}
         </div>

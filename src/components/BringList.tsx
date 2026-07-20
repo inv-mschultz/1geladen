@@ -80,7 +80,7 @@ export function BringList({
                     aria-busy={busy === `claim-${item.id}`}
                     onClick={() => run(`claim-${item.id}`, () => claimBringItem(item.id, true))}
                   >
-                    {dict.claim}
+                    <span className="btn__label">{dict.claim}</span>
                   </button>
                 )}
                 {item.claimedByMe && (
@@ -131,7 +131,7 @@ export function BringList({
           disabled={pending}
           aria-busy={busy === 'add'}
         >
-          {dict.add}
+          <span className="btn__label">{dict.add}</span>
         </button>
       </form>
     </div>
