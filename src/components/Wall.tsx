@@ -1,8 +1,14 @@
 'use client'
 
-import React, { useRef, useState, useTransition } from 'react'
+import React, { useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 
-import { createComment, createPost, deletePost, restorePost } from '@/app/(frontend)/actions'
+import {
+  createComment,
+  createPost,
+  deletePost,
+  loadOlderPosts,
+  restorePost,
+} from '@/app/(frontend)/actions'
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import { resizeImage } from '@/lib/resizeImage'
 import { Avatar } from './Avatar'
@@ -30,9 +36,24 @@ export type WallPost = {
   comments: WallComment[]
 }
 
+type OptimisticAction =
+  | { type: 'post'; post: WallPost }
+  | { type: 'comment'; postId: number; comment: WallComment }
+
 type Attachment =
   | { kind: 'gif'; url: string; alt: string }
   | { kind: 'image'; file: File; previewUrl: string }
+
+/** Optimistic rows get negative ids so they can never collide with real ones. */
+let optimisticIdSeq = -1
+const nextOptimisticId = () => optimisticIdSeq--
+
+/** Show the attachment straight from the local preview while it uploads. */
+const optimisticMedia = (attachment: Attachment | null): { gifUrl?: string; imageUrl?: string } => {
+  if (attachment?.kind === 'gif') return { gifUrl: attachment.url }
+  if (attachment?.kind === 'image') return { imageUrl: attachment.previewUrl }
+  return {}
+}
 
 function useAttachment() {
   const [attachment, setAttachment] = useState<Attachment | null>(null)
@@ -166,7 +187,17 @@ function PostMedia({ imageUrl, gifUrl }: { imageUrl?: string | null; gifUrl?: st
   )
 }
 
-function CommentForm({ postId, dict }: { postId: number; dict: Dictionary['wall'] }) {
+function CommentForm({
+  postId,
+  userName,
+  dict,
+  onOptimistic,
+}: {
+  postId: number
+  userName: string
+  dict: Dictionary['wall']
+  onOptimistic: (postId: number, comment: WallComment) => void
+}) {
   const [pending, startTransition] = useTransition()
   const [showGifs, setShowGifs] = useState(false)
   const [value, setValue] = useState('')
@@ -178,13 +209,23 @@ function CommentForm({ postId, dict }: { postId: number; dict: Dictionary['wall'
   const submit = () => {
     if (!canSend || pending) return
     const formData = new FormData()
-    formData.set('content', value.trim())
+    const content = value.trim()
+    formData.set('content', content)
     appendTo(formData)
+    const preview = optimisticMedia(attachment)
+    // Clear the field immediately — the optimistic comment already shows the text
+    setValue('')
+    setShowGifs(false)
     startTransition(async () => {
+      onOptimistic(postId, {
+        id: nextOptimisticId(),
+        authorName: userName,
+        content: content || undefined,
+        createdAt: new Date().toISOString(),
+        ...preview,
+      })
       await createComment(postId, formData)
-      setValue('')
       clear()
-      setShowGifs(false)
     })
   }
 
@@ -269,6 +310,7 @@ function CommentForm({ postId, dict }: { postId: number; dict: Dictionary['wall'
 export function Wall({
   eventId,
   posts,
+  hasMore,
   userName,
   hostName,
   isAdmin,
@@ -277,6 +319,7 @@ export function Wall({
 }: {
   eventId: number
   posts: WallPost[]
+  hasMore: boolean
   userName: string
   hostName?: string | null
   isAdmin: boolean
@@ -289,17 +332,73 @@ export function Wall({
   const [showGifs, setShowGifs] = useState(false)
   const { attachment, attachGif, attachImage, clear, appendTo } = useAttachment()
 
+  // Older pages pulled on demand. `posts` stays the server's freshest window,
+  // so dedupe by id — a new post can push an older one across the page edge.
+  const [older, setOlder] = useState<WallPost[]>([])
+  const [moreAvailable, setMoreAvailable] = useState(hasMore)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+
+  const allPosts = useMemo(() => {
+    const seen = new Set(posts.map((post) => post.id))
+    return [...posts, ...older.filter((post) => !seen.has(post.id))]
+  }, [posts, older])
+
+  const showOlder = () => {
+    const oldest = allPosts[allPosts.length - 1]
+    if (!oldest || loadingOlder) return
+    setLoadingOlder(true)
+    startTransition(async () => {
+      const result = await loadOlderPosts(eventId, oldest.createdAt)
+      setOlder((prev) => [...prev, ...result.posts])
+      setMoreAvailable(result.hasMore)
+      setLoadingOlder(false)
+    })
+  }
+
+  // New posts/comments render immediately and are replaced by the server's
+  // version when the action's revalidation lands.
+  const [optimisticPosts, applyOptimistic] = useOptimistic(
+    allPosts,
+    (state: WallPost[], action: OptimisticAction): WallPost[] =>
+      action.type === 'post'
+        ? [action.post, ...state]
+        : state.map((post) =>
+            post.id === action.postId
+              ? { ...post, comments: [...post.comments, action.comment] }
+              : post,
+          ),
+  )
+
+  const addOptimisticComment = (postId: number, comment: WallComment) =>
+    applyOptimistic({ type: 'comment', postId, comment })
+
   const submitPost = () => {
     if ((!draft.trim() && !attachment) || pending) return
     const formData = new FormData()
-    formData.set('content', draft.trim())
+    const content = draft.trim()
+    formData.set('content', content)
     appendTo(formData)
+    const preview = optimisticMedia(attachment)
+    // Empty the composer right away — the optimistic post already shows it
+    setDraft('')
+    setShowGifs(false)
     setPosting(true)
     startTransition(async () => {
+      applyOptimistic({
+        type: 'post',
+        post: {
+          id: nextOptimisticId(),
+          authorName: userName,
+          content: content || undefined,
+          deleted: false,
+          mine: true,
+          createdAt: new Date().toISOString(),
+          comments: [],
+          ...preview,
+        },
+      })
       await createPost(eventId, formData)
-      setDraft('')
       clear()
-      setShowGifs(false)
       setPosting(false)
     })
   }
@@ -350,11 +449,11 @@ export function Wall({
         </div>
       </div>
 
-      {posts.length === 0 ? (
+      {optimisticPosts.length === 0 ? (
         <p className="section__empty">{dict.empty}</p>
       ) : (
         <ul className="wall__posts">
-          {posts.map((post) => (
+          {optimisticPosts.map((post) => (
             <li key={post.id} className={`wall__post ${post.deleted ? 'wall__post--deleted' : ''}`}>
               <div className="wall__post-head">
                 <Avatar name={post.authorName} host={post.authorName === hostName} />
@@ -378,7 +477,7 @@ export function Wall({
                       <Restore />
                     </button>
                   )}
-                  {!post.deleted && (post.mine || isAdmin) && (
+                  {!post.deleted && post.id > 0 && (post.mine || isAdmin) && (
                     <button
                       type="button"
                       className="btn-quiet"
@@ -420,10 +519,31 @@ export function Wall({
                 </ul>
               )}
 
-              {!post.deleted && <CommentForm postId={post.id} dict={dict} />}
+              {!post.deleted && post.id > 0 && (
+                <CommentForm
+                  postId={post.id}
+                  userName={userName}
+                  dict={dict}
+                  onOptimistic={addOptimisticComment}
+                />
+              )}
             </li>
           ))}
         </ul>
+      )}
+
+      {moreAvailable && (
+        <div className="load-more">
+          <button
+            type="button"
+            className={`btn btn--ghost btn--small ${loadingOlder ? 'is-loading' : ''}`}
+            disabled={loadingOlder}
+            aria-busy={loadingOlder}
+            onClick={showOlder}
+          >
+            <span className="btn__label">{dict.loadOlder}</span>
+          </button>
+        </div>
       )}
     </div>
   )

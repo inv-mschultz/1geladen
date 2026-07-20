@@ -8,12 +8,17 @@ import { getPayload } from 'payload'
 
 import { randomBytes } from 'crypto'
 
+import type { GalleryPhoto } from '@/components/Gallery'
+import type { WallPost } from '@/components/Wall'
 import { getLocale, LOCALE_COOKIE } from '@/i18n/locale'
 import { type Locale, locales } from '@/i18n/dictionaries'
 import { syntheticGuestEmail } from '@/lib/guestAuth'
 import { addEventMember } from '@/lib/membership'
 import { MODE_COOKIE } from '@/lib/mode'
 import { PLATFORM_ACCENT, PLATFORM_COLOR } from '@/lib/theme'
+import { getViewAsGuest } from '@/lib/viewas'
+import { fetchGalleryPhotos } from '@/lib/gallery'
+import { fetchWallPosts } from '@/lib/wall'
 
 /** Events must be in the future — and never in a pre-2026 year (typo guard). */
 const isValidEventDate = (dateIso: string): boolean => {
@@ -40,6 +45,18 @@ async function getCtx() {
 
 function requireUser<T>(user: T | null): asserts user is T {
   if (!user) throw new Error('Not logged in')
+}
+
+/**
+ * Event content changed (RSVP, wall, bring list, photos). Page scope only:
+ * the layout — header, nav, auth lookup — is unaffected by these, so
+ * revalidating it too would just add another auth round trip per action.
+ * The route pattern covers whichever event page the user is on; '/' covers
+ * the home view, which renders the featured event.
+ */
+function revalidateEventViews(): void {
+  revalidatePath('/events/[slug]', 'page')
+  revalidatePath('/', 'page')
 }
 
 export async function setLocale(locale: string): Promise<void> {
@@ -291,7 +308,7 @@ export async function rsvp(eventId: number, status: 'yes' | 'maybe' | 'no'): Pro
       user,
     })
   }
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 type PayloadClient = Awaited<ReturnType<typeof getPayload>>
@@ -345,7 +362,7 @@ export async function createPost(eventId: number, formData: FormData): Promise<v
     overrideAccess: false,
     user,
   })
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 export async function createComment(postId: number, formData: FormData): Promise<void> {
@@ -361,7 +378,7 @@ export async function createComment(postId: number, formData: FormData): Promise
     overrideAccess: false,
     user,
   })
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 export async function deletePost(postId: number): Promise<void> {
@@ -375,7 +392,7 @@ export async function deletePost(postId: number): Promise<void> {
     overrideAccess: false,
     user,
   })
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 export async function restorePost(postId: number): Promise<void> {
@@ -390,7 +407,7 @@ export async function restorePost(postId: number): Promise<void> {
     overrideAccess: false,
     user,
   })
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 export async function addBringItem(eventId: number, title: string, note?: string): Promise<void> {
@@ -410,7 +427,7 @@ export async function addBringItem(eventId: number, title: string, note?: string
     overrideAccess: false,
     user,
   })
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 export async function deleteBringItem(itemId: number): Promise<void> {
@@ -423,7 +440,7 @@ export async function deleteBringItem(itemId: number): Promise<void> {
     overrideAccess: false,
     user,
   })
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 export async function claimBringItem(itemId: number, claim: boolean): Promise<void> {
@@ -437,7 +454,7 @@ export async function claimBringItem(itemId: number, claim: boolean): Promise<vo
     overrideAccess: false,
     user,
   })
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
 }
 
 export async function uploadPhotos(eventId: number, formData: FormData): Promise<void> {
@@ -465,5 +482,34 @@ export async function uploadPhotos(eventId: number, formData: FormData): Promise
       user,
     })
   }
-  revalidatePath('/', 'layout')
+  revalidateEventViews()
+}
+
+/**
+ * Pulls the next page of older wall posts. Keeps the initial page load (and
+ * every action's re-render) to one window of posts instead of the full history.
+ */
+export async function loadOlderPosts(
+  eventId: number,
+  before: string,
+): Promise<{ posts: WallPost[]; hasMore: boolean }> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+
+  const isRealAdmin = user.role === 'admin'
+  const isAdmin = isRealAdmin && !(await getViewAsGuest())
+
+  return fetchWallPosts({ payload, user, eventId, isAdmin, before })
+}
+
+/** Pulls the next page of older gallery photos (same reasoning as the wall). */
+export async function loadOlderPhotos(
+  eventId: number,
+  before: string,
+  coverImageId?: number | null,
+): Promise<{ photos: GalleryPhoto[]; hasMore: boolean }> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+
+  return fetchGalleryPhotos({ payload, user, eventId, coverImageId, before })
 }

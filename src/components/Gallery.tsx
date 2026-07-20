@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useEffect, useRef, useState, useTransition } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 
-import { uploadPhotos } from '@/app/(frontend)/actions'
+import { loadOlderPhotos, uploadPhotos } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
 import { resizeImage } from '@/lib/resizeImage'
 import { useMounted } from '@/lib/useMounted'
@@ -16,6 +16,8 @@ export type GalleryPhoto = {
   alt: string
   caption?: string | null
   uploaderName?: string | null
+  /** Pagination cursor for loading older photos. */
+  createdAt: string
 }
 
 function Lightbox({
@@ -116,17 +118,43 @@ function Lightbox({
 export function Gallery({
   eventId,
   photos,
+  hasMore,
+  coverImageId,
   unlocked,
   dict,
 }: {
   eventId: number
   photos: GalleryPhoto[]
+  hasMore: boolean
+  coverImageId?: number | null
   unlocked: boolean
   dict: Dictionary['gallery']
 }) {
   const [pending, startTransition] = useTransition()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Older pages pulled on demand; `photos` stays the server's freshest window.
+  const [older, setOlder] = useState<GalleryPhoto[]>([])
+  const [moreAvailable, setMoreAvailable] = useState(hasMore)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+
+  const allPhotos = useMemo(() => {
+    const seen = new Set(photos.map((photo) => photo.id))
+    return [...photos, ...older.filter((photo) => !seen.has(photo.id))]
+  }, [photos, older])
+
+  const showOlder = () => {
+    const oldest = allPhotos[allPhotos.length - 1]
+    if (!oldest || loadingOlder) return
+    setLoadingOlder(true)
+    startTransition(async () => {
+      const result = await loadOlderPhotos(eventId, oldest.createdAt, coverImageId)
+      setOlder((prev) => [...prev, ...result.photos])
+      setMoreAvailable(result.hasMore)
+      setLoadingOlder(false)
+    })
+  }
 
   const onFiles = (files: FileList | null) => {
     if (!files || files.length === 0 || pending) return
@@ -142,7 +170,7 @@ export function Gallery({
 
   // Wrap-around navigation
   const nav = (delta: number) =>
-    setOpenIndex((i) => (i === null ? i : (i + delta + photos.length) % photos.length))
+    setOpenIndex((i) => (i === null ? i : (i + delta + allPhotos.length) % allPhotos.length))
 
   if (!unlocked) {
     return (
@@ -170,11 +198,11 @@ export function Gallery({
         </label>
       </div>
 
-      {photos.length === 0 ? (
+      {allPhotos.length === 0 ? (
         <p className="section__empty">{dict.empty}</p>
       ) : (
         <ul className="gallery__grid">
-          {photos.map((photo, index) => (
+          {allPhotos.map((photo, index) => (
             <li key={photo.id} className="gallery__photo">
               <button type="button" onClick={() => setOpenIndex(index)} aria-label={photo.alt || dict.title}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -188,9 +216,23 @@ export function Gallery({
         </ul>
       )}
 
+      {moreAvailable && (
+        <div className="load-more">
+          <button
+            type="button"
+            className={`btn btn--ghost btn--small ${loadingOlder ? 'is-loading' : ''}`}
+            disabled={loadingOlder}
+            aria-busy={loadingOlder}
+            onClick={showOlder}
+          >
+            <span className="btn__label">{dict.loadOlder}</span>
+          </button>
+        </div>
+      )}
+
       {openIndex !== null && (
         <Lightbox
-          photos={photos}
+          photos={allPhotos}
           index={openIndex}
           onClose={() => setOpenIndex(null)}
           onNav={nav}

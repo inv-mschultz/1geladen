@@ -9,14 +9,16 @@ import { getThemeMode } from '@/lib/mode'
 import { richTextToPlain } from '@/lib/richtext'
 import { EVENT_TIMEZONE } from '@/lib/time'
 import { getViewAsGuest } from '@/lib/viewas'
+import { fetchWallPosts } from '@/lib/wall'
+import { fetchGalleryPhotos } from '@/lib/gallery'
 import { AdminDock } from './AdminDock'
 import { BreakableTitle } from './BreakableTitle'
 import { BringList, type BringListItem } from './BringList'
 import { ArrowDown, ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
-import { Gallery, type GalleryPhoto } from './Gallery'
+import { Gallery } from './Gallery'
 import { Rsvp, type RsvpEntry } from './Rsvp'
-import { Wall, type WallPost } from './Wall'
+import { Wall } from './Wall'
 
 const asUser = (value: number | User | null | undefined): User | null =>
   typeof value === 'object' && value !== null ? value : null
@@ -64,7 +66,7 @@ export async function EventView({
   const viewAsGuest = isRealAdmin && (await getViewAsGuest())
   const isAdmin = isRealAdmin && !viewAsGuest
 
-  const [rsvps, posts, comments, items, photos] = await Promise.all([
+  const [rsvps, wall, items, photos] = await Promise.all([
     payload.find({
       collection: 'rsvps',
       where: { event: { equals: event.id } },
@@ -73,26 +75,7 @@ export async function EventView({
       overrideAccess: false,
       user,
     }),
-    payload.find({
-      collection: 'posts',
-      where: isAdmin
-        ? { event: { equals: event.id } }
-        : { and: [{ event: { equals: event.id } }, { deleted: { not_equals: true } }] },
-      sort: '-createdAt',
-      depth: 1,
-      limit: 200,
-      overrideAccess: false,
-      user,
-    }),
-    payload.find({
-      collection: 'comments',
-      where: { 'post.event': { equals: event.id } },
-      sort: 'createdAt',
-      depth: 1,
-      limit: 500,
-      overrideAccess: false,
-      user,
-    }),
+    fetchWallPosts({ payload, user, eventId: event.id, isAdmin }),
     payload.find({
       collection: 'bring-items',
       where: { event: { equals: event.id } },
@@ -102,14 +85,11 @@ export async function EventView({
       overrideAccess: false,
       user,
     }),
-    payload.find({
-      collection: 'media',
-      where: { event: { equals: event.id } },
-      sort: '-createdAt',
-      depth: 1,
-      limit: 500,
-      overrideAccess: false,
+    fetchGalleryPhotos({
+      payload,
       user,
+      eventId: event.id,
+      coverImageId: asMedia(event.coverImage)?.id ?? null,
     }),
   ])
 
@@ -136,37 +116,7 @@ export async function EventView({
     rsvpEntries[doc.status].push({ name: rsvpUser.name })
   }
 
-  const mediaUrl = (value: number | Media | null | undefined): string | null => {
-    const media = asMedia(value)
-    return media?.sizes?.card?.url ?? media?.url ?? null
-  }
-
-  const commentsByPost = new Map<number, WallPost['comments']>()
-  for (const comment of comments.docs) {
-    const postId = typeof comment.post === 'object' ? comment.post.id : comment.post
-    const list = commentsByPost.get(postId) ?? []
-    list.push({
-      id: comment.id,
-      authorName: asUser(comment.author)?.name ?? '?',
-      content: comment.content,
-      imageUrl: mediaUrl(comment.image),
-      gifUrl: comment.gifUrl,
-      createdAt: comment.createdAt,
-    })
-    commentsByPost.set(postId, list)
-  }
-
-  const wallPosts: WallPost[] = posts.docs.map((post) => ({
-    id: post.id,
-    authorName: asUser(post.author)?.name ?? '?',
-    content: post.content,
-    imageUrl: mediaUrl(post.image),
-    gifUrl: post.gifUrl,
-    deleted: Boolean(post.deleted),
-    mine: asUser(post.author)?.id === user.id,
-    createdAt: post.createdAt,
-    comments: commentsByPost.get(post.id) ?? [],
-  }))
+  const wallPosts = wall.posts
 
   const bringItems: BringListItem[] = items.docs.map((item) => {
     const claimedBy = asUser(item.claimedBy)
@@ -182,17 +132,7 @@ export async function EventView({
   })
 
   const coverImage = asMedia(event.coverImage)
-  const galleryPhotos: GalleryPhoto[] = photos.docs
-    .filter((photo) => photo.id !== coverImage?.id)
-    .map((photo) => ({
-      id: photo.id,
-      url: photo.sizes?.card?.url ?? photo.url ?? '',
-      largeUrl: photo.sizes?.hero?.url ?? photo.url ?? photo.sizes?.card?.url ?? '',
-      alt: photo.alt ?? '',
-      caption: photo.caption,
-      uploaderName: asUser(photo.uploadedBy)?.name ?? null,
-    }))
-    .filter((photo) => photo.url)
+  const galleryPhotos = photos.photos
 
   const when = formatEventDate(event.date, locale)
   const location = event.location
@@ -332,6 +272,7 @@ export async function EventView({
         <Wall
           eventId={event.id}
           posts={wallPosts}
+          hasMore={wall.hasMore}
           userName={user.name}
           hostName={host?.name}
           isAdmin={isAdmin}
@@ -343,7 +284,14 @@ export async function EventView({
       <section id="fotos" className="section section--gallery reveal" style={{ animationDelay: '0.3s' }}>
         <h2 className="section__title">{dict.gallery.title}</h2>
         <p className="section__subtitle">{dict.gallery.subtitle}</p>
-        <Gallery eventId={event.id} photos={galleryPhotos} unlocked={photosUnlocked} dict={dict.gallery} />
+        <Gallery
+          eventId={event.id}
+          photos={galleryPhotos}
+          hasMore={photos.hasMore}
+          coverImageId={coverImage?.id ?? null}
+          unlocked={photosUnlocked}
+          dict={dict.gallery}
+        />
       </section>
     </article>
   )

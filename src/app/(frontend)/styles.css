@@ -1259,6 +1259,13 @@ a {
   gap: 8px;
 }
 
+/* Shared by the wall and the gallery */
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
+}
+
 /* --- bring list ----------------------------------------------------------------------------------------- */
 
 .bring__list {
