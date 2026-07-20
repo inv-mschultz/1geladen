@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { BreakableTitle } from '@/components/BreakableTitle'
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import type { Event } from '@/payload-types'
@@ -56,7 +57,9 @@ function EventCard({
             <span className="event-card__cal-day">{fmt({ day: '2-digit' })}</span>
             <span className="event-card__cal-month">{fmt({ month: 'short' })}</span>
           </div>
-          <h2 className="event-card__title">{event.title}</h2>
+          <h2 className="event-card__title">
+            <BreakableTitle text={event.title} />
+          </h2>
         </div>
 
         <dl className="event-card__facts">

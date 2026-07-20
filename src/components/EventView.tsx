@@ -10,6 +10,7 @@ import { richTextToPlain } from '@/lib/richtext'
 import { EVENT_TIMEZONE } from '@/lib/time'
 import { getViewAsGuest } from '@/lib/viewas'
 import { AdminDock } from './AdminDock'
+import { BreakableTitle } from './BreakableTitle'
 import { BringList, type BringListItem } from './BringList'
 import { ArrowDown, ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
@@ -250,7 +251,9 @@ export async function EventView({
           </div>
 
           <div className="event__hero-text">
-            <h1 className="event__title">{event.title}</h1>
+            <h1 className="event__title">
+              <BreakableTitle text={event.title} />
+            </h1>
 
             <dl className="event__facts">
               <div className="event__fact">

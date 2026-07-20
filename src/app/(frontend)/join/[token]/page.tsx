@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { BreakableTitle } from '@/components/BreakableTitle'
 import { JoinForm } from '@/components/JoinForm'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
@@ -63,7 +64,9 @@ export default async function JoinPage(props: { params: Promise<{ token: string 
       {theme.base && <style>{themeCss(theme.base, theme.accent, theme.light)}</style>}
       <div className="landing__poster landing__poster--join reveal">
         <span className="sticker sticker--invite">{dict.join.kicker}</span>
-        <h1 className="landing__title">{event.title}</h1>
+        <h1 className="landing__title">
+          <BreakableTitle text={event.title} />
+        </h1>
         <p className="landing__blurb">{when}</p>
         <JoinForm inviteToken={token} dict={dict.join} />
         <p className="join-form__login">
