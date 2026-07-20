@@ -348,6 +348,48 @@ a {
   cursor: wait;
 }
 
+/* The button that's actually working keeps full contrast and grows a spinner;
+   its siblings just dim via :disabled above. */
+.btn.is-loading,
+.btn-quiet.is-loading {
+  opacity: 1;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.btn.is-loading::after,
+.btn-quiet.is-loading::after {
+  content: '';
+  width: 0.85em;
+  height: 0.85em;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+/* Icon-only buttons swap their glyph for the spinner instead of showing both */
+.btn--icon.is-loading svg,
+.btn-quiet.is-loading svg {
+  display: none;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading::after,
+  .btn-quiet.is-loading::after {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.5;
+  }
+}
+
 .btn--big {
   font-size: 1.02rem;
   padding: 15px 32px;
@@ -909,8 +951,9 @@ a {
   font-size: clamp(1.9rem, 5.5vw, 3rem);
   margin-bottom: 22px;
   color: var(--c-accent);
+  /* Plain breaks without inserted dashes — auto-hyphenation puts a "-" after
+     dotted names like FAST.FIERZIG.FEIERN */
   overflow-wrap: anywhere;
-  hyphens: auto;
 }
 
 .event__facts {
@@ -1114,9 +1157,12 @@ a {
   display: inline-block;
 }
 
-.rsvp-nudgebar:hover .rsvp-nudgebar__inner {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+/* Hover-capable devices only — on touch the :hover state sticks after tapping */
+@media (hover: hover) {
+  .rsvp-nudgebar:hover .rsvp-nudgebar__inner {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 /* Clear the sticky header plus the sticky nudge bar that triggers this scroll */
@@ -1165,13 +1211,20 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
   padding: 14px 2px;
   border-bottom: 1px solid var(--c-line);
 }
 
 .bring__item:last-child {
   border-bottom: none;
+}
+
+.bring__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .bring__title {
@@ -1192,8 +1245,11 @@ a {
 .bring__status {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+  /* Stays right-aligned even when it wraps onto its own row on phones */
+  margin-left: auto;
 }
 
 .bring__open {
@@ -1219,6 +1275,7 @@ a {
 
 .bring__add .btn {
   justify-self: end;
+  margin-top: 10px;
 }
 
 /* --- wall ------------------------------------------------------------------------------------------------- */
@@ -1253,6 +1310,8 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  /* 8px + the grid's 12px row gap = the same 20px as the bring-list add button */
+  margin-top: 8px;
 }
 
 .wall__attach-buttons {
@@ -2136,6 +2195,8 @@ a {
 
   .site-mainnav a {
     white-space: nowrap;
+    /* breathing room below the user pill; also grows the tap target */
+    padding-top: 10px;
   }
 }
 
@@ -2162,6 +2223,10 @@ a {
 
   .site-mainnav a {
     font-size: 0.72rem;
+  }
+
+  .bring__item {
+    gap: 12px;
   }
 
   .event__hero {

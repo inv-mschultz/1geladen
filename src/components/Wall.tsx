@@ -252,8 +252,9 @@ function CommentForm({ postId, dict }: { postId: number; dict: Dictionary['wall'
         {canSend && (
           <button
             type="submit"
-            className="btn btn--icon btn--send"
+            className={`btn btn--icon btn--send ${pending ? 'is-loading' : ''}`}
             disabled={pending}
+            aria-busy={pending}
             aria-label={dict.comment}
             title={dict.comment}
           >
@@ -284,6 +285,7 @@ export function Wall({
 }) {
   const [pending, startTransition] = useTransition()
   const [draft, setDraft] = useState('')
+  const [posting, setPosting] = useState(false)
   const [showGifs, setShowGifs] = useState(false)
   const { attachment, attachGif, attachImage, clear, appendTo } = useAttachment()
 
@@ -292,11 +294,13 @@ export function Wall({
     const formData = new FormData()
     formData.set('content', draft.trim())
     appendTo(formData)
+    setPosting(true)
     startTransition(async () => {
       await createPost(eventId, formData)
       setDraft('')
       clear()
       setShowGifs(false)
+      setPosting(false)
     })
   }
 
@@ -336,8 +340,9 @@ export function Wall({
           <AttachButtons onImage={attachImage} onGifToggle={() => setShowGifs((v) => !v)} dict={dict} />
           <button
             type="button"
-            className="btn"
+            className={`btn ${posting ? 'is-loading' : ''}`}
             disabled={pending || (!draft.trim() && !attachment)}
+            aria-busy={posting}
             onClick={submitPost}
           >
             {dict.post}

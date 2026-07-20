@@ -48,7 +48,12 @@ export function JoinForm({
           className="input"
           autoComplete="name"
         />
-        <button type="submit" className="btn btn--big btn--yes" disabled={pending}>
+        <button
+          type="submit"
+          className={`btn btn--big btn--yes ${pending ? 'is-loading' : ''}`}
+          disabled={pending}
+          aria-busy={pending}
+        >
           {dict.cta}
         </button>
       </form>

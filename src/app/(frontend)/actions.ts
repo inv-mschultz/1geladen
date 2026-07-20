@@ -88,9 +88,13 @@ export async function joinParty(inviteToken: string, name: string): Promise<{ er
     data: { name: trimmed.slice(0, 80), email, password, role: 'guest', guestJoin: true },
     overrideAccess: true,
   })
-  await addEventMember(payload, event, guest.id)
 
-  const login = await payload.login({ collection: 'users', data: { email, password } })
+  // Independent of each other — run concurrently so the guest waits for one
+  // round trip instead of two (matters on serverless + remote Postgres).
+  const [, login] = await Promise.all([
+    addEventMember(payload, event, guest.id),
+    payload.login({ collection: 'users', data: { email, password } }),
+  ])
   if (!login.token) return { error: 'failed' }
   await setSessionCookie(login.token, login.exp)
 

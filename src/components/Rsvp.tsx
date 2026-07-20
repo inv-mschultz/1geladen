@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useTransition } from 'react'
+import React, { useState, useTransition } from 'react'
 
 import { rsvp } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
@@ -24,10 +24,16 @@ export function Rsvp({
   dict: Dictionary['rsvp']
 }) {
   const [pending, startTransition] = useTransition()
+  // Which button is in flight — so only that one spins, not all three
+  const [sending, setSending] = useState<Status | null>(null)
 
   const answer = (status: Status) => {
     if (pending || status === myStatus) return
-    startTransition(() => rsvp(eventId, status))
+    setSending(status)
+    startTransition(async () => {
+      await rsvp(eventId, status)
+      setSending(null)
+    })
   }
 
   const buttons: { status: Status; label: string; className: string }[] = [
@@ -53,8 +59,11 @@ export function Rsvp({
               key={status}
               type="button"
               disabled={pending}
+              aria-busy={sending === status}
               aria-pressed={myStatus === status}
-              className={`btn btn--big ${className} ${myStatus === status ? 'is-selected' : ''}`}
+              className={`btn btn--big ${className} ${myStatus === status ? 'is-selected' : ''} ${
+                sending === status ? 'is-loading' : ''
+              }`}
               onClick={() => answer(status)}
             >
               {label}
