@@ -1,7 +1,7 @@
 import type { CollectionConfig, FieldAccess } from 'payload'
 import { Forbidden } from 'payload'
 
-import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
+import { assertEventMember, isEventMember, isLoggedIn } from '@/access'
 
 const relId = (value: unknown): number | null => {
   if (value == null) return null
@@ -30,10 +30,12 @@ export const BringItems: CollectionConfig = {
   access: {
     read: isEventMember('event'),
     create: isLoggedIn,
-    // Members may update — but guests are limited to claiming/unclaiming
-    // themselves via the field access + hook below.
+    // Members may update — but everyone, host included, is limited to their own
+    // claim via the field access + hook below.
     update: isEventMember('event'),
-    delete: isAdminOrOwner('createdBy'),
+    // Whoever added it owns it. The host deliberately gets no override here:
+    // removing a guest's entry is the guest's call, not the host's.
+    delete: ({ req: { user } }) => (user ? { createdBy: { equals: user.id } } : false),
   },
   hooks: {
     beforeChange: [
@@ -42,22 +44,26 @@ export const BringItems: CollectionConfig = {
           await assertEventMember(req, data.event)
           if (req.user && req.user.role !== 'admin') {
             data.createdBy = req.user.id
+            // A guest adding an item is committing to bring it. Only the host
+            // puts something on the list for somebody else to pick up.
+            data.claimedBy = req.user.id
           }
         }
 
-        // Guests may only claim a free item for themselves, or release their own claim.
-        if (
-          operation === 'update' &&
-          req.user &&
-          req.user.role !== 'admin' &&
-          data &&
-          'claimedBy' in data
-        ) {
+        // Claims are personal: you may take a free item, or step out of one you
+        // took. Nobody de-assigns anybody else — the host included.
+        //
+        // The one asymmetry: a guest cannot unclaim an item they added, because
+        // adding it *was* the commitment to bring it; their exit is deleting the
+        // entry. The host can, since they also put things up for others.
+        if (operation === 'update' && req.user && data && 'claimedBy' in data) {
           const incoming = relId(data.claimedBy)
           const current = relId(originalDoc?.claimedBy)
           const me = req.user.id
+          const iAdded = relId(originalDoc?.createdBy) === me
+          const isAdmin = req.user.role === 'admin'
           const claiming = incoming === me && current === null
-          const unclaiming = incoming === null && current === me
+          const unclaiming = incoming === null && current === me && (isAdmin || !iAdded)
           const unchanged = incoming === current
           if (!claiming && !unclaiming && !unchanged) {
             throw new Forbidden()

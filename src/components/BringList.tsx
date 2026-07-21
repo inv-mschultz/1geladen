@@ -13,6 +13,8 @@ export type BringListItem = {
   note?: string | null
   claimedByName?: string | null
   claimedByMe: boolean
+  /** Added by the viewer — their claim is intrinsic, so they delete rather than unclaim. */
+  createdByMe: boolean
   canDelete: boolean
 }
 
@@ -20,11 +22,14 @@ export function BringList({
   eventId,
   items,
   hostName,
+  isAdmin,
   dict,
 }: {
   eventId: number
   items: BringListItem[]
   hostName?: string | null
+  /** Only the host may release someone else's claim (or their own). */
+  isAdmin: boolean
   dict: Dictionary['bring']
 }) {
   const [pending, startTransition] = useTransition()
@@ -62,53 +67,61 @@ export function BringList({
               <div className="bring__info">
                 <span className="bring__title">{item.title}</span>
                 {item.note && <span className="bring__note">{item.note}</span>}
-                {!item.claimedByName && <span className="bring__open">{dict.open}</span>}
               </div>
               <div className="bring__status">
-                {item.claimedByName ? (
-                  <span className="chip chip--claimed">
-                    <Avatar name={item.claimedByName} size={22} host={item.claimedByName === hostName} />
-                    <span className="chip__name">{item.claimedByName}</span> {dict.claimedBy}
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    className={`btn btn--small btn--claim ${
-                      busy === `claim-${item.id}` ? 'is-loading' : ''
-                    }`}
-                    disabled={pending}
-                    aria-busy={busy === `claim-${item.id}`}
-                    onClick={() => run(`claim-${item.id}`, () => claimBringItem(item.id, true))}
-                  >
-                    <span className="btn__label">{dict.claim}</span>
-                  </button>
-                )}
-                {item.claimedByMe && (
-                  <button
-                    type="button"
-                    className={`btn-quiet ${busy === `unclaim-${item.id}` ? 'is-loading' : ''}`}
-                    disabled={pending}
-                    aria-busy={busy === `unclaim-${item.id}`}
-                    aria-label={dict.unclaim}
-                    title={dict.unclaim}
-                    onClick={() => run(`unclaim-${item.id}`, () => claimBringItem(item.id, false))}
-                  >
-                    <X />
-                  </button>
-                )}
-                {item.canDelete && (
-                  <button
-                    type="button"
-                    className={`btn-quiet ${busy === `delete-${item.id}` ? 'is-loading' : ''}`}
-                    disabled={pending}
-                    aria-busy={busy === `delete-${item.id}`}
-                    aria-label={dict.deleteItem}
-                    title={dict.deleteItem}
-                    onClick={() => run(`delete-${item.id}`, () => deleteBringItem(item.id))}
-                  >
-                    <Trash />
-                  </button>
-                )}
+                {!item.claimedByName && <span className="bring__open">{dict.open}</span>}
+                <div className="bring__actions">
+                  {item.claimedByName ? (
+                    <span className="chip chip--claimed">
+                      <Avatar
+                        name={item.claimedByName}
+                        size={22}
+                        host={item.claimedByName === hostName}
+                      />
+                      <span className="chip__name">{item.claimedByName}</span> {dict.claimedBy}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`btn btn--small btn--claim ${
+                        busy === `claim-${item.id}` ? 'is-loading' : ''
+                      }`}
+                      disabled={pending}
+                      aria-busy={busy === `claim-${item.id}`}
+                      onClick={() => run(`claim-${item.id}`, () => claimBringItem(item.id, true))}
+                    >
+                      <span className="btn__label">{dict.claim}</span>
+                    </button>
+                  )}
+                  {/* Only ever removes yourself, and never from an item you
+                      added unless you're the host — mirrors the server rule. */}
+                  {item.claimedByMe && (isAdmin || !item.createdByMe) && (
+                    <button
+                      type="button"
+                      className={`btn-quiet ${busy === `unclaim-${item.id}` ? 'is-loading' : ''}`}
+                      disabled={pending}
+                      aria-busy={busy === `unclaim-${item.id}`}
+                      aria-label={dict.unclaim}
+                      title={dict.unclaim}
+                      onClick={() => run(`unclaim-${item.id}`, () => claimBringItem(item.id, false))}
+                    >
+                      <X />
+                    </button>
+                  )}
+                  {item.canDelete && (
+                    <button
+                      type="button"
+                      className={`btn-quiet ${busy === `delete-${item.id}` ? 'is-loading' : ''}`}
+                      disabled={pending}
+                      aria-busy={busy === `delete-${item.id}`}
+                      aria-label={dict.deleteItem}
+                      title={dict.deleteItem}
+                      onClick={() => run(`delete-${item.id}`, () => deleteBringItem(item.id))}
+                    >
+                      <Trash />
+                    </button>
+                  )}
+                </div>
               </div>
             </li>
           ))}

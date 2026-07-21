@@ -127,7 +127,9 @@ export async function EventView({
       note: item.note,
       claimedByName: claimedBy?.name ?? null,
       claimedByMe: claimedBy?.id === user.id,
-      canDelete: isAdmin || createdById === user.id,
+      createdByMe: createdById === user.id,
+      // Whoever added it owns it — the host gets no override.
+      canDelete: createdById === user.id,
     }
   })
 
@@ -262,7 +264,13 @@ export async function EventView({
         <section id="mitbringen" className="section section--bring reveal" style={{ animationDelay: '0.1s' }}>
           <h2 className="section__title">{dict.bring.title}</h2>
           <p className="section__subtitle">{dict.bring.subtitle}</p>
-          <BringList eventId={event.id} items={bringItems} hostName={host?.name} dict={dict.bring} />
+          <BringList
+            eventId={event.id}
+            items={bringItems}
+            hostName={host?.name}
+            isAdmin={isAdmin}
+            dict={dict.bring}
+          />
         </section>
       )}
 

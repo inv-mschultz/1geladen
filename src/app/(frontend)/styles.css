@@ -1274,13 +1274,24 @@ a {
   padding: 0;
 }
 
+/* Unclaimed: stacked, so the "up for grabs" label and the claim button get
+   their own row and don't fight the title for width. */
 .bring__item {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 14px 2px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+/* Claimed: nothing left to decide, so it collapses to a single centred line —
+   text stack on the left, who's bringing it on the right. */
+.bring__item.is-claimed {
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 2px;
-  border-bottom: 1px solid var(--c-line);
 }
 
 .bring__item:last-child {
@@ -1310,13 +1321,21 @@ a {
   font-size: 0.88rem;
 }
 
+/* "noch zu vergeben" on the left, the action on the right. */
 .bring__status {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
-  /* Stays right-aligned even when it wraps onto its own row on phones */
+}
+
+/* margin-left keeps the action hard right even on claimed rows, where there is
+   no label opposite it for space-between to push against. */
+.bring__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-left: auto;
 }
 
@@ -1326,6 +1345,9 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--c-muted);
+  /* All caps, so the line box's descender space sits empty below the glyphs and
+     flex centring reads ~2px high. Collapsing the line box to the text fixes it. */
+  line-height: 1;
 }
 
 .bring__add {
@@ -1690,32 +1712,89 @@ a {
 
 /* --- emoji picker ------------------------------------------------------------------------------------------ */
 
+/* One step darker than the cards this sits inside — at --c-surface-2 the shell
+   was the exact same colour as a wall post, so its padding read as no padding
+   and the search field looked like it was floating loose. */
 .emoji-picker {
-  background: var(--c-surface-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
   border-radius: 16px;
   padding: 12px;
   margin-bottom: 10px;
 }
 
+/* The close button is positioned inside the field rather than beside it, so
+   the input spans the full content width and lines up with the well below. */
 .emoji-picker__head {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 10px;
+  position: relative;
 }
 
 .emoji-picker__head .input {
-  flex: 1;
-  background: var(--c-surface);
+  width: 100%;
+  padding-right: 38px;
+  /* Matches the well below, so field and grid read as one pair on the shell. */
+  background: var(--c-bg);
 }
 
+/* Centred via auto margins, not translateY(-50%): .btn:hover sets its own
+   transform, which would replace the centring and drop the button mid-hover. */
+.emoji-picker__head .btn--icon {
+  position: absolute;
+  right: 5px;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  height: fit-content;
+  padding: 6px;
+  /* A filled square inside a text field reads as a second input; let it show
+     itself only when it's actually being reached for. */
+  background: transparent;
+  border-radius: 999px;
+}
+
+.emoji-picker__head .btn--icon:hover:not(:disabled) {
+  background: var(--c-surface-2);
+}
+
+/* Recessed well, darker than the picker shell and inset to exactly the same
+   width as the search field above it. */
 .emoji-picker__body {
+  background: var(--c-bg);
+  margin-top: 10px;
+  padding: 12px 8px 10px;
+  border-radius: 14px;
   max-height: 260px;
   overflow-y: auto;
+  /* Same approach as .drawer, one step softer — the default bar is a grey slab
+     against the dark well. Firefox/standard first, WebKit below. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-line) transparent;
+}
+
+.emoji-picker__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.emoji-picker__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.emoji-picker__body::-webkit-scrollbar-thumb {
+  background: var(--c-line);
+  border-radius: 999px;
+  /* Transparent border keeps the thumb visually slim without shrinking the
+     hit area, so it stays easy to grab. */
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.emoji-picker__body::-webkit-scrollbar-thumb:hover {
+  background: var(--c-line-strong);
+  background-clip: content-box;
 }
 
 .emoji-picker__group-title {
-  margin: 10px 2px 6px;
+  margin: 14px 2px 6px;
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -1732,8 +1811,11 @@ a {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
-  gap: 2px;
+  /* Cells sized close to the glyph itself. Letting them stretch to 1fr left
+     ~18px of dead space around each emoji on wide screens. */
+  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+  gap: 1px;
+  justify-content: start;
 }
 
 .emoji-picker__grid button {
@@ -1749,12 +1831,12 @@ a {
   cursor: pointer;
   /* Emoji render via the system font — the app face has no glyphs for them. */
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   line-height: 1;
 }
 
 .emoji-picker__grid button:hover {
-  background: var(--c-surface);
+  background: var(--c-surface-2);
 }
 
 .emoji-picker__empty {
@@ -1775,6 +1857,32 @@ a {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+  /* Matches the 10px an image already leaves; the bottom gap was missing
+     entirely, so the row sat flush against the comments below it. */
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* After text, the same 10px reads bigger: the paragraph's last line box carries
+   descender slack the glyphs never fill. Tightened so the optical distance
+   matches a hard media edge. (Adjacent margins collapse, so the paragraph's own
+   bottom margin has to come off too — otherwise it just wins at 10px.) */
+.wall__content:has(+ .reactions) {
+  margin-bottom: 0;
+}
+
+.wall__content + .reactions {
+  margin-top: 6px;
+}
+
+/* Same correction for comments. Their container is a flex column with gap: 2px,
+   and flex items don't collapse margins — the gap adds to the margin instead of
+   swallowing it, so these values are 2px lower than the post equivalents. */
+.wall__comment-text + .reactions {
+  margin-top: 4px;
+}
+
+.wall__comment-media + .reactions {
   margin-top: 8px;
 }
 
@@ -2487,10 +2595,6 @@ a {
 
   .site-mainnav a {
     font-size: 0.72rem;
-  }
-
-  .bring__item {
-    gap: 12px;
   }
 
   .event__hero {
