@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useOptimistic, useTransition } from 'react'
 
 import { rsvp } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
@@ -24,15 +24,22 @@ export function Rsvp({
   dict: Dictionary['rsvp']
 }) {
   const [pending, startTransition] = useTransition()
-  // Which button is in flight — so only that one spins, not all three
-  const [sending, setSending] = useState<Status | null>(null)
+  // The answer shows immediately and is replaced by the server's version when
+  // revalidation lands — the round trip is several queries deep, and waiting on
+  // it made a tap feel broken.
+  const [shownStatus, showStatus] = useOptimistic(myStatus)
+  // Which button is in flight — so only that one spins, not all three.
+  const [sending, showSending] = useOptimistic<Status | null, Status | null>(
+    null,
+    (_, next) => next,
+  )
 
   const answer = (status: Status) => {
-    if (pending || status === myStatus) return
-    setSending(status)
+    if (pending || status === shownStatus) return
     startTransition(async () => {
+      showStatus(status)
+      showSending(status)
       await rsvp(eventId, status)
-      setSending(null)
     })
   }
 
@@ -60,8 +67,8 @@ export function Rsvp({
               type="button"
               disabled={pending}
               aria-busy={sending === status}
-              aria-pressed={myStatus === status}
-              className={`btn btn--big ${className} ${myStatus === status ? 'is-selected' : ''} ${
+              aria-pressed={shownStatus === status}
+              className={`btn btn--big ${className} ${shownStatus === status ? 'is-selected' : ''} ${
                 sending === status ? 'is-loading' : ''
               }`}
               onClick={() => answer(status)}

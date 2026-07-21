@@ -1,5 +1,6 @@
-import type { Access, FieldAccess, PayloadRequest, Where } from 'payload'
+import type { Access, FieldAccess, Payload, PayloadRequest, Where } from 'payload'
 import { Forbidden } from 'payload'
+import { cache } from 'react'
 
 import type { User } from '@/payload-types'
 
@@ -29,18 +30,31 @@ export const isAdminOrOwner =
 export const hasRole = (user: User | null | undefined, role: User['role']): boolean =>
   user?.role === role
 
-/** IDs of all events the user is a member of. */
-export async function memberEventIds(req: PayloadRequest): Promise<number[]> {
-  if (!req.user) return []
-  const { docs } = await req.payload.find({
+/**
+ * Deduped per request. Nearly every access check needs this list, and a single
+ * event view checks access for rsvps, posts, comments, bring items, reactions
+ * and media — so this ran a dozen-plus times per render, each an identical
+ * query. Keyed on the user id rather than the request, because Payload builds a
+ * fresh `req` for every Local API call and identity-keyed caching would always
+ * miss. Falls back to querying normally outside a request scope, so the worst
+ * case is the old behaviour rather than a wrong answer.
+ */
+const eventIdsForUser = cache(async (payload: Payload, userId: number): Promise<number[]> => {
+  const { docs } = await payload.find({
     collection: 'events',
-    where: { members: { in: [req.user.id] } },
+    where: { members: { in: [userId] } },
     limit: 100,
     depth: 0,
     select: {},
     overrideAccess: true,
   })
   return docs.map((event) => event.id)
+})
+
+/** IDs of all events the user is a member of. */
+export async function memberEventIds(req: PayloadRequest): Promise<number[]> {
+  if (!req.user) return []
+  return eventIdsForUser(req.payload, req.user.id)
 }
 
 /**
