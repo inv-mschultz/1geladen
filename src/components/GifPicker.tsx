@@ -78,25 +78,27 @@ export function GifPicker({
           autoFocus
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button type="button" className="btn btn--icon" aria-label="Close" onClick={onClose}>
+        <button type="button" className="btn btn--icon" aria-label={dict.close} onClick={onClose}>
           <X />
         </button>
       </div>
 
-      {!loading && gifs.length === 0 ? (
-        <p className="gif-picker__empty">{dict.gifEmpty}</p>
-      ) : (
-        <ul className="gif-picker__grid">
-          {gifs.map((gif) => (
-            <li key={gif.id}>
-              <button type="button" onClick={() => onPick(gif.url, gif.alt)}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={gif.preview} alt={gif.alt} loading="lazy" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="gif-picker__body">
+        {!loading && gifs.length === 0 ? (
+          <p className="gif-picker__empty">{dict.gifEmpty}</p>
+        ) : (
+          <ul className="gif-picker__grid">
+            {gifs.map((gif) => (
+              <li key={gif.id}>
+                <button type="button" onClick={() => onPick(gif.url, gif.alt)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={gif.preview} alt={gif.alt} loading="lazy" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <p className="gif-picker__footer">{dict.gifBy}</p>
     </div>

@@ -1588,7 +1588,6 @@ a {
   margin-top: 6px;
 }
 
-.wall__comment-composer .gif-picker,
 .wall__comment-composer .wall__attachment {
   margin-top: 8px;
 }
@@ -1642,25 +1641,8 @@ a {
 
 /* --- gif picker --------------------------------------------------------------------------------------------- */
 
-.gif-picker {
-  background: var(--c-surface-2);
-  border-radius: 16px;
-  padding: 12px;
-  margin-bottom: 10px;
-}
-
-.gif-picker__head {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.gif-picker__head .input {
-  flex: 1;
-  background: var(--c-surface);
-}
-
+/* Shell, head and well are shared with the emoji picker further down — see the
+   "picker chrome" block there. Only the results grid differs. */
 .gif-picker__grid {
   list-style: none;
   margin: 0;
@@ -1668,8 +1650,6 @@ a {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  max-height: 240px;
-  overflow-y: auto;
 }
 
 .gif-picker__grid button {
@@ -1712,10 +1692,13 @@ a {
 
 /* --- emoji picker ------------------------------------------------------------------------------------------ */
 
+/* --- picker chrome (shared by the emoji and GIF pickers) --------------------------------------------------- */
+
 /* One step darker than the cards this sits inside — at --c-surface-2 the shell
    was the exact same colour as a wall post, so its padding read as no padding
    and the search field looked like it was floating loose. */
-.emoji-picker {
+.emoji-picker,
+.gif-picker {
   background: var(--c-surface);
   border: 1px solid var(--c-line);
   border-radius: 16px;
@@ -1725,11 +1708,13 @@ a {
 
 /* The close button is positioned inside the field rather than beside it, so
    the input spans the full content width and lines up with the well below. */
-.emoji-picker__head {
+.emoji-picker__head,
+.gif-picker__head {
   position: relative;
 }
 
-.emoji-picker__head .input {
+.emoji-picker__head .input,
+.gif-picker__head .input {
   width: 100%;
   padding-right: 38px;
   /* Matches the well below, so field and grid read as one pair on the shell. */
@@ -1738,7 +1723,8 @@ a {
 
 /* Centred via auto margins, not translateY(-50%): .btn:hover sets its own
    transform, which would replace the centring and drop the button mid-hover. */
-.emoji-picker__head .btn--icon {
+.emoji-picker__head .btn--icon,
+.gif-picker__head .btn--icon {
   position: absolute;
   right: 5px;
   top: 0;
@@ -1752,13 +1738,15 @@ a {
   border-radius: 999px;
 }
 
-.emoji-picker__head .btn--icon:hover:not(:disabled) {
+.emoji-picker__head .btn--icon:hover:not(:disabled),
+.gif-picker__head .btn--icon:hover:not(:disabled) {
   background: var(--c-surface-2);
 }
 
 /* Recessed well, darker than the picker shell and inset to exactly the same
    width as the search field above it. */
-.emoji-picker__body {
+.emoji-picker__body,
+.gif-picker__body {
   background: var(--c-bg);
   margin-top: 10px;
   padding: 12px 8px 10px;
@@ -1771,15 +1759,18 @@ a {
   scrollbar-color: var(--c-line) transparent;
 }
 
-.emoji-picker__body::-webkit-scrollbar {
+.emoji-picker__body::-webkit-scrollbar,
+.gif-picker__body::-webkit-scrollbar {
   width: 8px;
 }
 
-.emoji-picker__body::-webkit-scrollbar-track {
+.emoji-picker__body::-webkit-scrollbar-track,
+.gif-picker__body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.emoji-picker__body::-webkit-scrollbar-thumb {
+.emoji-picker__body::-webkit-scrollbar-thumb,
+.gif-picker__body::-webkit-scrollbar-thumb {
   background: var(--c-line);
   border-radius: 999px;
   /* Transparent border keeps the thumb visually slim without shrinking the
@@ -1788,7 +1779,8 @@ a {
   background-clip: content-box;
 }
 
-.emoji-picker__body::-webkit-scrollbar-thumb:hover {
+.emoji-picker__body::-webkit-scrollbar-thumb:hover,
+.gif-picker__body::-webkit-scrollbar-thumb:hover {
   background: var(--c-line-strong);
   background-clip: content-box;
 }
@@ -1845,7 +1837,8 @@ a {
   font-size: 0.9rem;
 }
 
-.wall__comment-composer .emoji-picker {
+.wall__comment-composer .emoji-picker,
+.wall__comment-composer .gif-picker {
   margin-top: 8px;
   margin-bottom: 0;
 }
