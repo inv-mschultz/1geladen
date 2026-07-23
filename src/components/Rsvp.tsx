@@ -5,6 +5,7 @@ import React, { useOptimistic, useTransition } from 'react'
 import { rsvp } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
 import { Avatar } from './Avatar'
+import { Check } from './icons'
 
 type Status = 'yes' | 'maybe' | 'no'
 
@@ -74,6 +75,9 @@ export function Rsvp({
               onClick={() => answer(status)}
             >
               <span className="btn__label">{label}</span>
+              {/* Marks the answer without relying on colour alone. Held back
+                  while sending so it doesn't sit next to the loading dots. */}
+              {shownStatus === status && sending !== status && <Check />}
             </button>
           ))}
         </div>

@@ -43,6 +43,14 @@ export const ArrowUp = () => (
   </svg>
 )
 
+/* Heavier than the shared stroke: it sits next to an 800-weight label and a
+   3px border, and at the icon's size the default reads thin beside them. */
+export const Check = () => (
+  <svg {...iconProps} strokeWidth={4}>
+    <path d="m5 13 5 5L19 7" />
+  </svg>
+)
+
 export const X = () => (
   <svg {...iconProps}>
     <path d="M6 6l12 12M18 6L6 18" />

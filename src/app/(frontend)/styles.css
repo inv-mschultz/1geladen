@@ -472,41 +472,38 @@ a {
   color: var(--c-on-accent);
 }
 
-.btn--maybe {
-  background: var(--c-surface-2);
-  color: var(--c-bright);
-  border: 2px solid var(--c-bright);
-}
-
-.btn--no {
-  background: transparent;
-  color: var(--c-bright);
-  border: 2px solid var(--c-bright);
-}
-
 .btn--claim {
   font-size: 0.78rem;
   padding: 8px 16px;
 }
 
-.btn.is-selected {
-  background: var(--c-accent);
-  color: var(--c-on-accent);
-  border: none;
-  box-shadow: 0 0 0 3px var(--c-surface), 0 0 0 6px var(--c-accent);
-}
-
-/* Maybe/No keep their own look when selected — the ring alone marks the choice */
-.btn--maybe.is-selected {
-  background: var(--c-surface-2);
-  color: var(--c-bright);
-  border: 2px solid var(--c-bright);
-}
-
-.btn--no.is-selected {
+/* The three answers are one control, not a CTA plus two alternatives: same
+   background, same border, same weight. (Outside this group .btn--yes keeps
+   its fill — there it's a primary action with no selected state to confuse.) */
+.rsvp__buttons .btn {
   background: transparent;
   color: var(--c-bright);
   border: 2px solid var(--c-bright);
+  box-shadow: none;
+}
+
+.rsvp__buttons .btn--big {
+  padding: 15px 22px;
+}
+
+/* Picking one recolours the border it already had and adds the check — no
+   fill, no ring, nothing that changes the row's weight as answers switch.
+   The label goes accent with it, and the check follows via currentColor. */
+.rsvp__buttons .btn.is-selected {
+  border-color: var(--c-accent);
+  border-width: 3px;
+  color: var(--c-accent);
+}
+
+/* The check adds its own width on the trailing side, so that side gives some
+   padding back and the label stays optically centred. */
+.rsvp__buttons .btn--big.is-selected {
+  padding-right: 14px;
 }
 
 .btn--icon {
@@ -2828,6 +2825,15 @@ a {
     text-align: center;
     font-size: 0.82rem;
     padding: 10px 6px;
+    /* Three buttons share the row here — the check mark has to fit next to
+       the label without pushing it into a wrap. */
+    gap: 5px;
+  }
+
+  /* Same trailing give-back as on wide screens, scaled to this padding —
+     without it the desktop 14px would read as an increase against 6px. */
+  .rsvp__buttons .btn--big.is-selected {
+    padding-right: 4px;
   }
 
   .gallery__upload {
