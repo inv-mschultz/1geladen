@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 const SECTIONS = ['info', 'mitbringen', 'pinnwand', 'fotos'] as const
 type SectionId = (typeof SECTIONS)[number]
@@ -12,6 +12,10 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
   // previous page is ignored on navigation without resetting state in an effect.
   const [active, setActive] = useState<{ path: string; id: SectionId } | null>(null)
   const activeId = active?.path === pathname ? active.id : null
+  // While a click-triggered smooth scroll is in flight, the sections it travels
+  // past would each claim the highlight. Pin it to the destination instead.
+  const pendingRef = useRef<SectionId | null>(null)
+  const pendingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Anchor links only make sense where an event view is rendered
   const hasEventView = pathname === '/' || /^\/events\/(?!new$)[^/]+$/.test(pathname)
@@ -30,7 +34,12 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
           else visible.delete(entry.target.id)
         }
         const current = SECTIONS.find((id) => visible.has(id))
-        if (current) setActive({ path: pathname, id: current })
+        if (!current) return
+        if (pendingRef.current) {
+          if (current !== pendingRef.current) return
+          pendingRef.current = null
+        }
+        setActive({ path: pathname, id: current })
       },
       // Top offset matches the sticky header; a section counts as "current"
       // once it enters the upper half of the viewport.
@@ -39,6 +48,28 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
     elements.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
   }, [pathname])
+
+  useEffect(
+    () => () => {
+      if (pendingTimer.current) clearTimeout(pendingTimer.current)
+    },
+    [],
+  )
+
+  function clearPending() {
+    pendingRef.current = null
+    if (pendingTimer.current) clearTimeout(pendingTimer.current)
+    pendingTimer.current = null
+  }
+
+  function handleClick(id: SectionId) {
+    setActive({ path: pathname, id })
+    clearPending()
+    pendingRef.current = id
+    // A short section at the very bottom may never reach the observer band, so
+    // the pin can't rely on arrival alone — release it once the scroll is over.
+    pendingTimer.current = setTimeout(clearPending, 1200)
+  }
 
   if (!hasEventView) return null
 
@@ -49,7 +80,7 @@ export function MainNav({ labels }: { labels: Record<SectionId, string> }) {
           key={id}
           href={`#${id}`}
           className={activeId === id ? 'is-active' : ''}
-          onClick={() => setActive({ path: pathname, id })}
+          onClick={() => handleClick(id)}
         >
           {labels[id]}
         </a>
