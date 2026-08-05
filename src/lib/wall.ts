@@ -119,6 +119,7 @@ export async function fetchWallPosts({
     const list = commentsByPost.get(postId) ?? []
     list.push({
       id: comment.id,
+      authorId: asUser(comment.author)?.id ?? 0,
       authorName: asUser(comment.author)?.name ?? '?',
       content: comment.content,
       imageUrl: mediaUrl(comment.image),
@@ -133,6 +134,7 @@ export async function fetchWallPosts({
   return {
     posts: posts.docs.map((post) => ({
       id: post.id,
+      authorId: asUser(post.author)?.id ?? 0,
       authorName: asUser(post.author)?.name ?? '?',
       content: post.content,
       imageUrl: mediaUrl(post.image),

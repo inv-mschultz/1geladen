@@ -65,7 +65,8 @@ export async function EventView({
 
   // Running this party is a property of the event, not of the account: an
   // organizer with no stake in it is just another guest here.
-  const viewerIsHost = toIds(event.hosts).includes(user.id)
+  const hostIds = toIds(event.hosts)
+  const viewerIsHost = hostIds.includes(user.id)
   // Hosts can preview the event as a regular invited guest (bugfixing tool).
   const viewAsGuest = viewerIsHost && (await getViewAsGuest())
   const canModerate = viewerIsHost && !viewAsGuest
@@ -119,7 +120,8 @@ export async function EventView({
     if (!rsvpUser) continue
     if (rsvpUser.id === user.id && (!viewerIsCreator || viewAsGuest)) myStatus = doc.status
     if (rsvpUser.id === host?.id) continue
-    rsvpEntries[doc.status].push({ name: rsvpUser.name })
+    // Co-hosts keep their own answer, but are marked wherever they land.
+    rsvpEntries[doc.status].push({ name: rsvpUser.name, isHost: hostIds.includes(rsvpUser.id) })
   }
 
   const wallPosts = wall.posts
@@ -131,6 +133,7 @@ export async function EventView({
       id: item.id,
       title: item.title,
       note: item.note,
+      claimedById: claimedBy?.id ?? null,
       claimedByName: claimedBy?.name ?? null,
       claimedByMe: claimedBy?.id === user.id,
       createdByMe: createdById === user.id,
@@ -152,7 +155,6 @@ export async function EventView({
 
   // Everyone on the guest list is a candidate. Already populated on the event
   // doc, so the host controls cost no extra query.
-  const hostIds = toIds(event.hosts)
   const hostCandidates: HostListPerson[] = (event.members ?? [])
     .map(asUser)
     .filter((member): member is User => member !== null)
@@ -289,7 +291,7 @@ export async function EventView({
           <BringList
             eventId={event.id}
             items={bringItems}
-            hostName={host?.name}
+            hostIds={hostIds}
             isHost={canModerate}
             dict={dict.bring}
           />
@@ -303,8 +305,9 @@ export async function EventView({
           eventId={event.id}
           posts={wallPosts}
           hasMore={wall.hasMore}
+          userId={user.id}
           userName={user.name}
-          hostName={host?.name}
+          hostIds={hostIds}
           isHost={canModerate}
           locale={locale}
           dict={dict.wall}

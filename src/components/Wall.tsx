@@ -28,6 +28,7 @@ export type WallReaction = {
 
 export type WallComment = {
   id: number
+  authorId: number
   authorName: string
   content?: string | null
   imageUrl?: string | null
@@ -40,6 +41,7 @@ export type WallComment = {
 
 export type WallPost = {
   id: number
+  authorId: number
   authorName: string
   content?: string | null
   imageUrl?: string | null
@@ -328,11 +330,13 @@ function PostMedia({ imageUrl, gifUrl }: { imageUrl?: string | null; gifUrl?: st
 
 function CommentForm({
   postId,
+  userId,
   userName,
   dict,
   onOptimistic,
 }: {
   postId: number
+  userId: number
   userName: string
   dict: Dictionary['wall']
   onOptimistic: (postId: number, comment: WallComment) => void
@@ -360,6 +364,7 @@ function CommentForm({
     startTransition(async () => {
       onOptimistic(postId, {
         id: nextOptimisticId(),
+        authorId: userId,
         authorName: userName,
         content: content || undefined,
         createdAt: new Date().toISOString(),
@@ -477,8 +482,9 @@ export function Wall({
   eventId,
   posts,
   hasMore,
+  userId,
   userName,
-  hostName,
+  hostIds,
   isHost,
   locale,
   dict,
@@ -486,8 +492,10 @@ export function Wall({
   eventId: number
   posts: WallPost[]
   hasMore: boolean
+  userId: number
   userName: string
-  hostName?: string | null
+  /** Everyone running this event — they get the marked avatar. */
+  hostIds: number[]
   isHost: boolean
   locale: Locale
   dict: Dictionary['wall']
@@ -607,6 +615,7 @@ export function Wall({
         type: 'post',
         post: {
           id: nextOptimisticId(),
+          authorId: userId,
           authorName: userName,
           content: content || undefined,
           deleted: false,
@@ -626,7 +635,7 @@ export function Wall({
   return (
     <div className="wall">
       <div className="wall__composer">
-        <Avatar name={userName} host={userName === hostName} />
+        <Avatar name={userName} host={hostIds.includes(userId)} />
         <textarea
           ref={draftRef}
           value={draft}
@@ -697,7 +706,7 @@ export function Wall({
           {optimisticPosts.map((post) => (
             <li key={post.id} className={`wall__post ${post.deleted ? 'wall__post--deleted' : ''}`}>
               <div className="wall__post-head">
-                <Avatar name={post.authorName} host={post.authorName === hostName} />
+                <Avatar name={post.authorName} host={hostIds.includes(post.authorId)} />
                 <div className="wall__post-meta">
                   <strong>{post.authorName}</strong>
                   <time dateTime={post.createdAt} className="wall__time" suppressHydrationWarning>
@@ -749,7 +758,7 @@ export function Wall({
                 <ul className="wall__comments">
                   {post.comments.map((comment) => (
                     <li key={comment.id} className="wall__comment">
-                      <Avatar name={comment.authorName} size={24} host={comment.authorName === hostName} />
+                      <Avatar name={comment.authorName} size={24} host={hostIds.includes(comment.authorId)} />
                       <div className="wall__comment-body">
                         <div className="wall__comment-head">
                           <strong>{comment.authorName}</strong>
@@ -792,6 +801,7 @@ export function Wall({
               {!post.deleted && post.id > 0 && (
                 <CommentForm
                   postId={post.id}
+                  userId={userId}
                   userName={userName}
                   dict={dict}
                   onOptimistic={addOptimisticComment}

@@ -11,6 +11,7 @@ export type BringListItem = {
   id: number
   title: string
   note?: string | null
+  claimedById?: number | null
   claimedByName?: string | null
   claimedByMe: boolean
   /** Added by the viewer — their claim is intrinsic, so they delete rather than unclaim. */
@@ -21,13 +22,14 @@ export type BringListItem = {
 export function BringList({
   eventId,
   items,
-  hostName,
+  hostIds,
   isHost,
   dict,
 }: {
   eventId: number
   items: BringListItem[]
-  hostName?: string | null
+  /** Everyone running this event — they get the marked avatar. */
+  hostIds: number[]
   /** Only the host may release someone else's claim (or their own). */
   isHost: boolean
   dict: Dictionary['bring']
@@ -76,7 +78,7 @@ export function BringList({
                       <Avatar
                         name={item.claimedByName}
                         size={22}
-                        host={item.claimedByName === hostName}
+                        host={item.claimedById != null && hostIds.includes(item.claimedById)}
                       />
                       <span className="chip__name">{item.claimedByName}</span> {dict.claimedBy}
                     </span>
