@@ -412,6 +412,88 @@ describe('per-event host access', () => {
     })
   })
 
+  // The server action itself needs a request context, so these cover the rules
+  // it enforces at the layer underneath it.
+  describe('promoting and demoting', () => {
+    it('lets a host promote a member, who can then edit the event', async () => {
+      await payload.update({
+        collection: 'events',
+        id: eventA.id,
+        data: { hosts: [hostA.id, guest.id] },
+        overrideAccess: false,
+        user: hostA,
+      })
+
+      await expect(
+        payload.update({
+          collection: 'events',
+          id: eventA.id,
+          data: { title: `${MARK} event-a renamed by co-host` },
+          overrideAccess: false,
+          user: guest,
+        }),
+      ).resolves.toBeTruthy()
+
+      // …and only this event. Promotion is not a platform-wide grant.
+      expect(
+        await refused(
+          payload.update({
+            collection: 'events',
+            id: eventB.id,
+            data: { title: 'nope' },
+            overrideAccess: false,
+            user: guest,
+          }),
+        ),
+      ).toBe(true)
+    })
+
+    it('refuses a non-host rewriting the hosts list', async () => {
+      // Field access strips `hosts`, so the write silently does nothing rather
+      // than throwing — assert the list is unchanged, not that it threw.
+      await payload
+        .update({
+          collection: 'events',
+          id: eventB.id,
+          data: { hosts: [outsider.id] },
+          overrideAccess: false,
+          user: guest,
+        })
+        .catch(() => undefined)
+
+      const after = await payload.findByID({
+        collection: 'events',
+        id: eventB.id,
+        depth: 0,
+        overrideAccess: true,
+      })
+      expect(after.hosts).toEqual([hostB.id])
+    })
+
+    it('demotes back down to one host but no further', async () => {
+      const after = await payload.update({
+        collection: 'events',
+        id: eventA.id,
+        data: { hosts: [hostA.id] },
+        overrideAccess: false,
+        user: hostA,
+        depth: 0,
+      })
+      expect(after.hosts).toEqual([hostA.id])
+      expect(
+        await refused(
+          payload.update({
+            collection: 'events',
+            id: eventA.id,
+            data: { hosts: [] },
+            overrideAccess: false,
+            user: hostA,
+          }),
+        ),
+      ).toBe(true)
+    })
+  })
+
   describe('deleting a host', () => {
     it('refuses to delete the only host of an event', async () => {
       // The FK is ON DELETE cascade, so without the guard this would succeed

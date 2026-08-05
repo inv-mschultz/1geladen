@@ -15,6 +15,7 @@ import { fetchGalleryPhotos } from '@/lib/gallery'
 import { AdminDock } from './AdminDock'
 import { BreakableTitle } from './BreakableTitle'
 import { BringList, type BringListItem } from './BringList'
+import type { HostListPerson } from './HostList'
 import { ArrowDown, ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
 import { Gallery } from './Gallery'
@@ -149,6 +150,20 @@ export async function EventView({
   // Maps gets ONLY the address — the location's nickname would confuse it
   const mapsQuery = addressLine
 
+  // Everyone on the guest list is a candidate. Already populated on the event
+  // doc, so the host controls cost no extra query.
+  const hostIds = toIds(event.hosts)
+  const hostCandidates: HostListPerson[] = (event.members ?? [])
+    .map(asUser)
+    .filter((member): member is User => member !== null)
+    .map((member) => ({
+      id: member.id,
+      name: member.name,
+      isHost: hostIds.includes(member.id),
+      isCreator: member.id === host?.id,
+      isMe: member.id === user.id,
+    }))
+
   const themeMode = await getThemeMode()
   const lightMode = themeMode ? themeMode === 'light' : Boolean(event.invertTheme)
 
@@ -172,6 +187,8 @@ export async function EventView({
             editLabel={dict.events.edit}
             viewLabels={{ admin: dict.events.viewAdmin, guest: dict.events.viewGuest }}
             dict={dict.eventForm}
+            hostsDict={dict.hosts}
+            people={hostCandidates}
             light={lightMode}
             event={{
               id: event.id,

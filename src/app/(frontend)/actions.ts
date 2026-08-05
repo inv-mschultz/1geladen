@@ -9,7 +9,7 @@ import type { Where } from 'payload'
 
 import { randomBytes } from 'crypto'
 
-import { isHostOfFor } from '@/access'
+import { isHostOfFor, toIds } from '@/access'
 import type { GalleryPhoto } from '@/components/Gallery'
 import type { WallPost } from '@/components/Wall'
 import { getLocale, LOCALE_COOKIE } from '@/i18n/locale'
@@ -256,6 +256,60 @@ export async function updateEvent(
   }
 
   revalidatePath('/', 'layout')
+  return {}
+}
+
+/**
+ * Hands a guest the keys to this one event, or takes them back.
+ *
+ * Authorised twice on purpose: explicitly here, so a non-host gets a clean
+ * 'forbidden' rather than a throw, and again by Payload through the collection's
+ * `update: isEventHost('id')` plus the `hosts` field access.
+ */
+export async function setEventHost(
+  eventId: number,
+  userId: number,
+  host: boolean,
+): Promise<{ error?: string }> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+
+  // overrideAccess so a stranger gets 'forbidden' rather than a leaky 404.
+  const event = await payload.findByID({
+    collection: 'events',
+    id: eventId,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  const hosts = toIds(event.hosts)
+  if (!hosts.includes(user.id)) return { error: 'forbidden' }
+
+  const members = toIds(event.members)
+  // Rights follow the guest list — you cannot hand an arbitrary account id the
+  // keys to a party it was never invited to.
+  if (host && !members.includes(userId)) return { error: 'notMember' }
+  // Somebody has to be able to open this event tomorrow.
+  if (!host && hosts.length <= 1) return { error: 'lastHost' }
+
+  try {
+    await payload.update({
+      collection: 'events',
+      id: eventId,
+      data: { hosts: host ? [...new Set([...hosts, userId])] : hosts.filter((id) => id !== userId) },
+      overrideAccess: false,
+      user,
+    })
+  } catch {
+    return { error: 'failed' }
+  }
+
+  revalidatePath('/', 'layout')
+  revalidateEventViews()
+
+  // Stepping down means losing read access — a re-render here would land on a
+  // notFound(), so leave for a page the user can still see.
+  if (!host && userId === user.id) redirect('/events')
   return {}
 }
 

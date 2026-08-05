@@ -2972,3 +2972,70 @@ a {
 #fotos {
   scroll-margin-top: calc(var(--header-h, 73px) + 24px);
 }
+
+/* --- host list --------------------------------------------------------------------------------------- */
+
+.drawer__section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-line);
+}
+
+.drawer__subtitle {
+  font-variation-settings: 'wdth' 118;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.hostlist__hint {
+  color: var(--c-muted);
+  font-size: 0.88rem;
+  margin: 0 0 14px;
+}
+
+.hostlist__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hostlist__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hostlist__who {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.hostlist__name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hostlist__you {
+  color: var(--c-muted);
+  font-weight: 500;
+}
+
+.chip--host {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  padding: 3px 9px;
+  font-size: 0.72rem;
+}
+
+.hostlist__error {
+  color: var(--c-accent);
+  font-size: 0.88rem;
+  margin-top: 12px;
+}
