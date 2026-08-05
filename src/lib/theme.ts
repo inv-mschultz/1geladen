@@ -185,6 +185,44 @@ export function themeTokens(
   }
 }
 
+/** WCAG 2.1 relative luminance. Note this is sRGB-based, not OKLCH — the
+ *  accessibility threshold is defined against it, so the theme engine's own
+ *  perceptual space doesn't apply here. */
+function luminance(hex: string): number {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return 0
+  const [r, g, b] = rgb.map(toLinear)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** WCAG contrast between two hex colors, 1–21. */
+export function contrastRatio(a: string, b: string): number {
+  const la = luminance(a)
+  const lb = luminance(b)
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
+}
+
+/** AA for body text. Buttons here are ~14px bold, which is below the
+ *  large-text exemption (18.66px bold), so they need the full 4.5. */
+export const AA_CONTRAST = 4.5
+
+/**
+ * How readable each color actually ends up, once the engine has derived the
+ * text tone that sits on it: the base color carries page text, each accent
+ * carries button labels.
+ */
+export function themeContrast(
+  baseHex: string,
+  accentHex: string | null | undefined,
+  light = false,
+): { base: number; accent: number } {
+  const tokens = themeTokens(baseHex, accentHex, light)
+  return {
+    base: contrastRatio(tokens['--c-bright'], tokens['--c-bg']),
+    accent: contrastRatio(tokens['--c-accent'], tokens['--c-on-accent']),
+  }
+}
+
 /** Inline-style object for React `style` props. */
 export const themeStyle = (baseHex: string, accentHex?: string | null, light = false) =>
   themeTokens(baseHex, accentHex, light) as import('react').CSSProperties

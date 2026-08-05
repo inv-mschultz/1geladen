@@ -2886,14 +2886,26 @@ a {
 }
 
 .event-form__row--colors {
-  grid-template-columns: 1fr 1fr 1fr;
-  align-items: end;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .event-form__row--colors .color-field__hex {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Advisory, not an error: sits at the end of the trigger, out of the way of
+   the swatch and hex that the host is actually aiming at. */
+.color-field__warning {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.05rem;
+  /* Not the accent — that is the colour being complained about, and if it
+     fails contrast the warning would too. --c-bright is always readable. */
+  color: var(--c-bright);
 }
 
 /* --- full color picker ------------------------------------------------------------------------------------------------ */
@@ -2955,12 +2967,6 @@ a {
   background: #fff;
   border: 2.5px solid rgba(0, 0, 0, 0.35);
   cursor: grab;
-}
-
-@media (max-width: 640px) {
-  .event-form__row--colors {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* --- anchor scroll offset --------------------------------------------------------------------------------------------- */

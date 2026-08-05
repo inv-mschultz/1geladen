@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState, useTransition } from 'react'
 
 import { createEvent, updateEvent } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
-import { PLATFORM_ACCENT, themeTokens } from '@/lib/theme'
+import { AA_CONTRAST, PLATFORM_ACCENT, themeContrast, themeTokens } from '@/lib/theme'
 import { ColorField } from './ColorField'
 
 export type EventFormValues = {
@@ -152,6 +152,18 @@ export function EventForm({
     }
   }, [event, themeColor, accentColor, accentColorLight, previewLight])
 
+  // Each color is judged against the text the engine puts on it: the base
+  // carries page text, each accent carries button labels. The base is measured
+  // in whichever polarity is being previewed, since it drives both.
+  const baseContrast = themeContrast(themeColor, accentColor, previewLight).base
+  const darkAccentContrast = themeContrast(themeColor, accentColor, false).accent
+  const lightAccentContrast = themeContrast(themeColor, accentColorLight, true).accent
+
+  const contrastWarning = (ratio: number): string | null =>
+    ratio >= AA_CONTRAST
+      ? null
+      : dict.contrastWarning.replace('{ratio}', ratio.toFixed(1)).replace('{aa}', String(AA_CONTRAST))
+
   // Initial date/time in the browser's timezone, not the server's
   const initial = event ? new Date(event.dateIso) : null
   const initialDate = initial
@@ -284,6 +296,7 @@ export function EventForm({
               name="themeColor"
               value={themeColor}
               customLabel={dict.customColor}
+              warning={contrastWarning(baseContrast)}
               onChange={(hex) => {
                 setThemeColor(hex)
                 scheduleSave()
@@ -294,6 +307,7 @@ export function EventForm({
               name="accentColor"
               value={accentColor}
               customLabel={dict.customColor}
+              warning={contrastWarning(darkAccentContrast)}
               onChange={(hex) => {
                 setAccentColor(hex)
                 scheduleSave()
@@ -304,6 +318,7 @@ export function EventForm({
               name="accentColorLight"
               value={accentColorLight}
               customLabel={dict.customColor}
+              warning={contrastWarning(lightAccentContrast)}
               onChange={(hex) => {
                 setAccentColorLight(hex)
                 scheduleSave()
