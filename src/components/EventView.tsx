@@ -104,24 +104,32 @@ export async function EventView({
   const isPast = (eventEnd ?? eventStart).getTime() < now.getTime()
   const photosUnlocked = Boolean(event.photosOpen) || isPast
 
-  // Whoever threw the party is always in — their RSVP is implicit and can't be
-  // taken back. Deliberately the creator rather than every host: a guest
-  // promoted to co-host keeps their own answer, and their RSVP buttons.
+  // Running the party is the RSVP: every host is in, their answer is implicit
+  // and can't be taken back. Promoting a guest to co-host commits them the same
+  // way — the creator is only special in being listed first.
   const host = asUser(event.createdBy)
-  const viewerIsCreator = host?.id === user.id
+  const hostUsers = (event.hosts ?? []).map(asUser).filter((h): h is User => h !== null)
+  const orderedHosts = [
+    ...hostUsers.filter((h) => h.id === host?.id),
+    ...hostUsers.filter((h) => h.id !== host?.id),
+  ]
 
   const rsvpEntries: Record<'yes' | 'maybe' | 'no', RsvpEntry[]> = { yes: [], maybe: [], no: [] }
-  if (host) rsvpEntries.yes.push({ name: host.name, isHost: true })
-  // In guest preview the creator's clicks reflect in the buttons like any
-  // guest's; outside of it their answer is pinned to yes.
-  let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsCreator && !viewAsGuest ? 'yes' : null
+  for (const attending of orderedHosts) {
+    rsvpEntries.yes.push({ name: attending.name, isHost: true })
+  }
+
+  // In guest preview a host's clicks reflect in the buttons like any guest's;
+  // outside of it their answer is pinned to yes.
+  let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsHost && !viewAsGuest ? 'yes' : null
   for (const doc of rsvps.docs) {
     const rsvpUser = asUser(doc.user)
     if (!rsvpUser) continue
-    if (rsvpUser.id === user.id && (!viewerIsCreator || viewAsGuest)) myStatus = doc.status
-    if (rsvpUser.id === host?.id) continue
-    // Co-hosts keep their own answer, but are marked wherever they land.
-    rsvpEntries[doc.status].push({ name: rsvpUser.name, isHost: hostIds.includes(rsvpUser.id) })
+    if (rsvpUser.id === user.id && (!viewerIsHost || viewAsGuest)) myStatus = doc.status
+    // Hosts are listed above. Someone promoted after answering keeps their old
+    // row — it simply stops counting until they step back down.
+    if (hostIds.includes(rsvpUser.id)) continue
+    rsvpEntries[doc.status].push({ name: rsvpUser.name })
   }
 
   const wallPosts = wall.posts
@@ -169,7 +177,7 @@ export async function EventView({
   const themeMode = await getThemeMode()
   const lightMode = themeMode ? themeMode === 'light' : Boolean(event.invertTheme)
 
-  const needsRsvp = (!viewerIsCreator || viewAsGuest) && myStatus === null
+  const needsRsvp = (!viewerIsHost || viewAsGuest) && myStatus === null
 
   return (
     <article className="event">
@@ -272,7 +280,7 @@ export async function EventView({
             eventId={event.id}
             myStatus={myStatus}
             entries={rsvpEntries}
-            canRespond={!viewerIsCreator || viewAsGuest}
+            canRespond={!viewerIsHost || viewAsGuest}
             dict={dict.rsvp}
           />
         </div>

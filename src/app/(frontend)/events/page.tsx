@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { relId, toIds } from '@/access'
 import { BreakableTitle } from '@/components/BreakableTitle'
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
@@ -118,7 +119,10 @@ export default async function EventsOverviewPage() {
     user,
   })
 
-  const yesCounts = new Map<number, number>()
+  // Who said yes, per event. Ids rather than a running total, because hosts are
+  // attending by definition and have to be added without double-counting anyone
+  // who answered before being promoted.
+  const saidYes = new Map<number, Set<number>>()
   if (events.length > 0) {
     const rsvps = await payload.find({
       collection: 'rsvps',
@@ -131,9 +135,19 @@ export default async function EventsOverviewPage() {
       user,
     })
     for (const rsvp of rsvps.docs) {
-      const id = typeof rsvp.event === 'object' ? rsvp.event.id : rsvp.event
-      yesCounts.set(id, (yesCounts.get(id) ?? 0) + 1)
+      const eventId = relId(rsvp.event)
+      const userId = relId(rsvp.user)
+      if (!eventId || !userId) continue
+      const answered = saidYes.get(eventId) ?? new Set<number>()
+      answered.add(userId)
+      saidYes.set(eventId, answered)
     }
+  }
+
+  const attendingCount = (event: Event): number => {
+    const hosts = toIds(event.hosts)
+    const answered = saidYes.get(event.id) ?? new Set<number>()
+    return hosts.length + [...answered].filter((id) => !hosts.includes(id)).length
   }
 
   // Server Component: rendered once per request, so reading the clock here is
@@ -161,7 +175,7 @@ export default async function EventsOverviewPage() {
         <EventCard
           key={event.id}
           event={event}
-          yesCount={yesCounts.get(event.id) ?? 0}
+          yesCount={attendingCount(event)}
           countdown={withCountdown ? countdown(event) : undefined}
           locale={locale}
           dict={dict}
