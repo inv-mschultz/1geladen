@@ -61,22 +61,17 @@ export function HostList({
           const locked = person.isCreator || (person.isHost && hostCount <= 1)
           return (
             <li key={person.id} className="hostlist__row">
-              <span className="hostlist__who">
-                <Avatar name={person.name} size={26} host={person.isHost} />
-                <span className="hostlist__name">
-                  {person.name}
-                  {person.isMe && <span className="hostlist__you"> ({dict.you})</span>}
-                </span>
-                {person.isHost && (
-                  <span className="chip chip--host" title={person.isCreator ? dict.creator : undefined}>
-                    {dict.badge}
-                  </span>
-                )}
+              {/* Same pill as the guest list, so "host" reads the same everywhere. */}
+              <span className="chip" title={person.isCreator ? dict.creator : undefined}>
+                <Avatar name={person.name} size={22} host={person.isHost} />
+                <span className="chip__name">{person.name}</span>
+                {person.isHost && <span className="chip__tag">{dict.badge}</span>}
+                {person.isMe && <span className="chip__tag">{dict.you}</span>}
               </span>
               {!locked && (
                 <button
                   type="button"
-                  className={`btn btn--small ${busy === person.id ? 'is-loading' : ''}`}
+                  className={`btn btn--small btn--ghost ${busy === person.id ? 'is-loading' : ''}`}
                   disabled={pending}
                   aria-busy={busy === person.id}
                   onClick={() => toggle(person)}
