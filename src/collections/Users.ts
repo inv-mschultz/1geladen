@@ -1,6 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
-import { isAdmin, isAdminFieldLevel, isAdminOrSelf } from '@/access'
+import {
+  isAdminOrSelf,
+  isEventPeerOrSelf,
+  isPlatformAdmin,
+  isPlatformAdminFieldLevel,
+} from '@/access'
 import { releaseUserContent } from '@/lib/deletedGuest'
 
 export const Users: CollectionConfig = {
@@ -18,9 +23,9 @@ export const Users: CollectionConfig = {
     admin: ({ req: { user } }) => user?.role === 'admin',
     // Anyone may register as a guest; the role field below is admin-locked
     create: () => true,
-    read: ({ req: { user } }) => Boolean(user),
+    read: isEventPeerOrSelf,
     update: isAdminOrSelf,
-    delete: isAdmin,
+    delete: isPlatformAdmin,
   },
   hooks: {
     beforeChange: [
@@ -57,8 +62,8 @@ export const Users: CollectionConfig = {
       defaultValue: false,
       index: true,
       access: {
-        create: isAdminFieldLevel,
-        update: isAdminFieldLevel,
+        create: isPlatformAdminFieldLevel,
+        update: isPlatformAdminFieldLevel,
       },
       admin: { position: 'sidebar' },
     },
@@ -73,8 +78,8 @@ export const Users: CollectionConfig = {
         { label: 'Guest', value: 'guest' },
       ],
       access: {
-        create: isAdminFieldLevel,
-        update: isAdminFieldLevel,
+        create: isPlatformAdminFieldLevel,
+        update: isPlatformAdminFieldLevel,
       },
     },
   ],

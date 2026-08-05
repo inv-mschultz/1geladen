@@ -3,10 +3,11 @@ import { ValidationError } from 'payload'
 
 import {
   assertEventMember,
-  isAdminFieldLevel,
-  isAdminOrOwner,
+  canActAsHost,
+  isEventHostField,
   isEventMember,
   isLoggedIn,
+  isOwnerOrEventHost,
 } from '@/access'
 
 export const RSVPs: CollectionConfig = {
@@ -21,15 +22,15 @@ export const RSVPs: CollectionConfig = {
   access: {
     read: isEventMember('event'),
     create: isLoggedIn,
-    update: isAdminOrOwner('user'),
-    delete: isAdminOrOwner('user'),
+    update: isOwnerOrEventHost('user', 'event'),
+    delete: isOwnerOrEventHost('user', 'event'),
   },
   hooks: {
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation === 'create' && req.user) {
           await assertEventMember(req, data.event)
-          if (req.user.role !== 'admin') {
+          if (!(await canActAsHost(req, data.event))) {
             data.user = req.user.id
           }
           // One RSVP per guest per event — you cannot both come and not come.
@@ -71,10 +72,11 @@ export const RSVPs: CollectionConfig = {
       required: true,
       index: true,
       defaultValue: ({ user }) => user?.id,
-      // Admins may RSVP on a guest's behalf; guests are pinned to themselves by
-      // the beforeChange hook on create, and locked out of reassigning on update.
+      // The event's hosts may RSVP on a guest's behalf; guests are pinned to
+      // themselves by the beforeChange hook on create, and locked out of
+      // reassigning on update.
       access: {
-        update: isAdminFieldLevel,
+        update: isEventHostField('event'),
       },
     },
     {

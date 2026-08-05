@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { ValidationError } from 'payload'
 
-import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
+import { assertEventMember, canActAsHost, isEventMember, isLoggedIn, isOwnerOrEventHost } from '@/access'
 import { releasePostContent } from '@/lib/cascade'
 
 /** Only GIFs hosted by GIPHY may be embedded. */
@@ -24,8 +24,8 @@ export const Posts: CollectionConfig = {
   access: {
     read: isEventMember('event'),
     create: isLoggedIn,
-    update: isAdminOrOwner('author'),
-    delete: isAdminOrOwner('author'),
+    update: isOwnerOrEventHost('author', 'event'),
+    delete: isOwnerOrEventHost('author', 'event'),
   },
   hooks: {
     beforeValidate: [
@@ -39,7 +39,7 @@ export const Posts: CollectionConfig = {
       async ({ data, operation, req }) => {
         if (operation === 'create') {
           await assertEventMember(req, data.event)
-          if (req.user && req.user.role !== 'admin') {
+          if (req.user && !(await canActAsHost(req, data.event))) {
             data.author = req.user.id
           }
         }

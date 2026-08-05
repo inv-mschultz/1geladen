@@ -1,7 +1,14 @@
 import { randomBytes } from 'crypto'
 import type { CollectionConfig } from 'payload'
 
-import { isAdmin, isAdminFieldLevel, relId, toIds } from '@/access'
+import {
+  isEventHost,
+  isEventHostFieldSelf,
+  isEventMemberOrHost,
+  isPlatformAdmin,
+  relId,
+  toIds,
+} from '@/access'
 
 const formatSlug = (value: string): string =>
   value
@@ -20,15 +27,14 @@ export const Events: CollectionConfig = {
     defaultColumns: ['title', 'date', 'slug'],
   },
   access: {
-    // Guests only see events they are a member of (joined via invite link)
-    read: ({ req: { user } }) => {
-      if (!user) return false
-      if (user.role === 'admin') return true
-      return { members: { in: [user.id] } }
-    },
-    create: isAdmin,
-    update: isAdmin,
-    delete: isAdmin,
+    // You see the events you were invited to and the ones you run. Nothing else
+    // — an organizer has no window into somebody else's party.
+    read: isEventMemberOrHost,
+    // A capability, not event control: anyone who may create events may create
+    // events, and becomes the first host of the ones they create.
+    create: isPlatformAdmin,
+    update: isEventHost('id'),
+    delete: isEventHost('id'),
   },
   hooks: {
     beforeValidate: [
@@ -196,7 +202,7 @@ export const Events: CollectionConfig = {
       relationTo: 'users',
       index: true,
       access: {
-        update: ({ req: { user } }) => user?.role === 'admin',
+        update: isEventHostFieldSelf,
       },
       admin: { position: 'sidebar' },
     },
@@ -222,7 +228,7 @@ export const Events: CollectionConfig = {
       validate: (value: unknown) =>
         toIds(value).length > 0 || 'An event needs at least one host.',
       access: {
-        update: isAdminFieldLevel,
+        update: isEventHostFieldSelf,
       },
       admin: { position: 'sidebar' },
     },
@@ -235,7 +241,7 @@ export const Events: CollectionConfig = {
       hasMany: true,
       index: true,
       access: {
-        update: ({ req: { user } }) => user?.role === 'admin',
+        update: isEventHostFieldSelf,
       },
       admin: { position: 'sidebar' },
     },
@@ -247,7 +253,7 @@ export const Events: CollectionConfig = {
       unique: true,
       index: true,
       access: {
-        read: ({ req: { user } }) => user?.role === 'admin',
+        read: isEventHostFieldSelf,
       },
       admin: {
         position: 'sidebar',

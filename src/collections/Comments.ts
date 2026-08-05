@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { assertEventMember, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
+import { assertEventMember, canActAsHost, isEventMember, isLoggedIn, isOwnerOrEventHost } from '@/access'
 import { deleteReactionsFor } from '@/lib/cascade'
 import { GIF_URL_PATTERN, requireSomeContent } from './Posts'
 
@@ -12,8 +12,8 @@ export const Comments: CollectionConfig = {
   access: {
     read: isEventMember('post.event'),
     create: isLoggedIn,
-    update: isAdminOrOwner('author'),
-    delete: isAdminOrOwner('author'),
+    update: isOwnerOrEventHost('author', 'post.event'),
+    delete: isOwnerOrEventHost('author', 'post.event'),
   },
   hooks: {
     beforeValidate: [
@@ -30,7 +30,7 @@ export const Comments: CollectionConfig = {
             ? await req.payload.findByID({ collection: 'posts', id: postId, depth: 0, overrideAccess: true })
             : null
           await assertEventMember(req, post?.event as number | undefined)
-          if (req.user && req.user.role !== 'admin') {
+          if (req.user && !(await canActAsHost(req, post?.event as number | undefined))) {
             data.author = req.user.id
           }
         }
