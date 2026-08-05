@@ -2999,6 +2999,10 @@ a {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* No global ul reset in here — every list clears its own indent. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Pill left, action right, action column aligned down the list. The pill
