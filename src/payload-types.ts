@@ -212,6 +212,7 @@ export interface Event {
    * Light mode — dark content on a light background.
    */
   invertTheme?: boolean | null;
+  hosts?: (number | User)[] | null;
   members?: (number | User)[] | null;
   /**
    * Secret for the invite link. Auto-generated.
@@ -500,6 +501,7 @@ export interface EventsSelect<T extends boolean = true> {
   accentColorLight?: T;
   createdBy?: T;
   invertTheme?: T;
+  hosts?: T;
   members?: T;
   inviteToken?: T;
   photosOpen?: T;

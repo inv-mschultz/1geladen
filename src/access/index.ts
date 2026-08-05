@@ -4,6 +4,18 @@ import { cache } from 'react'
 
 import type { User } from '@/payload-types'
 
+/** The id out of a relationship value, whether it came back populated or raw. */
+export const relId = (value: unknown): number | null => {
+  if (value == null) return null
+  if (typeof value === 'object') return (value as { id?: number }).id ?? null
+  const id = Number(value)
+  return Number.isFinite(id) ? id : null
+}
+
+/** The ids out of a hasMany relationship value. */
+export const toIds = (value: unknown): number[] =>
+  Array.isArray(value) ? value.map(relId).filter((id): id is number => id !== null) : []
+
 export const isAdmin: Access = ({ req: { user } }) => user?.role === 'admin'
 
 export const isLoggedIn: Access = ({ req: { user } }) => Boolean(user)
