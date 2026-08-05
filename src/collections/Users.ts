@@ -7,6 +7,7 @@ import {
   isPlatformAdminFieldLevel,
 } from '@/access'
 import { releaseUserContent } from '@/lib/deletedGuest'
+import { assertNotSoleHost } from '@/lib/membership'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -41,6 +42,12 @@ export const Users: CollectionConfig = {
       },
     ],
     beforeDelete: [
+      // Losing the last host of an event would make it unreachable for
+      // everyone, and the FK cascade would do it silently. Checked first, so
+      // nothing is released before we know the delete can go ahead.
+      async ({ id, req }) => {
+        await assertNotSoleHost(req, Number(id))
+      },
       // Hand off the guest's content before the row goes, or the delete fails on
       // the NOT NULL author/user columns. See releaseUserContent.
       async ({ id, req }) => {

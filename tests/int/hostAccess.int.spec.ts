@@ -412,6 +412,62 @@ describe('per-event host access', () => {
     })
   })
 
+  describe('deleting a host', () => {
+    it('refuses to delete the only host of an event', async () => {
+      // The FK is ON DELETE cascade, so without the guard this would succeed
+      // and quietly leave an event nobody can open.
+      expect(
+        await refused(
+          payload.delete({ collection: 'users', id: hostA.id, overrideAccess: true }),
+        ),
+      ).toBe(true)
+
+      const still = await payload.findByID({
+        collection: 'events',
+        id: eventA.id,
+        depth: 0,
+        overrideAccess: true,
+      })
+      expect(still.hosts).toContain(hostA.id)
+    })
+
+    it('allows it once the event has another host', async () => {
+      const spare = await makeUser('spare-host', 'guest')
+      const solo = await payload.create({
+        collection: 'events',
+        data: {
+          title: `${MARK} handover`,
+          slug: `${MARK}-handover`,
+          date: new Date().toISOString(),
+          createdBy: spare.id,
+        },
+        overrideAccess: true,
+      })
+      expect(
+        await refused(payload.delete({ collection: 'users', id: spare.id, overrideAccess: true })),
+      ).toBe(true)
+
+      await payload.update({
+        collection: 'events',
+        id: solo.id,
+        data: { hosts: [spare.id, hostA.id] },
+        overrideAccess: true,
+      })
+      await expect(
+        payload.delete({ collection: 'users', id: spare.id, overrideAccess: true }),
+      ).resolves.toBeTruthy()
+
+      await payload.delete({ collection: 'events', id: solo.id, overrideAccess: true })
+    })
+
+    it('does not block deleting a plain guest', async () => {
+      const leaving = await makeUser('leaving', 'guest')
+      await expect(
+        payload.delete({ collection: 'users', id: leaving.id, overrideAccess: true }),
+      ).resolves.toBeTruthy()
+    })
+  })
+
   describe('user list', () => {
     it('shows only people sharing an event, plus yourself', async () => {
       const { docs } = await payload.find({
