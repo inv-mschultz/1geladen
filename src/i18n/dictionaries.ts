@@ -62,6 +62,7 @@ const de = {
     modeLight: 'Hell',
     colorsHint: 'Das Event startet mit den Standardfarben — anpassen kannst du sie später beim Bearbeiten.',
     customColor: 'Eigene Farbe (Hex)',
+    contrastLabel: 'Kontrast',
     contrastWarning:
       'Kontrast nur {ratio}:1 — nötig sind {required}:1, sonst wird es schwer lesbar.',
     description: 'Was erwartet die Gäste?',
@@ -285,6 +286,7 @@ const en: typeof de = {
     modeLight: 'Light',
     colorsHint: 'The event starts with the standard colors — you can change them later while editing.',
     customColor: 'Custom color (hex)',
+    contrastLabel: 'Contrast',
     contrastWarning:
       'Contrast is only {ratio}:1 — {required}:1 is needed, below that it gets hard to read.',
     description: 'What can guests expect?',

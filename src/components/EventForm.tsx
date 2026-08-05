@@ -300,6 +300,7 @@ export function EventForm({
               name="themeColor"
               value={themeColor}
               customLabel={dict.customColor}
+              warningLabel={dict.contrastLabel}
               warning={contrastWarning(baseReadability(themeColor, accentColor, previewLight))}
               onChange={(hex) => {
                 setThemeColor(hex)
@@ -311,6 +312,7 @@ export function EventForm({
               name="accentColor"
               value={accentColor}
               customLabel={dict.customColor}
+              warningLabel={dict.contrastLabel}
               warning={contrastWarning(accentReadability(themeColor, accentColor, false))}
               onChange={(hex) => {
                 setAccentColor(hex)
@@ -322,6 +324,7 @@ export function EventForm({
               name="accentColorLight"
               value={accentColorLight}
               customLabel={dict.customColor}
+              warningLabel={dict.contrastLabel}
               warning={contrastWarning(accentReadability(themeColor, accentColorLight, true))}
               onChange={(hex) => {
                 setAccentColorLight(hex)

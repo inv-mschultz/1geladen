@@ -65,14 +65,16 @@ export function ColorField({
   value,
   customLabel,
   warning,
+  warningLabel,
   onChange,
 }: {
   label: string
   name: string
   value: string
   customLabel: string
-  /** Set when this color fails AA against the text the theme puts on it. */
+  /** Set when this color fails AA in one of the roles the theme puts it in. */
   warning?: string | null
+  warningLabel: string
   onChange: (hex: string) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -137,8 +139,13 @@ export function ColorField({
         <span className="color-field__hex">{value}</span>
         {/* Advisory, not a block — an off-brand palette is the host's call. */}
         {warning && (
-          <span className="color-field__warning" role="img" aria-label={warning} title={warning}>
-            <Warning />
+          <span className="color-field__warning" title={warning}>
+            <span className="color-field__warning-label">{warningLabel}</span>
+            {/* The full ratio lives in the tooltip; the row only has room to
+                say which thing is wrong. */}
+            <span role="img" aria-label={warning}>
+              <Warning />
+            </span>
           </span>
         )}
       </button>

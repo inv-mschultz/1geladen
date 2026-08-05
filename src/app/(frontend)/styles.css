@@ -2902,10 +2902,23 @@ a {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  font-size: 1.05rem;
+  gap: 6px;
   /* Not the accent — that is the colour being complained about, and if it
      fails contrast the warning would too. --c-bright is always readable. */
   color: var(--c-bright);
+}
+
+.color-field__warning-label {
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  /* The trigger lowercases everything for the hex; the word is a word. */
+  text-transform: none;
+  opacity: 0.85;
+}
+
+.color-field__warning svg {
+  font-size: 1.05rem;
 }
 
 /* --- full color picker ------------------------------------------------------------------------------------------------ */
