@@ -71,6 +71,7 @@ async function seed() {
       slug: 'spaghetti-abend',
       members: [admin.id, anna.id, ben.id, clara.id],
       createdBy: admin.id,
+      hosts: [admin.id],
       date: eventDate.toISOString(),
       location: {
         name: 'Bei Michael',

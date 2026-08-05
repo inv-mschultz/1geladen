@@ -1,7 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
-import { isAdmin, isAdminFieldLevel, isAdminOrSelf } from '@/access'
+import {
+  isAdminOrSelf,
+  isEventPeerOrSelf,
+  isPlatformAdmin,
+  isPlatformAdminFieldLevel,
+} from '@/access'
 import { releaseUserContent } from '@/lib/deletedGuest'
+import { assertNotSoleHost } from '@/lib/membership'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -18,9 +24,9 @@ export const Users: CollectionConfig = {
     admin: ({ req: { user } }) => user?.role === 'admin',
     // Anyone may register as a guest; the role field below is admin-locked
     create: () => true,
-    read: ({ req: { user } }) => Boolean(user),
+    read: isEventPeerOrSelf,
     update: isAdminOrSelf,
-    delete: isAdmin,
+    delete: isPlatformAdmin,
   },
   hooks: {
     beforeChange: [
@@ -36,6 +42,12 @@ export const Users: CollectionConfig = {
       },
     ],
     beforeDelete: [
+      // Losing the last host of an event would make it unreachable for
+      // everyone, and the FK cascade would do it silently. Checked first, so
+      // nothing is released before we know the delete can go ahead.
+      async ({ id, req }) => {
+        await assertNotSoleHost(req, Number(id))
+      },
       // Hand off the guest's content before the row goes, or the delete fails on
       // the NOT NULL author/user columns. See releaseUserContent.
       async ({ id, req }) => {
@@ -57,8 +69,8 @@ export const Users: CollectionConfig = {
       defaultValue: false,
       index: true,
       access: {
-        create: isAdminFieldLevel,
-        update: isAdminFieldLevel,
+        create: isPlatformAdminFieldLevel,
+        update: isPlatformAdminFieldLevel,
       },
       admin: { position: 'sidebar' },
     },
@@ -69,12 +81,15 @@ export const Users: CollectionConfig = {
       defaultValue: 'guest',
       saveToJWT: true,
       options: [
-        { label: 'Admin (host)', value: 'admin' },
+        { label: 'Organizer (may create events)', value: 'admin' },
         { label: 'Guest', value: 'guest' },
       ],
+      // Deliberately the one blanket power left: without it nobody could ever
+      // mint a new organizer. It is *not* control over anybody's event — that
+      // lives in events.hosts.
       access: {
-        create: isAdminFieldLevel,
-        update: isAdminFieldLevel,
+        create: isPlatformAdminFieldLevel,
+        update: isPlatformAdminFieldLevel,
       },
     },
   ],

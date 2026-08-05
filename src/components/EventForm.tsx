@@ -5,7 +5,13 @@ import React, { useEffect, useRef, useState, useTransition } from 'react'
 
 import { createEvent, updateEvent } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
-import { PLATFORM_ACCENT, themeTokens } from '@/lib/theme'
+import {
+  accentReadability,
+  baseReadability,
+  PLATFORM_ACCENT,
+  type Readability,
+  themeTokens,
+} from '@/lib/theme'
 import { ColorField } from './ColorField'
 
 export type EventFormValues = {
@@ -152,6 +158,16 @@ export function EventForm({
     }
   }, [event, themeColor, accentColor, accentColorLight, previewLight])
 
+  // Each color is judged in the roles it actually plays. The base is measured
+  // in whichever polarity is being previewed, since it drives both; each accent
+  // is measured in the polarity it belongs to.
+  const contrastWarning = ({ ratio, required, ok }: Readability): string | null =>
+    ok
+      ? null
+      : dict.contrastWarning
+          .replace('{ratio}', ratio.toFixed(1))
+          .replace('{required}', String(required))
+
   // Initial date/time in the browser's timezone, not the server's
   const initial = event ? new Date(event.dateIso) : null
   const initialDate = initial
@@ -284,6 +300,8 @@ export function EventForm({
               name="themeColor"
               value={themeColor}
               customLabel={dict.customColor}
+              warningLabel={dict.contrastLabel}
+              warning={contrastWarning(baseReadability(themeColor, accentColor, previewLight))}
               onChange={(hex) => {
                 setThemeColor(hex)
                 scheduleSave()
@@ -294,6 +312,8 @@ export function EventForm({
               name="accentColor"
               value={accentColor}
               customLabel={dict.customColor}
+              warningLabel={dict.contrastLabel}
+              warning={contrastWarning(accentReadability(themeColor, accentColor, false))}
               onChange={(hex) => {
                 setAccentColor(hex)
                 scheduleSave()
@@ -304,6 +324,8 @@ export function EventForm({
               name="accentColorLight"
               value={accentColorLight}
               customLabel={dict.customColor}
+              warningLabel={dict.contrastLabel}
+              warning={contrastWarning(accentReadability(themeColor, accentColorLight, true))}
               onChange={(hex) => {
                 setAccentColorLight(hex)
                 scheduleSave()

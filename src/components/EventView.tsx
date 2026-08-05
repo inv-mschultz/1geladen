@@ -3,6 +3,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { toIds } from '@/access'
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
 import { getThemeMode } from '@/lib/mode'
@@ -14,6 +15,7 @@ import { fetchGalleryPhotos } from '@/lib/gallery'
 import { AdminDock } from './AdminDock'
 import { BreakableTitle } from './BreakableTitle'
 import { BringList, type BringListItem } from './BringList'
+import type { HostListPerson } from './HostList'
 import { ArrowDown, ArrowUpRight } from './icons'
 import { InviteLink } from './InviteLink'
 import { Gallery } from './Gallery'
@@ -61,10 +63,13 @@ export async function EventView({
 }) {
   const payload = await getPayload({ config })
 
-  // Admins can preview the event as a regular invited guest (bugfixing tool).
-  const isRealAdmin = user.role === 'admin'
-  const viewAsGuest = isRealAdmin && (await getViewAsGuest())
-  const isAdmin = isRealAdmin && !viewAsGuest
+  // Running this party is a property of the event, not of the account: an
+  // organizer with no stake in it is just another guest here.
+  const hostIds = toIds(event.hosts)
+  const viewerIsHost = hostIds.includes(user.id)
+  // Hosts can preview the event as a regular invited guest (bugfixing tool).
+  const viewAsGuest = viewerIsHost && (await getViewAsGuest())
+  const canModerate = viewerIsHost && !viewAsGuest
 
   const [rsvps, wall, items, photos] = await Promise.all([
     payload.find({
@@ -75,7 +80,7 @@ export async function EventView({
       overrideAccess: false,
       user,
     }),
-    fetchWallPosts({ payload, user, eventId: event.id, isAdmin }),
+    fetchWallPosts({ payload, user, eventId: event.id, isHost: canModerate }),
     payload.find({
       collection: 'bring-items',
       where: { event: { equals: event.id } },
@@ -99,20 +104,31 @@ export async function EventView({
   const isPast = (eventEnd ?? eventStart).getTime() < now.getTime()
   const photosUnlocked = Boolean(event.photosOpen) || isPast
 
-  // The host is always in — their RSVP is implicit and can't be taken back.
+  // Running the party is the RSVP: every host is in, their answer is implicit
+  // and can't be taken back. Promoting a guest to co-host commits them the same
+  // way — the creator is only special in being listed first.
   const host = asUser(event.createdBy)
-  const viewerIsHost = host?.id === user.id
+  const hostUsers = (event.hosts ?? []).map(asUser).filter((h): h is User => h !== null)
+  const orderedHosts = [
+    ...hostUsers.filter((h) => h.id === host?.id),
+    ...hostUsers.filter((h) => h.id !== host?.id),
+  ]
 
   const rsvpEntries: Record<'yes' | 'maybe' | 'no', RsvpEntry[]> = { yes: [], maybe: [], no: [] }
-  if (host) rsvpEntries.yes.push({ name: host.name, isHost: true })
-  // In guest preview the host's clicks reflect in the buttons like any guest's;
+  for (const attending of orderedHosts) {
+    rsvpEntries.yes.push({ name: attending.name, isHost: true })
+  }
+
+  // In guest preview a host's clicks reflect in the buttons like any guest's;
   // outside of it their answer is pinned to yes.
   let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsHost && !viewAsGuest ? 'yes' : null
   for (const doc of rsvps.docs) {
     const rsvpUser = asUser(doc.user)
     if (!rsvpUser) continue
     if (rsvpUser.id === user.id && (!viewerIsHost || viewAsGuest)) myStatus = doc.status
-    if (rsvpUser.id === host?.id) continue
+    // Hosts are listed above. Someone promoted after answering keeps their old
+    // row — it simply stops counting until they step back down.
+    if (hostIds.includes(rsvpUser.id)) continue
     rsvpEntries[doc.status].push({ name: rsvpUser.name })
   }
 
@@ -125,6 +141,7 @@ export async function EventView({
       id: item.id,
       title: item.title,
       note: item.note,
+      claimedById: claimedBy?.id ?? null,
       claimedByName: claimedBy?.name ?? null,
       claimedByMe: claimedBy?.id === user.id,
       createdByMe: createdById === user.id,
@@ -144,6 +161,19 @@ export async function EventView({
   // Maps gets ONLY the address — the location's nickname would confuse it
   const mapsQuery = addressLine
 
+  // Everyone on the guest list is a candidate. Already populated on the event
+  // doc, so the host controls cost no extra query.
+  const hostCandidates: HostListPerson[] = (event.members ?? [])
+    .map(asUser)
+    .filter((member): member is User => member !== null)
+    .map((member) => ({
+      id: member.id,
+      name: member.name,
+      isHost: hostIds.includes(member.id),
+      isCreator: member.id === host?.id,
+      isMe: member.id === user.id,
+    }))
+
   const themeMode = await getThemeMode()
   const lightMode = themeMode ? themeMode === 'light' : Boolean(event.invertTheme)
 
@@ -160,13 +190,15 @@ export async function EventView({
       )}
       {kicker}
       <header id="info" className="event__hero reveal">
-        {isRealAdmin && (
+        {viewerIsHost && (
           <AdminDock
             viewAsGuest={viewAsGuest}
-            canEdit={isAdmin}
+            canEdit={canModerate}
             editLabel={dict.events.edit}
             viewLabels={{ admin: dict.events.viewAdmin, guest: dict.events.viewGuest }}
             dict={dict.eventForm}
+            hostsDict={dict.hosts}
+            people={hostCandidates}
             light={lightMode}
             event={{
               id: event.id,
@@ -253,7 +285,7 @@ export async function EventView({
           />
         </div>
 
-        {isAdmin && event.inviteToken && (
+        {canModerate && event.inviteToken && (
           <div className="event__invite">
             <InviteLink token={event.inviteToken} dict={dict.invite} />
           </div>
@@ -267,8 +299,8 @@ export async function EventView({
           <BringList
             eventId={event.id}
             items={bringItems}
-            hostName={host?.name}
-            isAdmin={isAdmin}
+            hostIds={hostIds}
+            isHost={canModerate}
             dict={dict.bring}
           />
         </section>
@@ -281,9 +313,10 @@ export async function EventView({
           eventId={event.id}
           posts={wallPosts}
           hasMore={wall.hasMore}
+          userId={user.id}
           userName={user.name}
-          hostName={host?.name}
-          isAdmin={isAdmin}
+          hostIds={hostIds}
+          isHost={canModerate}
           locale={locale}
           dict={dict.wall}
         />

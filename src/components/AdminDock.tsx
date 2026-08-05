@@ -7,6 +7,7 @@ import { setViewAsGuest } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
 import { useMounted } from '@/lib/useMounted'
 import { EventForm, type EventFormValues } from './EventForm'
+import { HostList, type HostListPerson } from './HostList'
 import { X } from './icons'
 
 export function AdminDock({
@@ -15,6 +16,8 @@ export function AdminDock({
   editLabel,
   viewLabels,
   dict,
+  hostsDict,
+  people,
   event,
   light = false,
 }: {
@@ -23,6 +26,8 @@ export function AdminDock({
   editLabel: string
   viewLabels: { admin: string; guest: string }
   dict: Dictionary['eventForm']
+  hostsDict: Dictionary['hosts']
+  people: HostListPerson[]
   event: EventFormValues
   light?: boolean
 }) {
@@ -95,6 +100,10 @@ export function AdminDock({
               </button>
             </div>
             <EventForm key={String(open)} dict={dict} event={event} light={light} />
+            <section className="drawer__section">
+              <h3 className="drawer__subtitle">{hostsDict.title}</h3>
+              <HostList eventId={event.id} people={people} dict={hostsDict} />
+            </section>
           </div>
         </div>
       )}

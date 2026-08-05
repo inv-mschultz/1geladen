@@ -11,6 +11,7 @@ export type BringListItem = {
   id: number
   title: string
   note?: string | null
+  claimedById?: number | null
   claimedByName?: string | null
   claimedByMe: boolean
   /** Added by the viewer — their claim is intrinsic, so they delete rather than unclaim. */
@@ -21,15 +22,16 @@ export type BringListItem = {
 export function BringList({
   eventId,
   items,
-  hostName,
-  isAdmin,
+  hostIds,
+  isHost,
   dict,
 }: {
   eventId: number
   items: BringListItem[]
-  hostName?: string | null
+  /** Everyone running this event — they get the marked avatar. */
+  hostIds: number[]
   /** Only the host may release someone else's claim (or their own). */
-  isAdmin: boolean
+  isHost: boolean
   dict: Dictionary['bring']
 }) {
   const [pending, startTransition] = useTransition()
@@ -76,7 +78,7 @@ export function BringList({
                       <Avatar
                         name={item.claimedByName}
                         size={22}
-                        host={item.claimedByName === hostName}
+                        host={item.claimedById != null && hostIds.includes(item.claimedById)}
                       />
                       <span className="chip__name">{item.claimedByName}</span> {dict.claimedBy}
                     </span>
@@ -95,7 +97,7 @@ export function BringList({
                   )}
                   {/* Only ever removes yourself, and never from an item you
                       added unless you're the host — mirrors the server rule. */}
-                  {item.claimedByMe && (isAdmin || !item.createdByMe) && (
+                  {item.claimedByMe && (isHost || !item.createdByMe) && (
                     <button
                       type="button"
                       className={`btn-quiet ${busy === `unclaim-${item.id}` ? 'is-loading' : ''}`}

@@ -1,7 +1,14 @@
 import type { CollectionConfig } from 'payload'
 import { ValidationError } from 'payload'
 
-import { assertEventMember, isAdmin, isAdminOrOwner, isEventMember, isLoggedIn } from '@/access'
+import {
+  assertEventMember,
+  canActAsHost,
+  isEventHost,
+  isEventMember,
+  isLoggedIn,
+  isOwnerOrEventHost,
+} from '@/access'
 import { isAllowedReaction } from '@/lib/emoji'
 
 /**
@@ -27,9 +34,10 @@ export const Reactions: CollectionConfig = {
   access: {
     read: isEventMember('event'),
     create: isLoggedIn,
-    // Reactions are toggled, never edited — only admins can touch an existing row.
-    update: isAdmin,
-    delete: isAdminOrOwner('user'),
+    // Reactions are toggled, never edited — only the event's hosts can touch an
+    // existing row.
+    update: isEventHost('event'),
+    delete: isOwnerOrEventHost('user', 'event'),
   },
   hooks: {
     beforeValidate: [
@@ -58,9 +66,6 @@ export const Reactions: CollectionConfig = {
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation !== 'create' || !req.user) return data
-
-        // Guests always react as themselves.
-        if (req.user.role !== 'admin') data.user = req.user.id
 
         // Stamp the event from whichever target this is, and check membership
         // against it — a guest may only react inside their own events.
@@ -96,6 +101,11 @@ export const Reactions: CollectionConfig = {
         }
 
         await assertEventMember(req, data.event)
+
+        // Guests always react as themselves. Pinned after the event is stamped,
+        // because "may I react on someone's behalf" is now a question about
+        // that event rather than about the account.
+        if (!(await canActAsHost(req, data.event))) data.user = req.user.id
 
         // One row per (guest, target, emoji) — reacting twice is a toggle, and
         // the toggle action deletes instead. This guards the direct API path.

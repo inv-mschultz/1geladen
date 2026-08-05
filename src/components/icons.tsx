@@ -97,3 +97,9 @@ export const Trash = () => (
     <path d="M4 7h16M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2m4 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7m4 4v6m4-6v6" />
   </svg>
 )
+
+export const Warning = () => (
+  <svg {...iconProps}>
+    <path d="M12 3.8 2.6 20h18.8L12 3.8ZM12 10v4M12 17.2v.05" />
+  </svg>
+)

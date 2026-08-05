@@ -9,6 +9,7 @@ import type { Where } from 'payload'
 
 import { randomBytes } from 'crypto'
 
+import { isHostOfFor, toIds } from '@/access'
 import type { GalleryPhoto } from '@/components/Gallery'
 import type { WallPost } from '@/components/Wall'
 import { getLocale, LOCALE_COOKIE } from '@/i18n/locale'
@@ -197,6 +198,7 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
         description: textToRichText(String(formData.get('description') ?? '')),
         themeColor: PLATFORM_COLOR,
         accentColor: PLATFORM_ACCENT,
+        hosts: [user.id],
         members: [user.id],
       },
       overrideAccess: false,
@@ -218,7 +220,10 @@ export async function updateEvent(
 ): Promise<{ error?: string }> {
   const { payload, user } = await getCtx()
   requireUser(user)
-  if (user.role !== 'admin') return { error: 'forbidden' }
+  // Editing an event is the event's business, not the account's. Payload
+  // enforces it again below via `update: isEventHost('id')`; this only buys a
+  // clean error instead of a throw.
+  if (!(await isHostOfFor(payload, user, eventId))) return { error: 'forbidden' }
 
   const title = String(formData.get('title') ?? '').trim()
   const dateIso = String(formData.get('dateIso') ?? '')
@@ -254,11 +259,74 @@ export async function updateEvent(
   return {}
 }
 
-/** Admin bugfixing tool: preview the event as a regular invited guest. */
-export async function setViewAsGuest(guest: boolean): Promise<void> {
-  const { user } = await getCtx()
+/**
+ * Hands a guest the keys to this one event, or takes them back.
+ *
+ * Authorised twice on purpose: explicitly here, so a non-host gets a clean
+ * 'forbidden' rather than a throw, and again by Payload through the collection's
+ * `update: isEventHost('id')` plus the `hosts` field access.
+ */
+export async function setEventHost(
+  eventId: number,
+  userId: number,
+  host: boolean,
+): Promise<{ error?: string }> {
+  const { payload, user } = await getCtx()
   requireUser(user)
-  if (user.role !== 'admin') return
+
+  // overrideAccess so a stranger gets 'forbidden' rather than a leaky 404.
+  const event = await payload.findByID({
+    collection: 'events',
+    id: eventId,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  const hosts = toIds(event.hosts)
+  if (!hosts.includes(user.id)) return { error: 'forbidden' }
+
+  const members = toIds(event.members)
+  // Rights follow the guest list — you cannot hand an arbitrary account id the
+  // keys to a party it was never invited to.
+  if (host && !members.includes(userId)) return { error: 'notMember' }
+  // Somebody has to be able to open this event tomorrow.
+  if (!host && hosts.length <= 1) return { error: 'lastHost' }
+
+  try {
+    await payload.update({
+      collection: 'events',
+      id: eventId,
+      data: { hosts: host ? [...new Set([...hosts, userId])] : hosts.filter((id) => id !== userId) },
+      overrideAccess: false,
+      user,
+    })
+  } catch {
+    return { error: 'failed' }
+  }
+
+  revalidatePath('/', 'layout')
+  revalidateEventViews()
+
+  // Stepping down means losing read access — a re-render here would land on a
+  // notFound(), so leave for a page the user can still see.
+  if (!host && userId === user.id) redirect('/events')
+  return {}
+}
+
+/** Host bugfixing tool: preview the event as a regular invited guest. */
+export async function setViewAsGuest(guest: boolean): Promise<void> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+  // Anyone who runs at least one event may use the preview — including a guest
+  // promoted to co-host, who never gets `role: 'admin'`.
+  const { docs } = await payload.find({
+    collection: 'events',
+    where: { hosts: { in: [user.id] } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  if (docs.length === 0) return
   const store = await cookies()
   if (guest) {
     store.set('1geladen-viewas', 'guest', { path: '/', maxAge: 60 * 60 * 24 })
@@ -419,7 +487,20 @@ export async function deletePost(postId: number): Promise<void> {
 export async function restorePost(postId: number): Promise<void> {
   const { payload, user } = await getCtx()
   requireUser(user)
-  if (user.role !== 'admin') throw new Error('Only admins can restore posts')
+
+  // Undoing somebody else's delete is a host's call. The post has to be read
+  // first to know which event that question is about; the update below then
+  // re-checks it through the collection's own access rules.
+  const post = await payload.findByID({
+    collection: 'posts',
+    id: postId,
+    depth: 0,
+    overrideAccess: false,
+    user,
+  })
+  if (!(await isHostOfFor(payload, user, post.event as number))) {
+    throw new Error('Only the event’s hosts can restore posts')
+  }
 
   await payload.update({
     collection: 'posts',
@@ -566,10 +647,10 @@ export async function loadOlderPosts(
   const { payload, user } = await getCtx()
   requireUser(user)
 
-  const isRealAdmin = user.role === 'admin'
-  const isAdmin = isRealAdmin && !(await getViewAsGuest())
+  const viewerIsHost = await isHostOfFor(payload, user, eventId)
+  const isHost = viewerIsHost && !(await getViewAsGuest())
 
-  return fetchWallPosts({ payload, user, eventId, isAdmin, before })
+  return fetchWallPosts({ payload, user, eventId, isHost, before })
 }
 
 /** Pulls the next page of older gallery photos (same reasoning as the wall). */

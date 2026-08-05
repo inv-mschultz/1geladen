@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 
+import { Warning } from './icons'
+
 // Quick choices — vivid tones that all survive the OKLCH theme engine
 const SWATCHES = [
   '#4ce6a5',
@@ -62,12 +64,17 @@ export function ColorField({
   name,
   value,
   customLabel,
+  warning,
+  warningLabel,
   onChange,
 }: {
   label: string
   name: string
   value: string
   customLabel: string
+  /** Set when this color fails AA in one of the roles the theme puts it in. */
+  warning?: string | null
+  warningLabel: string
   onChange: (hex: string) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -130,6 +137,17 @@ export function ColorField({
       >
         <span className="color-field__dot" style={{ background: value }} aria-hidden />
         <span className="color-field__hex">{value}</span>
+        {/* Advisory, not a block — an off-brand palette is the host's call. */}
+        {warning && (
+          <span className="color-field__warning" title={warning}>
+            <span className="color-field__warning-label">{warningLabel}</span>
+            {/* The full ratio lives in the tooltip; the row only has room to
+                say which thing is wrong. */}
+            <span role="img" aria-label={warning}>
+              <Warning />
+            </span>
+          </span>
+        )}
       </button>
 
       {open && (

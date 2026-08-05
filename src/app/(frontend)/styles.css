@@ -2886,14 +2886,39 @@ a {
 }
 
 .event-form__row--colors {
-  grid-template-columns: 1fr 1fr 1fr;
-  align-items: end;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .event-form__row--colors .color-field__hex {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Advisory, not an error: sits at the end of the trigger, out of the way of
+   the swatch and hex that the host is actually aiming at. */
+.color-field__warning {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* Not the accent — that is the colour being complained about, and if it
+     fails contrast the warning would too. --c-bright is always readable. */
+  color: var(--c-bright);
+}
+
+.color-field__warning-label {
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  /* The trigger lowercases everything for the hex; the word is a word. */
+  text-transform: none;
+  opacity: 0.85;
+}
+
+.color-field__warning svg {
+  font-size: 1.05rem;
 }
 
 /* --- full color picker ------------------------------------------------------------------------------------------------ */
@@ -2957,12 +2982,6 @@ a {
   cursor: grab;
 }
 
-@media (max-width: 640px) {
-  .event-form__row--colors {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* --- anchor scroll offset --------------------------------------------------------------------------------------------- */
 
 /* Keep anchored sections clear of the sticky header, whatever height it wraps to */
@@ -2971,4 +2990,62 @@ a {
 #pinnwand,
 #fotos {
   scroll-margin-top: calc(var(--header-h, 73px) + 24px);
+}
+
+/* --- host list --------------------------------------------------------------------------------------- */
+
+.drawer__section {
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-line);
+}
+
+.drawer__subtitle {
+  font-variation-settings: 'wdth' 118;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.hostlist__hint {
+  color: var(--c-muted);
+  font-size: 0.88rem;
+  margin: 0 0 16px;
+}
+
+.hostlist__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* No global ul reset in here — every list clears its own indent. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Pill left, action right, action column aligned down the list. The pill
+   shrinks before the button does, so long names ellipsis rather than
+   pushing the action off the panel. */
+.hostlist__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hostlist__row .chip {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.hostlist__row .btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.hostlist__error {
+  color: var(--c-accent);
+  font-size: 0.88rem;
+  margin-top: 12px;
 }

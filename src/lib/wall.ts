@@ -31,18 +31,18 @@ export async function fetchWallPosts({
   payload,
   user,
   eventId,
-  isAdmin,
+  isHost,
   before,
 }: {
   payload: Payload
   user: TypedUser
   eventId: number
-  isAdmin: boolean
+  isHost: boolean
   /** ISO date — fetch posts strictly older than this (pagination cursor). */
   before?: string
 }): Promise<{ posts: WallPost[]; hasMore: boolean }> {
   const eventFilter = [{ event: { equals: eventId } }]
-  const visibility = isAdmin ? [] : [{ deleted: { not_equals: true } }]
+  const visibility = isHost ? [] : [{ deleted: { not_equals: true } }]
   const cursor = before ? [{ createdAt: { less_than: before } }] : []
 
   const posts = await payload.find({
@@ -119,6 +119,7 @@ export async function fetchWallPosts({
     const list = commentsByPost.get(postId) ?? []
     list.push({
       id: comment.id,
+      authorId: asUser(comment.author)?.id ?? 0,
       authorName: asUser(comment.author)?.name ?? '?',
       content: comment.content,
       imageUrl: mediaUrl(comment.image),
@@ -133,6 +134,7 @@ export async function fetchWallPosts({
   return {
     posts: posts.docs.map((post) => ({
       id: post.id,
+      authorId: asUser(post.author)?.id ?? 0,
       authorName: asUser(post.author)?.name ?? '?',
       content: post.content,
       imageUrl: mediaUrl(post.image),

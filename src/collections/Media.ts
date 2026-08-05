@@ -1,6 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
-import { assertEventMember, isAdminOrOwner, isLoggedIn, memberEventIds } from '@/access'
+import {
+  assertEventMember,
+  canActAsHost,
+  globalBypass,
+  isLoggedIn,
+  isOwnerOrEventHost,
+  memberEventIds,
+} from '@/access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -13,22 +20,22 @@ export const Media: CollectionConfig = {
     // (post/comment images) to any logged-in user.
     read: async ({ req }) => {
       if (!req.user) return false
-      if (req.user.role === 'admin') return true
+      if (globalBypass(req.user)) return true
       const ids = await memberEventIds(req)
       return {
         or: [{ event: { exists: false } }, ...(ids.length ? [{ event: { in: ids } }] : [])],
       }
     },
     create: isLoggedIn,
-    update: isAdminOrOwner('uploadedBy'),
-    delete: isAdminOrOwner('uploadedBy'),
+    update: isOwnerOrEventHost('uploadedBy', 'event'),
+    delete: isOwnerOrEventHost('uploadedBy', 'event'),
   },
   hooks: {
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation === 'create') {
           if (data.event) await assertEventMember(req, data.event)
-          if (req.user && req.user.role !== 'admin') {
+          if (req.user && !(await canActAsHost(req, data.event))) {
             data.uploadedBy = req.user.id
           }
         }

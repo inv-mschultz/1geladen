@@ -1,20 +1,21 @@
 import type { CollectionConfig, FieldAccess } from 'payload'
 import { Forbidden } from 'payload'
 
-import { assertEventMember, isEventMember, isLoggedIn } from '@/access'
+import {
+  assertEventMember,
+  canActAsHost,
+  isEventHostField,
+  isEventMember,
+  isLoggedIn,
+  relId,
+} from '@/access'
 
-const relId = (value: unknown): number | null => {
-  if (value == null) return null
-  if (typeof value === 'object') return (value as { id: number }).id
-  return value as number
-}
-
-// Item details may only be edited by the creator or an admin.
+// Item details may only be edited by whoever added it, or the event's hosts.
 // Returning false silently strips the field from the update.
-const isAdminOrCreatorField: FieldAccess = ({ req: { user }, doc }) => {
-  if (!user) return false
-  if (user.role === 'admin') return true
-  return relId(doc?.createdBy) === user.id
+const isCreatorOrHostField: FieldAccess = async ({ req, doc }) => {
+  if (!req.user) return false
+  if (relId(doc?.createdBy) === req.user.id) return true
+  return canActAsHost(req, relId(doc?.event))
 }
 
 export const BringItems: CollectionConfig = {
@@ -42,7 +43,7 @@ export const BringItems: CollectionConfig = {
       async ({ data, operation, req, originalDoc }) => {
         if (operation === 'create') {
           await assertEventMember(req, data.event)
-          if (req.user && req.user.role !== 'admin') {
+          if (req.user && !(await canActAsHost(req, data.event))) {
             data.createdBy = req.user.id
             // A guest adding an item is committing to bring it. Only the host
             // puts something on the list for somebody else to pick up.
@@ -61,9 +62,9 @@ export const BringItems: CollectionConfig = {
           const current = relId(originalDoc?.claimedBy)
           const me = req.user.id
           const iAdded = relId(originalDoc?.createdBy) === me
-          const isAdmin = req.user.role === 'admin'
+          const isHost = await canActAsHost(req, relId(originalDoc?.event))
           const claiming = incoming === me && current === null
-          const unclaiming = incoming === null && current === me && (isAdmin || !iAdded)
+          const unclaiming = incoming === null && current === me && (isHost || !iAdded)
           const unchanged = incoming === current
           if (!claiming && !unclaiming && !unchanged) {
             throw new Forbidden()
@@ -82,7 +83,7 @@ export const BringItems: CollectionConfig = {
       required: true,
       index: true,
       access: {
-        update: isAdminOrCreatorField,
+        update: isCreatorOrHostField,
       },
     },
     {
@@ -91,7 +92,7 @@ export const BringItems: CollectionConfig = {
       required: true,
       admin: { description: 'e.g. "Kartoffelsalat", "Wine (red)", "Good mood"' },
       access: {
-        update: isAdminOrCreatorField,
+        update: isCreatorOrHostField,
       },
     },
     {
@@ -99,7 +100,7 @@ export const BringItems: CollectionConfig = {
       type: 'text',
       admin: { description: 'Optional details — "enough for 12 people"' },
       access: {
-        update: isAdminOrCreatorField,
+        update: isCreatorOrHostField,
       },
     },
     {
@@ -116,7 +117,7 @@ export const BringItems: CollectionConfig = {
       defaultValue: ({ user }) => user?.id,
       admin: { readOnly: true, position: 'sidebar' },
       access: {
-        update: ({ req: { user } }) => user?.role === 'admin',
+        update: isEventHostField('event'),
       },
     },
   ],
