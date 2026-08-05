@@ -79,7 +79,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
             {user ? (
               <UserMenu
                 name={user.name}
-                isAdmin={user.role === 'admin'}
+                canEnterBackstage={user.role === 'admin'}
                 locale={locale}
                 mode={mode}
                 labels={{

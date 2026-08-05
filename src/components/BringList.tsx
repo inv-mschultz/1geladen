@@ -22,14 +22,14 @@ export function BringList({
   eventId,
   items,
   hostName,
-  isAdmin,
+  isHost,
   dict,
 }: {
   eventId: number
   items: BringListItem[]
   hostName?: string | null
   /** Only the host may release someone else's claim (or their own). */
-  isAdmin: boolean
+  isHost: boolean
   dict: Dictionary['bring']
 }) {
   const [pending, startTransition] = useTransition()
@@ -95,7 +95,7 @@ export function BringList({
                   )}
                   {/* Only ever removes yourself, and never from an item you
                       added unless you're the host — mirrors the server rule. */}
-                  {item.claimedByMe && (isAdmin || !item.createdByMe) && (
+                  {item.claimedByMe && (isHost || !item.createdByMe) && (
                     <button
                       type="button"
                       className={`btn-quiet ${busy === `unclaim-${item.id}` ? 'is-loading' : ''}`}

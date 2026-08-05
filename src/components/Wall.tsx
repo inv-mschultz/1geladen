@@ -479,7 +479,7 @@ export function Wall({
   hasMore,
   userName,
   hostName,
-  isAdmin,
+  isHost,
   locale,
   dict,
 }: {
@@ -488,7 +488,7 @@ export function Wall({
   hasMore: boolean
   userName: string
   hostName?: string | null
-  isAdmin: boolean
+  isHost: boolean
   locale: Locale
   dict: Dictionary['wall']
 }) {
@@ -706,7 +706,7 @@ export function Wall({
                 </div>
                 <div className="wall__post-actions">
                   {post.deleted && <span className="wall__deleted-badge">{dict.deletedBadge}</span>}
-                  {post.deleted && isAdmin && (
+                  {post.deleted && isHost && (
                     <button
                       type="button"
                       className="btn-quiet"
@@ -718,7 +718,7 @@ export function Wall({
                       <Restore />
                     </button>
                   )}
-                  {!post.deleted && post.id > 0 && (post.mine || isAdmin) && (
+                  {!post.deleted && post.id > 0 && (post.mine || isHost) && (
                     <button
                       type="button"
                       className="btn-quiet"
@@ -756,7 +756,7 @@ export function Wall({
                           <time dateTime={comment.createdAt} className="wall__time" suppressHydrationWarning>
                             {formatTime(comment.createdAt, locale, dict)}
                           </time>
-                          {comment.id > 0 && (comment.mine || isAdmin) && (
+                          {comment.id > 0 && (comment.mine || isHost) && (
                             <button
                               type="button"
                               className="btn-quiet wall__comment-delete"

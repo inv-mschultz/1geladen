@@ -20,17 +20,16 @@ export const toIds = (value: unknown): number[] =>
 /**
  * The old world, where `role: 'admin'` meant control over every event.
  *
- * Kept behind a flag so switching to per-event hosts is a config change rather
- * than a deploy: set LEGACY_GLOBAL_ADMIN=0 to take the blanket rights away, and
- * back to 1 to hand them straight back if something goes wrong. Read per call
- * rather than at module load so the tests can flip it and so a Vercel env change
- * lands without a rebuild.
+ * Off now. Kept behind a flag so handing the blanket rights back is a config
+ * change rather than a deploy: set LEGACY_GLOBAL_ADMIN=1 and redeploy without
+ * rebuilding. Read per call rather than at module load so that env change lands
+ * on its own, and so the tests can flip it.
  *
  * Delete the flag, and every `globalBypass` call, once production has run a
  * clean week on per-event hosts.
  */
 export const globalBypass = (user: User | null | undefined): boolean =>
-  process.env.LEGACY_GLOBAL_ADMIN !== '0' && user?.role === 'admin'
+  process.env.LEGACY_GLOBAL_ADMIN === '1' && user?.role === 'admin'
 
 /**
  * May create events and enter the backstage. This is a capability, *not*

@@ -3,6 +3,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { toIds } from '@/access'
 import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
 import { getThemeMode } from '@/lib/mode'
@@ -61,10 +62,12 @@ export async function EventView({
 }) {
   const payload = await getPayload({ config })
 
-  // Admins can preview the event as a regular invited guest (bugfixing tool).
-  const isRealAdmin = user.role === 'admin'
-  const viewAsGuest = isRealAdmin && (await getViewAsGuest())
-  const isAdmin = isRealAdmin && !viewAsGuest
+  // Running this party is a property of the event, not of the account: an
+  // organizer with no stake in it is just another guest here.
+  const viewerIsHost = toIds(event.hosts).includes(user.id)
+  // Hosts can preview the event as a regular invited guest (bugfixing tool).
+  const viewAsGuest = viewerIsHost && (await getViewAsGuest())
+  const canModerate = viewerIsHost && !viewAsGuest
 
   const [rsvps, wall, items, photos] = await Promise.all([
     payload.find({
@@ -75,7 +78,7 @@ export async function EventView({
       overrideAccess: false,
       user,
     }),
-    fetchWallPosts({ payload, user, eventId: event.id, isAdmin }),
+    fetchWallPosts({ payload, user, eventId: event.id, isHost: canModerate }),
     payload.find({
       collection: 'bring-items',
       where: { event: { equals: event.id } },
@@ -99,19 +102,21 @@ export async function EventView({
   const isPast = (eventEnd ?? eventStart).getTime() < now.getTime()
   const photosUnlocked = Boolean(event.photosOpen) || isPast
 
-  // The host is always in — their RSVP is implicit and can't be taken back.
+  // Whoever threw the party is always in — their RSVP is implicit and can't be
+  // taken back. Deliberately the creator rather than every host: a guest
+  // promoted to co-host keeps their own answer, and their RSVP buttons.
   const host = asUser(event.createdBy)
-  const viewerIsHost = host?.id === user.id
+  const viewerIsCreator = host?.id === user.id
 
   const rsvpEntries: Record<'yes' | 'maybe' | 'no', RsvpEntry[]> = { yes: [], maybe: [], no: [] }
   if (host) rsvpEntries.yes.push({ name: host.name, isHost: true })
-  // In guest preview the host's clicks reflect in the buttons like any guest's;
-  // outside of it their answer is pinned to yes.
-  let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsHost && !viewAsGuest ? 'yes' : null
+  // In guest preview the creator's clicks reflect in the buttons like any
+  // guest's; outside of it their answer is pinned to yes.
+  let myStatus: 'yes' | 'maybe' | 'no' | null = viewerIsCreator && !viewAsGuest ? 'yes' : null
   for (const doc of rsvps.docs) {
     const rsvpUser = asUser(doc.user)
     if (!rsvpUser) continue
-    if (rsvpUser.id === user.id && (!viewerIsHost || viewAsGuest)) myStatus = doc.status
+    if (rsvpUser.id === user.id && (!viewerIsCreator || viewAsGuest)) myStatus = doc.status
     if (rsvpUser.id === host?.id) continue
     rsvpEntries[doc.status].push({ name: rsvpUser.name })
   }
@@ -147,7 +152,7 @@ export async function EventView({
   const themeMode = await getThemeMode()
   const lightMode = themeMode ? themeMode === 'light' : Boolean(event.invertTheme)
 
-  const needsRsvp = (!viewerIsHost || viewAsGuest) && myStatus === null
+  const needsRsvp = (!viewerIsCreator || viewAsGuest) && myStatus === null
 
   return (
     <article className="event">
@@ -160,10 +165,10 @@ export async function EventView({
       )}
       {kicker}
       <header id="info" className="event__hero reveal">
-        {isRealAdmin && (
+        {viewerIsHost && (
           <AdminDock
             viewAsGuest={viewAsGuest}
-            canEdit={isAdmin}
+            canEdit={canModerate}
             editLabel={dict.events.edit}
             viewLabels={{ admin: dict.events.viewAdmin, guest: dict.events.viewGuest }}
             dict={dict.eventForm}
@@ -248,12 +253,12 @@ export async function EventView({
             eventId={event.id}
             myStatus={myStatus}
             entries={rsvpEntries}
-            canRespond={!viewerIsHost || viewAsGuest}
+            canRespond={!viewerIsCreator || viewAsGuest}
             dict={dict.rsvp}
           />
         </div>
 
-        {isAdmin && event.inviteToken && (
+        {canModerate && event.inviteToken && (
           <div className="event__invite">
             <InviteLink token={event.inviteToken} dict={dict.invite} />
           </div>
@@ -268,7 +273,7 @@ export async function EventView({
             eventId={event.id}
             items={bringItems}
             hostName={host?.name}
-            isAdmin={isAdmin}
+            isHost={canModerate}
             dict={dict.bring}
           />
         </section>
@@ -283,7 +288,7 @@ export async function EventView({
           hasMore={wall.hasMore}
           userName={user.name}
           hostName={host?.name}
-          isAdmin={isAdmin}
+          isHost={canModerate}
           locale={locale}
           dict={dict.wall}
         />

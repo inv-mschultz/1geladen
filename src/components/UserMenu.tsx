@@ -12,13 +12,13 @@ import { LangSwitch } from './LangSwitch'
 
 export function UserMenu({
   name,
-  isAdmin,
+  canEnterBackstage,
   locale,
   mode,
   labels,
 }: {
   name: string
-  isAdmin: boolean
+  canEnterBackstage: boolean
   locale: Locale
   mode: 'dark' | 'light'
   labels: {
@@ -79,7 +79,7 @@ export function UserMenu({
           <Link href="/account" className="user-menu__item" onClick={() => setOpen(false)}>
             {labels.account}
           </Link>
-          {isAdmin && (
+          {canEnterBackstage && (
             <a
               href="/admin"
               target="_blank"

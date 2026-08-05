@@ -74,9 +74,12 @@ export const Users: CollectionConfig = {
       defaultValue: 'guest',
       saveToJWT: true,
       options: [
-        { label: 'Admin (host)', value: 'admin' },
+        { label: 'Organizer (may create events)', value: 'admin' },
         { label: 'Guest', value: 'guest' },
       ],
+      // Deliberately the one blanket power left: without it nobody could ever
+      // mint a new organizer. It is *not* control over anybody's event — that
+      // lives in events.hosts.
       access: {
         create: isPlatformAdminFieldLevel,
         update: isPlatformAdminFieldLevel,
