@@ -5,7 +5,13 @@ import React, { useEffect, useRef, useState, useTransition } from 'react'
 
 import { createEvent, updateEvent } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
-import { AA_CONTRAST, PLATFORM_ACCENT, themeContrast, themeTokens } from '@/lib/theme'
+import {
+  accentReadability,
+  baseReadability,
+  PLATFORM_ACCENT,
+  type Readability,
+  themeTokens,
+} from '@/lib/theme'
 import { ColorField } from './ColorField'
 
 export type EventFormValues = {
@@ -152,17 +158,15 @@ export function EventForm({
     }
   }, [event, themeColor, accentColor, accentColorLight, previewLight])
 
-  // Each color is judged against the text the engine puts on it: the base
-  // carries page text, each accent carries button labels. The base is measured
-  // in whichever polarity is being previewed, since it drives both.
-  const baseContrast = themeContrast(themeColor, accentColor, previewLight).base
-  const darkAccentContrast = themeContrast(themeColor, accentColor, false).accent
-  const lightAccentContrast = themeContrast(themeColor, accentColorLight, true).accent
-
-  const contrastWarning = (ratio: number): string | null =>
-    ratio >= AA_CONTRAST
+  // Each color is judged in the roles it actually plays. The base is measured
+  // in whichever polarity is being previewed, since it drives both; each accent
+  // is measured in the polarity it belongs to.
+  const contrastWarning = ({ ratio, required, ok }: Readability): string | null =>
+    ok
       ? null
-      : dict.contrastWarning.replace('{ratio}', ratio.toFixed(1)).replace('{aa}', String(AA_CONTRAST))
+      : dict.contrastWarning
+          .replace('{ratio}', ratio.toFixed(1))
+          .replace('{required}', String(required))
 
   // Initial date/time in the browser's timezone, not the server's
   const initial = event ? new Date(event.dateIso) : null
@@ -296,7 +300,7 @@ export function EventForm({
               name="themeColor"
               value={themeColor}
               customLabel={dict.customColor}
-              warning={contrastWarning(baseContrast)}
+              warning={contrastWarning(baseReadability(themeColor, accentColor, previewLight))}
               onChange={(hex) => {
                 setThemeColor(hex)
                 scheduleSave()
@@ -307,7 +311,7 @@ export function EventForm({
               name="accentColor"
               value={accentColor}
               customLabel={dict.customColor}
-              warning={contrastWarning(darkAccentContrast)}
+              warning={contrastWarning(accentReadability(themeColor, accentColor, false))}
               onChange={(hex) => {
                 setAccentColor(hex)
                 scheduleSave()
@@ -318,7 +322,7 @@ export function EventForm({
               name="accentColorLight"
               value={accentColorLight}
               customLabel={dict.customColor}
-              warning={contrastWarning(lightAccentContrast)}
+              warning={contrastWarning(accentReadability(themeColor, accentColorLight, true))}
               onChange={(hex) => {
                 setAccentColorLight(hex)
                 scheduleSave()

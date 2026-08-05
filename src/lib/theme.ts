@@ -202,25 +202,56 @@ export function contrastRatio(a: string, b: string): number {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
 }
 
-/** AA for body text. Buttons here are ~14px bold, which is below the
- *  large-text exemption (18.66px bold), so they need the full 4.5. */
-export const AA_CONTRAST = 4.5
+/** AA for body text. Button labels here are ~14px bold, below the large-text
+ *  exemption (18.66px bold), so they need the full 4.5. */
+export const AA_TEXT = 4.5
+/** AA for large text — the event title is 30–48px. */
+export const AA_LARGE = 3
+
+export type Readability = { ratio: number; required: number; ok: boolean }
+
+const worstOf = (...checks: { ratio: number; required: number }[]): Readability => {
+  // Rank by how far short of its own bar each role falls, not by raw ratio —
+  // 3.4 against a bar of 3 is fine, 4.4 against 4.5 is not.
+  const worst = checks.reduce((a, b) => (a.ratio / a.required <= b.ratio / b.required ? a : b))
+  return { ...worst, ok: worst.ratio >= worst.required }
+}
 
 /**
- * How readable each color actually ends up, once the engine has derived the
- * text tone that sits on it: the base color carries page text, each accent
- * carries button labels.
+ * How readable an accent ends up in the two roles it actually plays: a button
+ * fill carrying the derived label tone, and display ink on the page.
+ *
+ * Deliberately not measured: the accent also numbers the calendar tile, which
+ * sits on `--c-bright`. That pairing is under 3:1 for every color including the
+ * platform default — it is a decorative choice baked into the design, so
+ * flagging it would mean a warning that never goes away.
  */
-export function themeContrast(
+export function accentReadability(
   baseHex: string,
   accentHex: string | null | undefined,
   light = false,
-): { base: number; accent: number } {
-  const tokens = themeTokens(baseHex, accentHex, light)
-  return {
-    base: contrastRatio(tokens['--c-bright'], tokens['--c-bg']),
-    accent: contrastRatio(tokens['--c-accent'], tokens['--c-on-accent']),
-  }
+): Readability {
+  const t = themeTokens(baseHex, accentHex, light)
+  return worstOf(
+    { ratio: contrastRatio(t['--c-accent'], t['--c-on-accent']), required: AA_TEXT },
+    {
+      ratio: Math.min(
+        contrastRatio(t['--c-accent'], t['--c-bg']),
+        contrastRatio(t['--c-accent'], t['--c-surface']),
+      ),
+      required: AA_LARGE,
+    },
+  )
+}
+
+/** The base color's own job: carrying page text on the page background. */
+export function baseReadability(
+  baseHex: string,
+  accentHex: string | null | undefined,
+  light = false,
+): Readability {
+  const t = themeTokens(baseHex, accentHex, light)
+  return worstOf({ ratio: contrastRatio(t['--c-bright'], t['--c-bg']), required: AA_TEXT })
 }
 
 /** Inline-style object for React `style` props. */
