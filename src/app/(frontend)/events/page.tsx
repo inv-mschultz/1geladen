@@ -10,7 +10,7 @@ import { BreakableTitle } from '@/components/BreakableTitle'
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import type { Event } from '@/payload-types'
-import { EVENT_TIMEZONE } from '@/lib/time'
+import { EVENT_TIMEZONE, isEventPast } from '@/lib/time'
 
 export const dynamic = 'force-dynamic'
 
@@ -151,11 +151,9 @@ export default async function EventsOverviewPage() {
   }
 
   // Server Component: rendered once per request, so reading the clock here is
-  // deterministic for that render. The purity rule targets client re-renders.
-  // eslint-disable-next-line react-hooks/purity
-  const now = Date.now()
-  const isPast = (event: Event) =>
-    new Date(event.endDate ?? event.date).getTime() < now
+  // deterministic for that render.
+  const now = new Date()
+  const isPast = (event: Event) => isEventPast(event, now)
   const upcoming = events.filter((event) => !isPast(event))
   const past = events.filter(isPast).reverse()
 

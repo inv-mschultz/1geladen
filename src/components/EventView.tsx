@@ -8,7 +8,7 @@ import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
 import { getThemeMode } from '@/lib/mode'
 import { richTextToPlain } from '@/lib/richtext'
-import { EVENT_TIMEZONE } from '@/lib/time'
+import { EVENT_TIMEZONE, hasEventStarted, isEventPast } from '@/lib/time'
 import { getViewAsGuest } from '@/lib/viewas'
 import { fetchWallPosts } from '@/lib/wall'
 import { fetchGalleryPhotos } from '@/lib/gallery'
@@ -99,10 +99,11 @@ export async function EventView({
   ])
 
   const now = new Date()
-  const eventStart = new Date(event.date)
-  const eventEnd = event.endDate ? new Date(event.endDate) : null
-  const isPast = (eventEnd ?? eventStart).getTime() < now.getTime()
-  const photosUnlocked = Boolean(event.photosOpen) || isPast
+  const isPast = isEventPast(event, now)
+  // Deliberately the start, not `isPast`: the gallery is for the party, so it
+  // opens as the doors do. These two used to be the same flag, which is why an
+  // event read as over the moment it began.
+  const photosUnlocked = Boolean(event.photosOpen) || hasEventStarted(event, now)
 
   // Running the party is the RSVP: every host is in, their answer is implicit
   // and can't be taken back. Promoting a guest to co-host commits them the same

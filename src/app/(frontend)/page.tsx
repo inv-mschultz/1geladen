@@ -10,7 +10,7 @@ import { ArrowDown, ArrowRight } from '@/components/icons'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import { getThemeMode, resolveEventTheme } from '@/lib/mode'
-import { EVENT_TIMEZONE } from '@/lib/time'
+import { EVENT_TIMEZONE, isEventPast } from '@/lib/time'
 import { themeCss } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
@@ -52,12 +52,20 @@ export default async function HomePage() {
     )
   }
 
-  const now = new Date().toISOString()
+  const now = new Date()
+  // An event stays current until noon the day after, so one that already
+  // started is not necessarily over. The cutoff can't be expressed as a plain
+  // date comparison, so the query widens by the longest that grace can run —
+  // midnight start to noon the next day, 36 hours — and the exact rule is
+  // applied below. Without the widening a party in progress vanishes from the
+  // "next up" query and reappears under "that was nice", mid-party.
+  const GRACE_MS = 36 * 60 * 60 * 1000
+  const cutoff = new Date(now.getTime() - GRACE_MS).toISOString()
 
-  const [upcoming, past] = await Promise.all([
+  const [upcomingDocs, pastDocs] = await Promise.all([
     payload.find({
       collection: 'events',
-      where: { date: { greater_than_equal: now } },
+      where: { date: { greater_than_equal: cutoff } },
       sort: 'date',
       limit: 10,
       locale,
@@ -66,7 +74,7 @@ export default async function HomePage() {
     }),
     payload.find({
       collection: 'events',
-      where: { date: { less_than: now } },
+      where: { date: { less_than: now.toISOString() } },
       sort: '-date',
       limit: 10,
       locale,
@@ -74,6 +82,11 @@ export default async function HomePage() {
       user,
     }),
   ])
+
+  // The two windows overlap by the grace period; the filters are complementary,
+  // so an event in progress lands in `upcoming` and nowhere else.
+  const upcoming = { docs: upcomingDocs.docs.filter((event) => !isEventPast(event, now)) }
+  const past = { docs: pastDocs.docs.filter((event) => isEventPast(event, now)) }
 
   const featured = upcoming.docs[0] ?? past.docs[0]
   const archive = [...upcoming.docs.slice(1), ...past.docs].filter(
