@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "pnpm payload migrate && pnpm build",
+  "buildCommand": "pnpm vercel-build",
   "regions": ["fra1"]
 }

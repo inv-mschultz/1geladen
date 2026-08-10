@@ -23,6 +23,24 @@ const dirname = path.dirname(filename)
 // Vercel/Neon Postgres (POSTGRES_URL, provided by the Vercel integration).
 const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL || ''
 
+// The store is connected with a MEDIA_ prefix because the older "Blobby" store
+// already holds the default BLOB_ names on this project. Vercel only mints this
+// token when "Add a read-write token env var" is ticked — connecting a store now
+// defaults to OIDC, which this Payload adapter cannot use.
+const blobToken = process.env.MEDIA_READ_WRITE_TOKEN
+
+// Serverless has no writable disk, so on Vercel the Blob plugin is not
+// optional: without it Payload silently falls back to writing into ./media
+// and every upload dies with EROFS behind an opaque error page. Fail loudly
+// at boot instead — locally (no VERCEL) disk storage stays fine.
+if (process.env.VERCEL && !blobToken) {
+  throw new Error(
+    'MEDIA_READ_WRITE_TOKEN is missing. Uploads would fall back to the read-only ' +
+      'serverless filesystem. Re-connect the 1geladen-media Blob store in Vercel → ' +
+      'Storage with "Add a read-write token env var" ticked, then redeploy.',
+  )
+}
+
 const db = databaseUrl.startsWith('file:')
   ? sqliteAdapter({
       client: { url: databaseUrl },
@@ -60,11 +78,17 @@ export default buildConfig({
   sharp,
   plugins: [
     // Uploads go to Vercel Blob in production (serverless has no persistent disk)
-    ...(process.env.BLOB_READ_WRITE_TOKEN
+    ...(blobToken
       ? [
           vercelBlobStorage({
             collections: { media: true },
-            token: process.env.BLOB_READ_WRITE_TOKEN,
+            token: blobToken,
+            // NB: not addRandomSuffix. The adapter writes the suffixed name back to
+            // the top-level data.filename for *every* file it uploads — original and
+            // each imageSize alike — so with sizes configured the sizes keep their
+            // un-suffixed (non-existent) names and the doc's own filename ends up
+            // being whichever size won the Promise.all race. Media randomises the
+            // base filename itself instead; see Media's beforeOperation hook.
           }),
         ]
       : []),

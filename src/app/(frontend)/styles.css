@@ -1367,6 +1367,13 @@ a {
 
 /* --- wall ------------------------------------------------------------------------------------------------- */
 
+.wall__error {
+  margin: 0 0 12px;
+  color: var(--c-bright);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
 .wall__composer {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1971,6 +1978,13 @@ a {
   height: 1px;
   opacity: 0;
   overflow: hidden;
+}
+
+.gallery__error {
+  margin: 0 0 12px;
+  color: var(--c-bright);
+  font-weight: 800;
+  font-size: 0.9rem;
 }
 
 .gallery__grid {

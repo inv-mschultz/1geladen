@@ -132,6 +132,7 @@ export function Gallery({
 }) {
   const [pending, startTransition] = useTransition()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [failed, setFailed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Older pages pulled on demand; `photos` stays the server's freshest window.
@@ -159,11 +160,22 @@ export function Gallery({
   const onFiles = (files: FileList | null) => {
     if (!files || files.length === 0 || pending) return
     startTransition(async () => {
-      const formData = new FormData()
+      setFailed(false)
+      // One request per photo. Vercel caps a serverless request body at 4.5 MB
+      // and that cap sits in front of the function, so next.config's larger
+      // serverActions.bodySizeLimit cannot lift it — batching a phone's worth of
+      // photos into a single FormData just gets the whole upload rejected.
+      let anyFailed = false
       for (const file of Array.from(files)) {
-        formData.append('photos', await resizeImage(file))
+        try {
+          const formData = new FormData()
+          formData.append('photos', await resizeImage(file))
+          await uploadPhotos(eventId, formData)
+        } catch {
+          anyFailed = true // keep going: one oversized photo shouldn't sink the rest
+        }
       }
-      await uploadPhotos(eventId, formData)
+      setFailed(anyFailed)
       if (inputRef.current) inputRef.current.value = ''
     })
   }
@@ -197,6 +209,12 @@ export function Gallery({
           {pending ? dict.uploading : dict.upload}
         </label>
       </div>
+
+      {failed && (
+        <p className="gallery__error" role="alert">
+          {dict.uploadFailed}
+        </p>
+      )}
 
       {allPhotos.length === 0 ? (
         <p className="section__empty">{dict.empty}</p>

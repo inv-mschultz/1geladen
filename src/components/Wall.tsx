@@ -345,6 +345,7 @@ function CommentForm({
   const [showGifs, setShowGifs] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const [value, setValue] = useState('')
+  const [failed, setFailed] = useState(false)
   const { attachment, attachGif, attachImage, clear, appendTo } = useAttachment()
   const fileRef = useRef<HTMLInputElement>(null)
   const { ref: inputRef, insert: insertEmoji } = useEmojiInsert<HTMLInputElement>(setValue)
@@ -372,13 +373,24 @@ function CommentForm({
         reactions: [],
         ...preview,
       })
-      await createComment(postId, formData)
-      clear()
+      try {
+        await createComment(postId, formData)
+        clear()
+        setFailed(false)
+      } catch {
+        setValue(content)
+        setFailed(true)
+      }
     })
   }
 
   return (
     <div className="wall__comment-composer">
+      {failed && (
+        <p className="wall__error" role="alert">
+          {dict.sendFailed}
+        </p>
+      )}
       {attachment && <AttachmentPreview attachment={attachment} onRemove={clear} dict={dict} />}
       {showGifs && (
         <GifPicker
@@ -503,6 +515,7 @@ export function Wall({
   const [pending, startTransition] = useTransition()
   const [draft, setDraft] = useState('')
   const [posting, setPosting] = useState(false)
+  const [failed, setFailed] = useState(false)
   const [showGifs, setShowGifs] = useState(false)
   const [showEmoji, setShowEmoji] = useState(false)
   const { attachment, attachGif, attachImage, clear, appendTo } = useAttachment()
@@ -626,14 +639,28 @@ export function Wall({
           ...preview,
         },
       })
-      await createPost(eventId, formData)
-      clear()
-      setPosting(false)
+      try {
+        await createPost(eventId, formData)
+        clear()
+        setFailed(false)
+      } catch {
+        // The optimistic post rolls back on its own when the transition ends;
+        // hand the text back so a rejected image upload doesn't eat what they wrote.
+        setDraft(content)
+        setFailed(true)
+      } finally {
+        setPosting(false)
+      }
     })
   }
 
   return (
     <div className="wall">
+      {failed && (
+        <p className="wall__error" role="alert">
+          {dict.sendFailed}
+        </p>
+      )}
       <div className="wall__composer">
         <Avatar name={userName} host={hostIds.includes(userId)} />
         <textarea

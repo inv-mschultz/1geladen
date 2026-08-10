@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto'
+import path from 'path'
 import type { CollectionConfig } from 'payload'
 
 import {
@@ -31,6 +33,20 @@ export const Media: CollectionConfig = {
     delete: isOwnerOrEventHost('uploadedBy', 'event'),
   },
   hooks: {
+    // The Blob store is public: anyone holding a blob URL can read it, and the
+    // event-member check above only guards the surrounding page. Photos are
+    // named after whatever came off the phone (IMG_4312.jpg), which is trivially
+    // guessable, so replace the base name with random bytes before Payload
+    // derives any filename from it. Runs ahead of generateFileData, so all three
+    // imageSizes inherit the random base too.
+    beforeOperation: [
+      ({ operation, req }) => {
+        if (operation !== 'create' && operation !== 'update') return
+        if (!req.file) return
+        const ext = path.extname(req.file.name)
+        req.file.name = `${randomBytes(16).toString('hex')}${ext.toLowerCase()}`
+      },
+    ],
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation === 'create') {
