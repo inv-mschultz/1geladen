@@ -2004,6 +2004,7 @@ a {
 
 .gallery__photo button {
   display: block;
+  position: relative;
   width: 100%;
   padding: 0;
   border: none;
@@ -2021,6 +2022,47 @@ a {
 
 .gallery__photo:hover img {
   transform: scale(1.04);
+}
+
+/* Photos land one by one as they decode. Hold a shimmering tile in the grid
+   slot until each one is ready, so the gallery fills in evenly instead of
+   flashing empty boxes. The tile is a pseudo-element over the li's own
+   background, so it needs no extra markup and disappears with the class. */
+.gallery__photo.is-loading button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    var(--c-surface-2) 30%,
+    var(--c-surface) 50%,
+    var(--c-surface-2) 70%
+  );
+  background-size: 220% 100%;
+  animation: gallery-shimmer 1.4s ease-in-out infinite;
+}
+
+.gallery__photo.is-loading img {
+  opacity: 0;
+}
+
+.gallery__photo img {
+  transition: transform 0.16s ease, opacity 0.25s ease;
+}
+
+@keyframes gallery-shimmer {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -40% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__photo.is-loading button::after {
+    animation: none;
+  }
 }
 
 .gallery__caption {
@@ -2619,11 +2661,14 @@ a {
     padding: 24px 20px;
   }
 
-  /* unboxed sections: title keeps the section inset, the cards bleed to full width */
-  .section--wall .wall,
-  .section--gallery .gallery {
-    margin-left: -20px;
-    margin-right: -20px;
+  /* Unboxed sections have no card to sit inside, so nothing should be inset:
+     the heading lines up with its own cards rather than hanging 20px to their
+     right. Drop the padding .section just re-applied instead of cancelling it
+     with negative margins on the content. */
+  .section--wall,
+  .section--gallery {
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .wall__composer {
@@ -2852,7 +2897,6 @@ a {
 
   .gallery__upload {
     top: 24px;
-    right: 20px;
   }
 
   .gallery__upload .btn {

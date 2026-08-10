@@ -135,6 +135,11 @@ export function Gallery({
   const [failed, setFailed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Ids of photos whose bitmap has arrived; everything else wears a skeleton.
+  const [loaded, setLoaded] = useState<ReadonlySet<number>>(() => new Set())
+  const markLoaded = (id: number) =>
+    setLoaded((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
+
   // Older pages pulled on demand; `photos` stays the server's freshest window.
   const [older, setOlder] = useState<GalleryPhoto[]>([])
   const [moreAvailable, setMoreAvailable] = useState(hasMore)
@@ -221,10 +226,25 @@ export function Gallery({
       ) : (
         <ul className="gallery__grid">
           {allPhotos.map((photo, index) => (
-            <li key={photo.id} className="gallery__photo">
+            <li
+              key={photo.id}
+              className={`gallery__photo ${loaded.has(photo.id) ? '' : 'is-loading'}`}
+            >
               <button type="button" onClick={() => setOpenIndex(index)} aria-label={photo.alt || dict.title}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photo.url} alt={photo.alt} loading="lazy" />
+                <img
+                  src={photo.url}
+                  alt={photo.alt}
+                  loading="lazy"
+                  // A cached image can already be complete before React attaches
+                  // onLoad, which would strand the skeleton on top of it forever.
+                  ref={(el) => {
+                    if (el?.complete) markLoaded(photo.id)
+                  }}
+                  onLoad={() => markLoaded(photo.id)}
+                  // A broken photo should show itself as broken, not shimmer for ever.
+                  onError={() => markLoaded(photo.id)}
+                />
               </button>
               {(photo.caption || photo.uploaderName) && (
                 <span className="gallery__caption">{photo.caption || photo.uploaderName}</span>
