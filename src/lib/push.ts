@@ -23,12 +23,31 @@ const privateKey = process.env.VAPID_PRIVATE_KEY
  */
 export const pushEnabled = Boolean(publicKey && privateKey)
 
-if (pushEnabled) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:hallo@1geladen.de',
-    publicKey as string,
-    privateKey as string,
-  )
+/**
+ * web-push wants the subject as a URL. A bare address ("hey@example.com") is
+ * the natural thing to type into Vercel, so it gets its mailto: here rather
+ * than failing the build.
+ */
+const vapidSubject = (): string => {
+  const raw = (process.env.VAPID_SUBJECT || 'hallo@1geladen.de').trim()
+  return /^(mailto:|https:)/.test(raw) ? raw : `mailto:${raw}`
+}
+
+/**
+ * Configured on first send, not at import: this module is imported by pages,
+ * and a throw at module load takes the whole page — and the build — with it.
+ */
+let configured: boolean | null = null
+const configure = (logger: Payload['logger']): boolean => {
+  if (configured !== null) return configured
+  try {
+    webpush.setVapidDetails(vapidSubject(), publicKey as string, privateKey as string)
+    configured = true
+  } catch (err) {
+    logger.error({ err, msg: 'VAPID settings are invalid; push is off' })
+    configured = false
+  }
+  return configured
 }
 
 /**
@@ -43,7 +62,7 @@ export async function sendPush(
   userIds: number[],
   message: PushMessage,
 ): Promise<void> {
-  if (!pushEnabled || userIds.length === 0) return
+  if (!pushEnabled || userIds.length === 0 || !configure(payload.logger)) return
 
   try {
     const { docs } = await payload.find({
