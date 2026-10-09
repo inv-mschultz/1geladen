@@ -230,7 +230,79 @@ const de = {
     deleteCancel: 'Doch nicht',
     deleteFailed: 'Das hat nicht geklappt. Versuch es nochmal.',
   },
+  about: {
+    metaTitle: 'So geht’s — 1geladen',
+    kicker: 'So geht’s',
+    title: 'Eine Einladung.',
+    titleAccent: 'Ein Link. Eine Party.',
+    blurb:
+      'Erinnerst du dich, als man Partys noch online geplant hat, ohne dass einem dabei jemand etwas verkaufen wollte? 1geladen ist genau das: eine Seite pro Fest, nur für die Leute, die eingeladen sind.',
+    stepsTitle: 'In drei Schritten',
+    steps: [
+      {
+        title: 'Party anlegen',
+        text: 'Wo, wann, was — und eine Farbe, die zur Stimmung passt. Dauert eine Minute.',
+      },
+      {
+        title: 'Link teilen',
+        text: 'Ab in die WhatsApp-Gruppe damit. Gäste tippen ihren Namen ein und sind dabei — ohne Konto, ohne App, ohne Passwort.',
+      },
+      {
+        title: 'Feiern',
+        text: 'Alle sagen zu, ab oder vielleicht, teilen auf, wer was mitbringt, und schreiben an die Pinnwand. Ab Partystart füllt sich die Galerie.',
+      },
+    ],
+    featuresTitle: 'Was drin ist',
+    features: [
+      { emoji: '✅', title: 'Dabei · Vielleicht · Kann nicht', text: 'Die heilige Dreifaltigkeit. Du siehst auf einen Blick, wer kommt.' },
+      { emoji: '📌', title: 'Pinnwand', text: 'Fragen, Vorfreude, GIFs. Mit Kommentaren und Reaktionen, wie früher.' },
+      { emoji: '🥗', title: 'Mitbringliste', text: 'Ihr tragt ein, was gebraucht wird, und jede:r schnappt sich etwas. Nie wieder fünf Kartoffelsalate. Außer ihr wollt das.' },
+      { emoji: '📸', title: 'Fotogalerie', text: 'Öffnet, wenn die Party beginnt. Alle laden ihre Bilder an einen Ort statt in zwölf Chats.' },
+      { emoji: '👯', title: 'Co-Hosts', text: 'Zu zweit ausrichten? Mach Gäste zu Hosts — dann können sie mit bearbeiten, einladen und aufräumen.' },
+      { emoji: '📱', title: 'Aufs Handy', text: 'Zum Home-Bildschirm hinzufügen, Benachrichtigungen einschalten: fühlt sich an wie eine App, ganz ohne Store.' },
+    ],
+    notTitle: 'Was es nicht gibt',
+    not: [
+      'Keine Werbung.',
+      'Kein Tracking, keine Analyse-Cookies.',
+      'Kein Algorithmus, kein Feed, keine öffentlichen Profile.',
+      'Niemand außer den Gästen sieht, was auf der Event-Seite passiert.',
+      'Kein Abo, keine Kosten. 1geladen ist ein privates Hobbyprojekt.',
+    ],
+    faqTitle: 'Fragen',
+    faq: [
+      {
+        q: 'Kostet das etwas?',
+        a: 'Nein. Kein Abo, keine Premium-Version, keine versteckten Kosten. Damit das so bleibt, gibt es ein paar Grenzen: bis zu 10 kommende Partys pro Person und 300 Fotos pro Galerie.',
+      },
+      {
+        q: 'Brauchen meine Gäste ein Konto?',
+        a: 'Nein. Wer den Link hat, gibt einen Namen ein und ist dabei. Wer sich auf mehreren Geräten anmelden oder selbst einladen will, kann später eine E-Mail hinzufügen.',
+      },
+      {
+        q: 'Wer sieht unsere Fotos und Beiträge?',
+        a: 'Nur die Gäste und Hosts dieser einen Party. Event-Seiten sind nicht öffentlich und tauchen nirgends auf.',
+      },
+      {
+        q: 'Was passiert nach der Party?',
+        a: 'Die Seite bleibt als Erinnerung. Die Fotos in der Galerie werden 30 Tage nach der Party gelöscht — bis dahin könnt ihr eure Lieblingsbilder herunterladen.',
+      },
+      {
+        q: 'Gibt es eine App?',
+        a: 'Sozusagen: Öffne 1geladen im Browser und füge es zum Home-Bildschirm hinzu. Dann hat es ein eigenes Icon und kann dir Bescheid geben, wenn jemand zusagt oder dir antwortet.',
+      },
+      {
+        q: 'Kann ich mein Konto löschen?',
+        a: 'Jederzeit, selbst, unter „Dein Konto“. Was dann mit deinen Daten passiert, steht im Datenschutz.',
+      },
+    ],
+    ctaTitle: 'Lust bekommen?',
+    ctaHost: 'Party anlegen',
+    ctaRegister: 'Konto erstellen',
+    landingLink: 'So geht’s',
+  },
   footer: {
+    about: 'So geht’s',
     imprint: 'Impressum',
     privacy: 'Datenschutz',
     report: 'Inhalt melden',
@@ -494,7 +566,79 @@ const en: typeof de = {
     deleteCancel: 'Never mind',
     deleteFailed: 'That didn’t work. Please try again.',
   },
+  about: {
+    metaTitle: 'How it works — 1geladen',
+    kicker: 'How it works',
+    title: 'One invite.',
+    titleAccent: 'One link. One party.',
+    blurb:
+      'Remember planning parties online without anyone trying to sell you something along the way? That’s 1geladen: one page per party, only for the people who are invited.',
+    stepsTitle: 'Three steps',
+    steps: [
+      {
+        title: 'Create the party',
+        text: 'Where, when, what — and a colour that fits the mood. Takes a minute.',
+      },
+      {
+        title: 'Share the link',
+        text: 'Drop it in the group chat. Guests type their name and they’re in — no account, no app, no password.',
+      },
+      {
+        title: 'Party',
+        text: 'Everyone says yes, no or maybe, splits up who brings what and posts on the wall. Once the party starts, the gallery fills up.',
+      },
+    ],
+    featuresTitle: 'What’s inside',
+    features: [
+      { emoji: '✅', title: 'Attending · Maybe · Can’t', text: 'The holy trinity. See at a glance who’s coming.' },
+      { emoji: '📌', title: 'The wall', text: 'Questions, excitement, GIFs. With comments and reactions, like back then.' },
+      { emoji: '🥗', title: 'Bring list', text: 'List what’s needed and everyone grabs something. Never five potato salads again. Unless you want that.' },
+      { emoji: '📸', title: 'Photo gallery', text: 'Opens when the party starts. Everyone’s pictures in one place instead of twelve chats.' },
+      { emoji: '👯', title: 'Co-hosts', text: 'Hosting together? Make guests hosts so they can edit, invite and tidy up too.' },
+      { emoji: '📱', title: 'On your phone', text: 'Add it to your home screen and turn on notifications: feels like an app, no store needed.' },
+    ],
+    notTitle: 'What you won’t find',
+    not: [
+      'No ads.',
+      'No tracking, no analytics cookies.',
+      'No algorithm, no feed, no public profiles.',
+      'Nobody but the guests sees what happens on the event page.',
+      'No subscription, no cost. 1geladen is a private hobby project.',
+    ],
+    faqTitle: 'Questions',
+    faq: [
+      {
+        q: 'Does it cost anything?',
+        a: 'No. No subscription, no premium tier, no hidden costs. To keep it that way there are a few limits: up to 10 upcoming parties per person and 300 photos per gallery.',
+      },
+      {
+        q: 'Do my guests need an account?',
+        a: 'No. Whoever has the link enters a name and is in. Anyone who wants to log in on several devices or send invites themselves can add an email later.',
+      },
+      {
+        q: 'Who sees our photos and posts?',
+        a: 'Only the guests and hosts of that one party. Event pages aren’t public and don’t show up anywhere.',
+      },
+      {
+        q: 'What happens after the party?',
+        a: 'The page stays as a memory. Gallery photos are deleted 30 days after the party — until then you can download your favourites.',
+      },
+      {
+        q: 'Is there an app?',
+        a: 'Sort of: open 1geladen in your browser and add it to your home screen. It gets its own icon and can let you know when someone RSVPs or replies to you.',
+      },
+      {
+        q: 'Can I delete my account?',
+        a: 'Any time, yourself, under “Your account”. What happens to your data then is explained in the privacy policy.',
+      },
+    ],
+    ctaTitle: 'In the mood?',
+    ctaHost: 'Throw a party',
+    ctaRegister: 'Create account',
+    landingLink: 'How it works',
+  },
   footer: {
+    about: 'How it works',
     imprint: 'Imprint',
     privacy: 'Privacy',
     report: 'Report content',

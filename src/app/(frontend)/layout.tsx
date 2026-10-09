@@ -106,6 +106,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
         {user && <InstallHint dict={dict.install} />}
         <main className="site-main">{children}</main>
         <footer className="site-footer">
+          <Link href="/so-gehts">{dict.footer.about}</Link>
           <Link href="/impressum">{dict.footer.imprint}</Link>
           <Link href="/datenschutz">{dict.footer.privacy}</Link>
           <a href={reportMailto()}>{dict.footer.report}</a>

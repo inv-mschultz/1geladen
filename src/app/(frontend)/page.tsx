@@ -48,6 +48,9 @@ export default async function HomePage() {
               {dict.landing.ctaSecondary}
             </Link>
           </div>
+          <Link href="/so-gehts" className="landing__more">
+            {dict.about.landingLink} <ArrowRight />
+          </Link>
         </div>
       </div>
     )

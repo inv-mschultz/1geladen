@@ -912,6 +912,202 @@ a {
   color: var(--c-muted);
 }
 
+.landing__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 26px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--c-muted);
+  text-decoration: none;
+}
+
+.landing__more:hover {
+  color: var(--c-bright);
+}
+
+/* --- about (/so-gehts) ----------------------------------------------------------------------- */
+
+.about {
+  display: grid;
+  gap: 56px;
+  padding: 44px 0 20px;
+}
+
+.about__hero {
+  margin: 0 auto;
+}
+
+.about__hero .landing__blurb {
+  margin-bottom: 0;
+}
+
+.about__heading {
+  color: var(--c-on-bg);
+  margin-bottom: 20px;
+}
+
+.about__steps,
+.about__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.about__steps {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.about__features {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.about__step,
+.about__feature {
+  background: var(--c-surface);
+  color: var(--c-bright);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  padding: 26px 24px;
+}
+
+.about__step h3,
+.about__feature h3 {
+  font-variation-settings: 'wdth' 112;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.about__step p,
+.about__feature p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 0.95rem;
+}
+
+/* Outlined numerals, the same trick as the landing title's accent line. */
+.about__step-number {
+  display: block;
+  font-variation-settings: 'wdth' 125;
+  font-weight: 800;
+  font-size: 3.4rem;
+  line-height: 1;
+  margin-bottom: 14px;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--c-accent);
+}
+
+.about__feature-emoji {
+  display: block;
+  font-size: 1.9rem;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.about__not ul {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.about__not li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-weight: 700;
+}
+
+.about__not li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 14px;
+  height: 3px;
+  margin-top: 0.7em;
+  align-self: flex-start;
+  background: var(--c-accent);
+  border-radius: 2px;
+}
+
+.about__faq {
+  display: grid;
+  gap: 10px;
+}
+
+.about__faq-item {
+  background: var(--c-surface);
+  color: var(--c-bright);
+  border-radius: var(--radius-el);
+}
+
+.about__faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  font-weight: 800;
+}
+
+.about__faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.about__faq-item summary::after {
+  content: '+';
+  flex-shrink: 0;
+  color: var(--c-accent);
+  font-weight: 900;
+  transition: transform 0.2s ease;
+}
+
+.about__faq-item[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.about__faq-item summary:focus-visible {
+  outline: 2px solid var(--c-bright);
+  outline-offset: 2px;
+  border-radius: var(--radius-el);
+}
+
+.about__faq-item p {
+  margin: 0;
+  padding: 0 20px 20px;
+  color: var(--c-muted);
+}
+
+.about__cta {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
+  color: var(--c-on-bg);
+}
+
+@media (max-width: 760px) {
+  .about {
+    gap: 44px;
+  }
+  .about__steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about__faq-item summary::after {
+    transition: none;
+  }
+}
+
 /* --- home / misc --------------------------------------------------------------------------- */
 
 .home-kicker {
