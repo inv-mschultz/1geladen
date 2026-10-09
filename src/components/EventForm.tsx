@@ -191,7 +191,7 @@ export function EventForm({
         }
         startTransition(async () => {
           const result = await createEvent(formData)
-          if (result?.error) setError(dict.error)
+          if (result?.error) setError(result.error === 'limit' ? dict.errorLimit : dict.error)
         })
       }}
     >

@@ -3,7 +3,6 @@ import type { CollectionConfig } from 'payload'
 import {
   isAdminOrSelf,
   isEventPeerOrSelf,
-  isPlatformAdmin,
   isPlatformAdminFieldLevel,
 } from '@/access'
 import { releaseUserContent } from '@/lib/deletedGuest'
@@ -26,7 +25,9 @@ export const Users: CollectionConfig = {
     create: () => true,
     read: isEventPeerOrSelf,
     update: isAdminOrSelf,
-    delete: isPlatformAdmin,
+    // Yourself (from /account), or anybody from the backstage.
+    delete: ({ req: { user } }) =>
+      user?.role === 'admin' ? true : user ? { id: { equals: user.id } } : false,
   },
   hooks: {
     beforeChange: [
@@ -81,12 +82,11 @@ export const Users: CollectionConfig = {
       defaultValue: 'guest',
       saveToJWT: true,
       options: [
-        { label: 'Organizer (may create events)', value: 'admin' },
+        { label: 'Platform admin (backstage)', value: 'admin' },
         { label: 'Guest', value: 'guest' },
       ],
-      // Deliberately the one blanket power left: without it nobody could ever
-      // mint a new organizer. It is *not* control over anybody's event — that
-      // lives in events.hosts.
+      // Backstage access only. Hosting needs no role — any real account may
+      // create events — and control over an event lives in events.hosts.
       access: {
         create: isPlatformAdminFieldLevel,
         update: isPlatformAdminFieldLevel,

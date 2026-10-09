@@ -8,7 +8,7 @@ import type { Dictionary, Locale } from '@/i18n/dictionaries'
 import type { Event, Media, User } from '@/payload-types'
 import { getThemeMode } from '@/lib/mode'
 import { richTextToPlain } from '@/lib/richtext'
-import { EVENT_TIMEZONE, hasEventStarted, isEventPast } from '@/lib/time'
+import { EVENT_TIMEZONE, galleryRetiresAt, hasEventStarted, isEventPast } from '@/lib/time'
 import { getViewAsGuest } from '@/lib/viewas'
 import { fetchWallPosts } from '@/lib/wall'
 import { fetchGalleryPhotos } from '@/lib/gallery'
@@ -104,6 +104,20 @@ export async function EventView({
   // opens as the doors do. These two used to be the same flag, which is why an
   // event read as over the moment it began.
   const photosUnlocked = Boolean(event.photosOpen) || hasEventStarted(event, now)
+  const retiresAt = galleryRetiresAt(event)
+  const galleryRetired = Boolean(event.galleryRetiredAt) || retiresAt.getTime() <= now.getTime()
+  // Once the party is over, say when the photos go — while there's time to save them.
+  const galleryNotice =
+    isPast && !galleryRetired
+      ? dict.gallery.retiresOn.replace(
+          '{date}',
+          new Intl.DateTimeFormat(locale === 'de' ? 'de-DE' : 'en-GB', {
+            day: 'numeric',
+            month: 'long',
+            timeZone: EVENT_TIMEZONE,
+          }).format(retiresAt),
+        )
+      : null
 
   // Running the party is the RSVP: every host is in, their answer is implicit
   // and can't be taken back. Promoting a guest to co-host commits them the same
@@ -261,10 +275,10 @@ export async function EventView({
           </div>
         </div>
 
-        {coverImage?.sizes?.hero?.url || coverImage?.url ? (
+        {coverImage?.url ? (
           <div className="event__cover">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverImage.sizes?.hero?.url ?? coverImage.url ?? ''} alt={coverImage.alt ?? event.title} />
+            <img src={coverImage.url} alt={coverImage.alt ?? event.title} />
           </div>
         ) : null}
 
@@ -332,6 +346,8 @@ export async function EventView({
           hasMore={photos.hasMore}
           coverImageId={coverImage?.id ?? null}
           unlocked={photosUnlocked}
+          retired={galleryRetired}
+          notice={galleryNotice}
           dict={dict.gallery}
         />
       </section>

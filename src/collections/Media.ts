@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto'
 import path from 'path'
 import type { CollectionConfig } from 'payload'
+import { APIError } from 'payload'
 
 import {
   assertEventMember,
@@ -9,7 +10,15 @@ import {
   isLoggedIn,
   isOwnerOrEventHost,
   memberEventIds,
+  relId,
 } from '@/access'
+import { galleryRetiresAt } from '@/lib/time'
+
+/**
+ * Photos per gallery. Storage is the one thing that costs real money on the
+ * free tiers, and no dinner party needs more than this.
+ */
+export const MAX_PHOTOS_PER_EVENT = 300
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -50,7 +59,31 @@ export const Media: CollectionConfig = {
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation === 'create') {
-          if (data.event) await assertEventMember(req, data.event)
+          if (data.event) {
+            await assertEventMember(req, data.event)
+            const { totalDocs } = await req.payload.count({
+              collection: 'media',
+              where: { event: { equals: data.event } },
+              overrideAccess: true,
+              req,
+            })
+            if (totalDocs >= MAX_PHOTOS_PER_EVENT) {
+              throw new APIError(`This gallery is full (${MAX_PHOTOS_PER_EVENT} photos).`, 400)
+            }
+            // Uploads stop on the day the photos are due to go, not on whichever
+            // later day the cron gets round to deleting them.
+            const event = await req.payload.findByID({
+              collection: 'events',
+              id: relId(data.event) as number,
+              depth: 0,
+              select: { date: true, endDate: true, galleryRetiredAt: true },
+              overrideAccess: true,
+              req,
+            })
+            if (event.galleryRetiredAt || galleryRetiresAt(event).getTime() <= Date.now()) {
+              throw new APIError('This gallery has been retired.', 400)
+            }
+          }
           if (req.user && !(await canActAsHost(req, data.event))) {
             data.uploadedBy = req.user.id
           }
@@ -61,11 +94,13 @@ export const Media: CollectionConfig = {
   },
   upload: {
     mimeTypes: ['image/*'],
-    imageSizes: [
-      { name: 'thumbnail', width: 400, height: 400, position: 'centre' },
-      { name: 'card', width: 800 },
-      { name: 'hero', width: 1600 },
-    ],
+    // The original doubles as the large version (lightbox, cover image), so
+    // it is capped instead of kept at camera size next to a separate 'hero'
+    // copy. Two files per photo rather than four: Blob storage is the one
+    // limit the free tier actually hits.
+    resizeOptions: { width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true },
+    imageSizes: [{ name: 'card', width: 800 }],
+    adminThumbnail: 'card',
   },
   fields: [
     {

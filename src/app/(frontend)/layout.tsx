@@ -1,17 +1,22 @@
 import config from '@payload-config'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Archivo } from 'next/font/google'
 import { headers as getHeaders } from 'next/headers'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { canHost, hostedEventIdsFor } from '@/access'
+import { BRAND_BG, logoSvg } from '@/lib/brand'
+import { reportMailto } from '@/lib/legal'
 import { getThemeMode } from '@/lib/mode'
 import { PLATFORM_ACCENT, PLATFORM_COLOR, themeCss } from '@/lib/theme'
 
 import { HeaderMeasure } from '@/components/HeaderMeasure'
+import { InstallHint } from '@/components/InstallHint'
 import { LangSwitch } from '@/components/LangSwitch'
 import { MainNav } from '@/components/MainNav'
+import { ServiceWorker } from '@/components/ServiceWorker'
 import { UserMenu } from '@/components/UserMenu'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
@@ -23,25 +28,22 @@ const archivo = Archivo({
   variable: '--font-sans',
 })
 
+export const viewport: Viewport = {
+  themeColor: BRAND_BG,
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
   const dict = getDictionary(locale)
   return {
     title: dict.meta.title,
     description: dict.meta.description,
+    applicationName: '1geladen',
+    manifest: '/manifest.webmanifest',
+    appleWebApp: { capable: true, title: '1geladen', statusBarStyle: 'black' },
     icons: {
-      // Pink pixel sparkle (the logo mark) on the platform-dark background
-      icon: `data:image/svg+xml,${encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
-          '<rect width="100" height="100" rx="24" fill="#0d1f17"/>' +
-          '<g fill="#ff8ad4">' +
-          '<rect x="15" y="15" width="14" height="14"/><rect x="43" y="15" width="14" height="14"/>' +
-          '<rect x="29" y="29" width="14" height="14"/><rect x="43" y="29" width="14" height="14"/><rect x="57" y="29" width="14" height="14"/>' +
-          '<rect x="15" y="43" width="14" height="14"/><rect x="29" y="43" width="14" height="14"/><rect x="43" y="43" width="14" height="14"/><rect x="57" y="43" width="14" height="14"/><rect x="71" y="43" width="14" height="14"/>' +
-          '<rect x="29" y="57" width="14" height="14"/><rect x="43" y="57" width="14" height="14"/><rect x="57" y="57" width="14" height="14"/>' +
-          '<rect x="43" y="71" width="14" height="14"/>' +
-          '</g></svg>',
-      )}`,
+      icon: `data:image/svg+xml,${encodeURIComponent(logoSvg())}`,
+      apple: '/icons/apple-touch-icon.png',
     },
   }
 }
@@ -55,6 +57,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
   const headers = await getHeaders()
   const { user } = await payload.auth({ headers })
   const mode = (await getThemeMode()) ?? 'dark'
+  const hostsAnything = user ? (await hostedEventIdsFor(payload, user)).length > 0 : false
 
   return (
     <html lang={locale}>
@@ -62,7 +65,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
         <style>{themeCss(PLATFORM_COLOR, PLATFORM_ACCENT, mode === 'light')}</style>
         <header className="site-header">
           <HeaderMeasure />
-          <Link href={user?.role === 'admin' ? '/events' : '/'} className="site-logo">
+          <Link href={hostsAnything ? '/events' : '/'} className="site-logo">
             <span className="site-logo__one">1</span>geladen
           </Link>
           {user && (
@@ -80,10 +83,12 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
               <UserMenu
                 name={user.name}
                 canEnterBackstage={user.role === 'admin'}
+                canHost={canHost(user)}
                 locale={locale}
                 mode={mode}
                 labels={{
                   account: dict.nav.account,
+                  newEvent: dict.nav.newEvent,
                   admin: dict.nav.admin,
                   language: dict.nav.language,
                   logout: dict.nav.logout,
@@ -97,7 +102,14 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
             )}
           </nav>
         </header>
+        <ServiceWorker />
+        {user && <InstallHint dict={dict.install} />}
         <main className="site-main">{children}</main>
+        <footer className="site-footer">
+          <Link href="/impressum">{dict.footer.imprint}</Link>
+          <Link href="/datenschutz">{dict.footer.privacy}</Link>
+          <a href={reportMailto()}>{dict.footer.report}</a>
+        </footer>
       </body>
     </html>
   )

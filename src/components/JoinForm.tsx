@@ -61,6 +61,9 @@ export function JoinForm({
       {error && <p className="join-form__error">{error}</p>}
 
       <p className="join-form__hint">{dict.rsvpHint}</p>
+      <p className="join-form__hint">
+        <a href="/datenschutz">{dict.privacyNote}</a>
+      </p>
     </div>
   )
 }

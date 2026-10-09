@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { relId, toIds } from '@/access'
+import { canHost, relId, toIds } from '@/access'
 import { BreakableTitle } from '@/components/BreakableTitle'
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
@@ -186,7 +186,7 @@ export default async function EventsOverviewPage() {
     <div className="events-page reveal">
       <div className="events-page__head">
         <h1 className="events-page__title">{dict.events.title}</h1>
-        {user.role === 'admin' && (
+        {canHost(user) && (
           <Link href="/events/new" className="btn">
             + {dict.events.new}
           </Link>

@@ -51,3 +51,34 @@ export async function releasePostContent(req: PayloadRequest, postId: number): P
 
   await deleteReactionsFor(req, { post: postId })
 }
+
+/**
+ * Clears everything hanging off an event before it is deleted.
+ *
+ * Posts, RSVPs and bring items have NOT NULL event columns, so without this an
+ * event with any activity cannot be deleted. Gallery photos have a nullable
+ * column and would survive as orphans — still in the Blob store, now readable
+ * by any logged-in user through the eventless-media rule — so they go too.
+ * Deleting each post runs its own beforeDelete, which takes the comments and
+ * reactions with it.
+ */
+export async function releaseEventContent(req: PayloadRequest, eventId: number): Promise<void> {
+  const byEvent = { event: { equals: eventId } }
+
+  const { docs: posts } = await req.payload.find({
+    collection: 'posts',
+    where: byEvent,
+    limit: 10000,
+    depth: 0,
+    select: {},
+    overrideAccess: true,
+    req,
+  })
+  for (const post of posts) {
+    await req.payload.delete({ collection: 'posts', id: post.id, overrideAccess: true, req })
+  }
+
+  for (const collection of ['reactions', 'rsvps', 'bring-items', 'media'] as const) {
+    await req.payload.delete({ collection, where: byEvent, overrideAccess: true, req })
+  }
+}

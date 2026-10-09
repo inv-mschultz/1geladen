@@ -42,7 +42,8 @@ export async function getDeletedGuestId(req: PayloadRequest): Promise<number> {
  * foreign key is ON DELETE SET NULL — the two contradict, so Postgres aborts the
  * delete. We resolve them ourselves first: RSVPs are meaningless without their
  * guest and get removed, while posts and comments are reassigned to the
- * placeholder so other guests' replies don't disappear with them.
+ * placeholder so other guests' replies don't disappear with them. Their gallery
+ * photos are deleted — those are pictures of people, not part of a thread.
  *
  * Runs on `req` so it shares the delete's transaction and rolls back with it.
  */
@@ -62,6 +63,24 @@ export async function releaseUserContent(req: PayloadRequest, userId: number): P
   await req.payload.delete({
     collection: 'reactions',
     where: { user: { equals: userId } },
+    overrideAccess: true,
+    req,
+  })
+
+  // Their devices stop hearing about parties they are no longer part of. The
+  // FK would only null `user`, which is NOT NULL — same trap as RSVPs.
+  await req.payload.delete({
+    collection: 'push-subscriptions',
+    where: { user: { equals: userId } },
+    overrideAccess: true,
+    req,
+  })
+
+  // Gallery photos leave with the person who took them. Images attached to
+  // posts and comments stay, because the post they illustrate stays too.
+  await req.payload.delete({
+    collection: 'media',
+    where: { and: [{ uploadedBy: { equals: userId } }, { event: { exists: true } }] },
     overrideAccess: true,
     req,
   })

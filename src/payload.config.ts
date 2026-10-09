@@ -12,6 +12,7 @@ import { Comments } from './collections/Comments'
 import { Events } from './collections/Events'
 import { Media } from './collections/Media'
 import { Posts } from './collections/Posts'
+import { PushSubscriptions } from './collections/PushSubscriptions'
 import { Reactions } from './collections/Reactions'
 import { RSVPs } from './collections/RSVPs'
 import { Users } from './collections/Users'
@@ -60,7 +61,7 @@ export default buildConfig({
       titleSuffix: ' — 1geladen',
     },
   },
-  collections: [Users, Events, Posts, Comments, BringItems, RSVPs, Reactions, Media],
+  collections: [Users, Events, Posts, Comments, BringItems, RSVPs, Reactions, Media, PushSubscriptions],
   localization: {
     locales: [
       { label: 'Deutsch', code: 'de' },
@@ -69,6 +70,9 @@ export default buildConfig({
     defaultLocale: 'de',
     fallback: true,
   },
+  // Phones send resized JPEGs (see resizeImage), so this only stops someone
+  // posting raw files straight to /api/media.
+  upload: { limits: { fileSize: 15_000_000 } },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

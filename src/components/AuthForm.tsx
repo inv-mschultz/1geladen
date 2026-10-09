@@ -78,6 +78,12 @@ export function AuthForm({
         />
       </label>
 
+      {mode === 'register' && (
+        <p className="auth-form__note">
+          <a href="/datenschutz">{dict.privacyNote}</a>
+        </p>
+      )}
+
       {error && <p className="auth-form__error">{error}</p>}
 
       <button type="submit" className="btn btn--big btn--yes auth-form__submit" disabled={busy}>

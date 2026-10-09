@@ -32,11 +32,22 @@ export const globalBypass = (user: User | null | undefined): boolean =>
   process.env.LEGACY_GLOBAL_ADMIN === '1' && user?.role === 'admin'
 
 /**
- * May create events and enter the backstage. This is a capability, *not*
- * control over any particular event — that lives in `events.hosts`. An admin
- * who hosts nothing has a guest's rights to everybody else's party.
+ * May enter the backstage and manage accounts. *Not* control over any
+ * particular event — that lives in `events.hosts`. An admin who hosts nothing
+ * has a guest's rights to everybody else's party.
  */
 export const isPlatformAdmin: Access = ({ req: { user } }) => user?.role === 'admin'
+
+/**
+ * May throw a party: anyone with a real account. Invite-link guests have no
+ * email on file, so nobody could reach them about an event they run — they
+ * claim their account first (/account), which flips `guestJoin` off.
+ */
+export const canHost = (
+  user: Pick<User, 'guestJoin'> | null | undefined,
+): user is Pick<User, 'guestJoin'> => Boolean(user) && !user?.guestJoin
+
+export const canHostAccess: Access = ({ req: { user } }) => canHost(user)
 
 export const isPlatformAdminFieldLevel: FieldAccess = ({ req: { user } }) =>
   user?.role === 'admin'
@@ -121,6 +132,14 @@ export async function hostEventIds(req: PayloadRequest): Promise<number[]> {
 /** IDs of everyone sharing an event with the user, including the user. */
 export async function peerUserIds(req: PayloadRequest): Promise<number[]> {
   return (await scopeFor(req.payload, req.user)).peerUserIds
+}
+
+/** IDs of all events the user hosts, from a server component or action. */
+export async function hostedEventIdsFor(
+  payload: Payload,
+  user: { id: number } | null | undefined,
+): Promise<number[]> {
+  return (await scopeFor(payload, user)).hostedIds
 }
 
 /** Whether the user hosts the given event. */

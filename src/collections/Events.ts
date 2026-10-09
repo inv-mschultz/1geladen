@@ -2,13 +2,14 @@ import { randomBytes } from 'crypto'
 import type { CollectionConfig } from 'payload'
 
 import {
+  canHostAccess,
   isEventHost,
   isEventHostFieldSelf,
   isEventMemberOrHost,
-  isPlatformAdmin,
   relId,
   toIds,
 } from '@/access'
+import { releaseEventContent } from '@/lib/cascade'
 
 const formatSlug = (value: string): string =>
   value
@@ -30,9 +31,9 @@ export const Events: CollectionConfig = {
     // You see the events you were invited to and the ones you run. Nothing else
     // — an organizer has no window into somebody else's party.
     read: isEventMemberOrHost,
-    // A capability, not event control: anyone who may create events may create
-    // events, and becomes the first host of the ones they create.
-    create: isPlatformAdmin,
+    // Anyone with a real account may throw a party, and becomes the first host
+    // of the ones they create.
+    create: canHostAccess,
     update: isEventHost('id'),
     delete: isEventHost('id'),
   },
@@ -77,6 +78,12 @@ export const Events: CollectionConfig = {
         }
 
         return data
+      },
+    ],
+    beforeDelete: [
+      // Everything inside the party has to go first — see releaseEventContent.
+      async ({ id, req }) => {
+        await releaseEventContent(req, Number(id))
       },
     ],
     beforeChange: [
@@ -259,6 +266,16 @@ export const Events: CollectionConfig = {
         position: 'sidebar',
         description: 'Secret for the invite link. Auto-generated.',
       },
+    },
+    {
+      // Set by the daily cron once the gallery's photos have been deleted,
+      // 30 days after the party (see lib/retireGalleries). The event itself,
+      // its wall and its cover image stay.
+      name: 'galleryRetiredAt',
+      type: 'date',
+      index: true,
+      access: { create: () => false, update: () => false },
+      admin: { position: 'sidebar', readOnly: true },
     },
     {
       name: 'photosOpen',

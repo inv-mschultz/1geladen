@@ -50,3 +50,24 @@ export async function addEventMember(
     overrideAccess: true,
   })
 }
+
+/**
+ * Events nobody but this user runs. Deleting the account takes these with it —
+ * the account page lists them first, so that is never a surprise.
+ */
+export async function soleHostedEvents(
+  payload: Payload,
+  userId: number,
+): Promise<{ id: number; title: string }[]> {
+  const { docs } = await payload.find({
+    collection: 'events',
+    where: { hosts: { in: [userId] } },
+    limit: 500,
+    depth: 0,
+    select: { hosts: true, title: true },
+    overrideAccess: true,
+  })
+  return docs
+    .filter((event) => toIds(event.hosts).length <= 1)
+    .map((event) => ({ id: event.id, title: event.title }))
+}

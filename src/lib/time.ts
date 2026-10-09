@@ -69,3 +69,13 @@ export const isEventPast = (event: Dated, now: Date = new Date()): boolean =>
  */
 export const hasEventStarted = (event: Dated, now: Date = new Date()): boolean =>
   new Date(event.date).getTime() <= now.getTime()
+
+/** How long a gallery lives after the party is over. */
+export const GALLERY_RETENTION_DAYS = 30
+
+/**
+ * When the photos go: 30 days after the party is over (see eventEndsAt). The
+ * daily cron deletes them some time after this; uploads stop exactly here.
+ */
+export const galleryRetiresAt = (event: Dated): Date =>
+  new Date(eventEndsAt(event).getTime() + GALLERY_RETENTION_DAYS * 86_400_000)

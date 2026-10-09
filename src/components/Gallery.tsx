@@ -121,6 +121,8 @@ export function Gallery({
   hasMore,
   coverImageId,
   unlocked,
+  retired = false,
+  notice,
   dict,
 }: {
   eventId: number
@@ -128,6 +130,10 @@ export function Gallery({
   hasMore: boolean
   coverImageId?: number | null
   unlocked: boolean
+  /** The photos were deleted 30 days after the party. */
+  retired?: boolean
+  /** Shown above the grid — e.g. when the photos will go. */
+  notice?: string | null
   dict: Dictionary['gallery']
 }) {
   const [pending, startTransition] = useTransition()
@@ -189,6 +195,14 @@ export function Gallery({
   const nav = (delta: number) =>
     setOpenIndex((i) => (i === null ? i : (i + delta + allPhotos.length) % allPhotos.length))
 
+  if (retired) {
+    return (
+      <div className="gallery gallery--locked">
+        <p>{dict.retired}</p>
+      </div>
+    )
+  }
+
   if (!unlocked) {
     return (
       <div className="gallery gallery--locked">
@@ -214,6 +228,8 @@ export function Gallery({
           {pending ? dict.uploading : dict.upload}
         </label>
       </div>
+
+      {notice && <p className="gallery__notice">{notice}</p>}
 
       {failed && (
         <p className="gallery__error" role="alert">

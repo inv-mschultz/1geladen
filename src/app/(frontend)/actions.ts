@@ -2,6 +2,7 @@
 
 import config from '@payload-config'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { cookies, headers as getHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
@@ -9,15 +10,16 @@ import type { Where } from 'payload'
 
 import { randomBytes } from 'crypto'
 
-import { isHostOfFor, toIds } from '@/access'
+import { canHost, hostedEventIdsFor, isHostOfFor, relId, toIds } from '@/access'
 import type { GalleryPhoto } from '@/components/Gallery'
 import type { WallPost } from '@/components/Wall'
 import { getLocale, LOCALE_COOKIE } from '@/i18n/locale'
 import { type Locale, locales } from '@/i18n/dictionaries'
 import { isAllowedReaction } from '@/lib/emoji'
 import { syntheticGuestEmail } from '@/lib/guestAuth'
-import { addEventMember } from '@/lib/membership'
+import { addEventMember, soleHostedEvents } from '@/lib/membership'
 import { MODE_COOKIE } from '@/lib/mode'
+import { pushEnabled, sendPush, snippet, type PushMessage } from '@/lib/push'
 import { PLATFORM_ACCENT, PLATFORM_COLOR } from '@/lib/theme'
 import { getViewAsGuest } from '@/lib/viewas'
 import { fetchGalleryPhotos } from '@/lib/gallery'
@@ -60,6 +62,38 @@ function requireUser<T>(user: T | null): asserts user is T {
 function revalidateEventViews(): void {
   revalidatePath('/events/[slug]', 'page')
   revalidatePath('/', 'page')
+}
+
+/**
+ * Tells an event's people that something happened, after the response has gone
+ * out — the guest who posted never waits on a push service. `to` picks the
+ * recipients from the event; the actor is always left out.
+ */
+function notifyEvent(
+  payload: PayloadClient,
+  eventId: number,
+  actorId: number,
+  to: 'members' | 'hosts' | number[],
+  message: (event: { title: Record<Locale, string>; url: string }) => Omit<PushMessage, 'url'>,
+): void {
+  if (!pushEnabled) return
+  after(async () => {
+    const event = await payload.findByID({
+      collection: 'events',
+      id: eventId,
+      depth: 0,
+      locale: 'all',
+      select: { title: true, slug: true, hosts: true, members: true },
+      overrideAccess: true,
+    })
+    const titles = event.title as unknown as Partial<Record<Locale, string>>
+    const title = { de: titles.de ?? titles.en ?? '', en: titles.en ?? titles.de ?? '' }
+    const url = event.slug ? `/events/${event.slug}` : '/'
+    const recipients = (
+      to === 'members' ? toIds(event.members) : to === 'hosts' ? toIds(event.hosts) : to
+    ).filter((id) => id !== actorId)
+    await sendPush(payload, recipients, { ...message({ title, url }), url })
+  })
 }
 
 export async function setLocale(locale: string): Promise<void> {
@@ -149,6 +183,33 @@ export async function claimAccount(formData: FormData): Promise<{ error: string 
   redirect('/')
 }
 
+/**
+ * Deletes the logged-in account for good.
+ *
+ * Events only this person runs go first — whole, with everything in them —
+ * because the user delete itself refuses to orphan an event (see
+ * assertNotSoleHost). Co-hosted events simply lose one host. The account page
+ * names the events that will disappear before the button is offered.
+ */
+export async function deleteAccount(): Promise<{ error: string } | never> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+
+  try {
+    for (const event of await soleHostedEvents(payload, user.id)) {
+      await payload.delete({ collection: 'events', id: event.id, overrideAccess: true })
+    }
+    await payload.delete({ collection: 'users', id: user.id, overrideAccess: false, user })
+  } catch {
+    return { error: 'failed' }
+  }
+
+  const store = await cookies()
+  store.delete('payload-token')
+  revalidatePath('/', 'layout')
+  redirect('/')
+}
+
 /** Plain textarea → lexical rich text (one paragraph per line). */
 function textToRichText(text: string) {
   const paragraphs = text
@@ -175,11 +236,30 @@ function textToRichText(text: string) {
   }
 }
 
-/** Admin-only: create an event from the frontend form. */
+/**
+ * How many upcoming events one account may run at once. Generous for anybody
+ * actually throwing parties, and a ceiling on what a single spam account can
+ * cost in storage.
+ */
+const MAX_UPCOMING_HOSTED = 10
+
+/** Any real account: create an event from the frontend form. */
 export async function createEvent(formData: FormData): Promise<{ error: string } | never> {
   const { payload, user } = await getCtx()
   requireUser(user)
-  if (user.role !== 'admin') return { error: 'forbidden' }
+  if (!canHost(user)) return { error: 'forbidden' }
+
+  const hostedIds = await hostedEventIdsFor(payload, user)
+  if (hostedIds.length >= MAX_UPCOMING_HOSTED) {
+    const { totalDocs: upcoming } = await payload.count({
+      collection: 'events',
+      where: {
+        and: [{ id: { in: hostedIds } }, { date: { greater_than: new Date().toISOString() } }],
+      },
+      overrideAccess: true,
+    })
+    if (upcoming >= MAX_UPCOMING_HOSTED) return { error: 'limit' }
+  }
 
   const title = String(formData.get('title') ?? '').trim()
   const dateIso = String(formData.get('dateIso') ?? '')
@@ -212,7 +292,7 @@ export async function createEvent(formData: FormData): Promise<{ error: string }
   redirect(event.slug ? `/events/${event.slug}` : '/events')
 }
 
-/** Admin-only: update an event from the edit drawer. No redirect — the
+/** Hosts only: update an event from the edit drawer. No redirect — the
  *  caller refreshes the route so the page updates behind the drawer. */
 export async function updateEvent(
   eventId: number,
@@ -378,6 +458,16 @@ export async function rsvp(eventId: number, status: 'yes' | 'maybe' | 'no'): Pro
       user,
     })
   }
+  const said = {
+    yes: { de: 'ist dabei! 🎉', en: 'is coming! 🎉' },
+    maybe: { de: 'kommt vielleicht.', en: 'might come.' },
+    no: { de: 'kann leider nicht.', en: 'can’t make it.' },
+  }[status]
+  notifyEvent(payload, eventId, user.id, 'hosts', ({ title }) => ({
+    title,
+    body: { de: `${user.name} ${said.de}`, en: `${user.name} ${said.en}` },
+    tag: `rsvp-${eventId}-${user.id}`,
+  }))
   revalidateEventViews()
 }
 
@@ -432,6 +522,14 @@ export async function createPost(eventId: number, formData: FormData): Promise<v
     overrideAccess: false,
     user,
   })
+  const text = snippet(attachments.content)
+  notifyEvent(payload, eventId, user.id, 'members', ({ title }) => ({
+    title,
+    body: {
+      de: `${user.name} an der Pinnwand: ${text || '📷'}`,
+      en: `${user.name} on the wall: ${text || '📷'}`,
+    },
+  }))
   revalidateEventViews()
 }
 
@@ -442,12 +540,28 @@ export async function createComment(postId: number, formData: FormData): Promise
   const attachments = await extractAttachments(payload, user, formData)
   if (!attachments) return
 
-  await payload.create({
+  const comment = await payload.create({
     collection: 'comments',
     data: { post: postId, author: user.id, ...attachments },
     overrideAccess: false,
     user,
+    depth: 1,
   })
+  // Replies only reach whoever wrote the post — a ping for every comment in
+  // every thread would get notifications switched off by the second party.
+  const post = typeof comment.post === 'object' ? comment.post : null
+  const postAuthor = relId(post?.author)
+  const postEvent = relId(post?.event)
+  if (postAuthor && postEvent) {
+    const text = snippet(attachments.content)
+    notifyEvent(payload, postEvent, user.id, [postAuthor], ({ title }) => ({
+      title,
+      body: {
+        de: `${user.name} hat dir geantwortet: ${text || '📷'}`,
+        en: `${user.name} replied to you: ${text || '📷'}`,
+      },
+    }))
+  }
   revalidateEventViews()
 }
 
@@ -663,4 +777,50 @@ export async function loadOlderPhotos(
   requireUser(user)
 
   return fetchGalleryPhotos({ payload, user, eventId, coverImageId, before })
+}
+
+/** Remembers this device for notifications. Idempotent per endpoint. */
+export async function savePushSubscription(subscription: {
+  endpoint: string
+  keys: { p256dh: string; auth: string }
+}): Promise<{ error?: string }> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+  const { endpoint, keys } = subscription ?? {}
+  if (!pushEnabled || !endpoint?.startsWith('https://') || !keys?.p256dh || !keys?.auth) {
+    return { error: 'invalid' }
+  }
+  const locale = await getLocale()
+
+  const existing = await payload.find({
+    collection: 'push-subscriptions',
+    where: { endpoint: { equals: endpoint } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  // A shared tablet changes hands: the endpoint follows whoever is logged in.
+  const data = { user: user.id, endpoint, p256dh: keys.p256dh, auth: keys.auth, locale }
+  if (existing.docs[0]) {
+    await payload.update({
+      collection: 'push-subscriptions',
+      id: existing.docs[0].id,
+      data,
+      overrideAccess: true,
+    })
+  } else {
+    await payload.create({ collection: 'push-subscriptions', data, overrideAccess: true })
+  }
+  return {}
+}
+
+/** Forgets this device. Only the owner's own rows, so a leaked endpoint is harmless. */
+export async function removePushSubscription(endpoint: string): Promise<void> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+  await payload.delete({
+    collection: 'push-subscriptions',
+    where: { and: [{ endpoint: { equals: endpoint } }, { user: { equals: user.id } }] },
+    overrideAccess: true,
+  })
 }

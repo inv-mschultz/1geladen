@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { canHost, hostedEventIdsFor } from '@/access'
 import { EventView } from '@/components/EventView'
 import { ArrowDown, ArrowRight } from '@/components/icons'
 import { getDictionary } from '@/i18n/dictionaries'
@@ -23,8 +24,8 @@ export default async function HomePage() {
   const headers = await getHeaders()
   const { user } = await payload.auth({ headers })
 
-  // Admins start on their event overview
-  if (user?.role === 'admin') {
+  // Hosts start on their event overview
+  if (user && (await hostedEventIdsFor(payload, user)).length > 0) {
     redirect('/events')
   }
 
@@ -98,6 +99,11 @@ export default async function HomePage() {
       <div className="empty-state reveal">
         <h1>{dict.home.noEvents}</h1>
         <p>{dict.home.noEventsHint}</p>
+        {canHost(user) && (
+          <Link href="/events/new" className="btn btn--big btn--yes">
+            {dict.home.newEvent}
+          </Link>
+        )}
       </div>
     )
   }

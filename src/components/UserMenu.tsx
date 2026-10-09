@@ -13,16 +13,19 @@ import { LangSwitch } from './LangSwitch'
 export function UserMenu({
   name,
   canEnterBackstage,
+  canHost,
   locale,
   mode,
   labels,
 }: {
   name: string
   canEnterBackstage: boolean
+  canHost: boolean
   locale: Locale
   mode: 'dark' | 'light'
   labels: {
     account: string
+    newEvent: string
     admin: string
     language: string
     logout: string
@@ -79,6 +82,11 @@ export function UserMenu({
           <Link href="/account" className="user-menu__item" onClick={() => setOpen(false)}>
             {labels.account}
           </Link>
+          {canHost && (
+            <Link href="/events/new" className="user-menu__item" onClick={() => setOpen(false)}>
+              {labels.newEvent}
+            </Link>
+          )}
           {canEnterBackstage && (
             <a
               href="/admin"

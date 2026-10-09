@@ -46,7 +46,7 @@ export async function fetchGalleryPhotos({
       .map((photo) => ({
         id: photo.id,
         url: photo.sizes?.card?.url ?? photo.url ?? '',
-        largeUrl: photo.sizes?.hero?.url ?? photo.url ?? photo.sizes?.card?.url ?? '',
+        largeUrl: photo.url ?? photo.sizes?.card?.url ?? '',
         alt: photo.alt ?? '',
         caption: photo.caption,
         uploaderName: asUser(photo.uploadedBy)?.name ?? null,

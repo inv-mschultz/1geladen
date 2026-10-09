@@ -14,6 +14,7 @@ const de = {
     logout: 'Abmelden',
     admin: 'Backstage',
     account: 'Dein Konto',
+    newEvent: 'Neue Party',
     language: 'Sprache',
     mode: 'Design',
     modeDark: 'Dunkel',
@@ -72,6 +73,7 @@ const de = {
     saving: 'Speichert …',
     saved: 'Gespeichert',
     error: 'Das hat nicht geklappt. Sind alle Pflichtfelder gefüllt?',
+    errorLimit: 'Du richtest schon 10 kommende Events aus. Feiere erst ein paar davon!',
   },
   landing: {
     kicker: 'Du bist eingeladen',
@@ -86,7 +88,8 @@ const de = {
     nextUp: 'Als Nächstes',
     lastParty: 'Das war schön',
     noEvents: 'Noch keine Events. Die Ruhe vor der Party.',
-    noEventsHint: 'Ein Admin kann im Backstage-Bereich das erste Event anlegen.',
+    noEventsHint: 'Warte auf eine Einladung — oder lade selbst ein.',
+    newEvent: 'Party anlegen',
     archive: 'Weitere Events',
   },
   hero: {
@@ -165,6 +168,9 @@ const de = {
     title: 'Fotos',
     subtitle: 'Beweise, dass es schön war.',
     locked: 'Die Galerie öffnet nach dem Event.',
+    retiresOn:
+      'Die Fotos bleiben bis zum {date} — danach räumen wir auf. Lieblingsbilder also vorher herunterladen!',
+    retired: 'Die Fotos wurden 30 Tage nach der Party aufgeräumt. Hoffentlich habt ihr eure Lieblinge gesichert!',
     upload: 'Fotos hochladen',
     uploading: 'Lädt hoch …',
     uploadFailed: 'Nicht alle Fotos konnten hochgeladen werden. Bitte noch einmal versuchen.',
@@ -185,6 +191,7 @@ const de = {
     invalid: 'Dieser Einladungslink ist ungültig. Frag den Host nach einem neuen!',
     nameMissing: 'Sag uns wenigstens deinen Namen',
     failed: 'Das hat nicht geklappt. Versuch es nochmal.',
+    privacyNote: 'Was wir speichern (wenig): Datenschutz',
     rsvpHint: 'Damit stehst du erstmal nur auf der Gästeliste — ob du wirklich kommst, sagst du im nächsten Schritt.',
   },
   invite: {
@@ -213,6 +220,37 @@ const de = {
     password: 'Neues Passwort',
     save: 'Speichern',
     error: 'Das hat nicht geklappt. Ist die E-Mail schon vergeben?',
+    hostHint: 'Du willst selbst einladen? Gib oben eine E-Mail an, dann kannst du eigene Partys anlegen.',
+    deleteTitle: 'Konto löschen',
+    deleteHint:
+      'Deine Zusagen, Reaktionen und Galerie-Fotos verschwinden. Beiträge und Kommentare bleiben stehen, aber ohne deinen Namen.',
+    deleteEvents: 'Diese Events richtest nur du aus — sie werden komplett gelöscht:',
+    deleteButton: 'Konto löschen …',
+    deleteConfirm: 'Ja, endgültig löschen',
+    deleteCancel: 'Doch nicht',
+    deleteFailed: 'Das hat nicht geklappt. Versuch es nochmal.',
+  },
+  footer: {
+    imprint: 'Impressum',
+    privacy: 'Datenschutz',
+    report: 'Inhalt melden',
+  },
+  install: {
+    title: '1geladen aufs Handy',
+    android: 'Als App installieren — ein Tipp, kein Store.',
+    ios: 'In Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.',
+    install: 'Installieren',
+    dismiss: 'Ausblenden',
+  },
+  push: {
+    title: 'Benachrichtigungen',
+    hint: 'Auf diesem Gerät: Zusagen zu deinen Events, neue Pinnwand-Beiträge und Antworten an dich.',
+    turnOn: 'Einschalten',
+    turnOff: 'Ausschalten',
+    installFirst: 'Auf dem iPhone gehen Benachrichtigungen nur, wenn 1geladen auf dem Home-Bildschirm liegt: „Teilen“ → „Zum Home-Bildschirm“, dann von dort öffnen.',
+    unsupported: 'Dieser Browser kann leider keine Benachrichtigungen.',
+    denied: 'Benachrichtigungen sind für 1geladen blockiert. Das kannst du in den Browser- bzw. System-Einstellungen ändern.',
+    failed: 'Das hat nicht geklappt. Versuch es nochmal.',
   },
   auth: {
     loginTitle: 'Willkommen zurück!',
@@ -226,6 +264,7 @@ const de = {
     toLogin: 'Schon dabei? Anmelden',
     errorLogin: 'Das hat nicht geklappt. E-Mail oder Passwort prüfen.',
     errorRegister: 'Registrierung fehlgeschlagen. Gibt es das Konto vielleicht schon?',
+    privacyNote: 'Was wir speichern (wenig): Datenschutz',
   },
 }
 
@@ -240,6 +279,7 @@ const en: typeof de = {
     logout: 'Log out',
     admin: 'Backstage',
     account: 'Your account',
+    newEvent: 'New party',
     language: 'Language',
     mode: 'Theme',
     modeDark: 'Dark',
@@ -298,6 +338,7 @@ const en: typeof de = {
     saving: 'Saving …',
     saved: 'Saved',
     error: 'That didn’t work. Are all required fields filled?',
+    errorLimit: 'You’re already hosting 10 upcoming events. Throw a few of those first!',
   },
   landing: {
     kicker: 'You are invited',
@@ -312,7 +353,8 @@ const en: typeof de = {
     nextUp: 'Up next',
     lastParty: 'That was lovely',
     noEvents: 'No events yet. The calm before the party.',
-    noEventsHint: 'An admin can create the first event in the backstage area.',
+    noEventsHint: 'Wait for an invite — or send one yourself.',
+    newEvent: 'Throw a party',
     archive: 'More events',
   },
   hero: {
@@ -391,6 +433,8 @@ const en: typeof de = {
     title: 'Photos',
     subtitle: 'Proof that it was lovely.',
     locked: 'The gallery opens after the event.',
+    retiresOn: 'The photos stay until {date} — then we tidy up. Save your favourites before that!',
+    retired: 'The photos were cleared away 30 days after the party. Hopefully you saved your favourites!',
     upload: 'Upload photos',
     uploading: 'Uploading …',
     uploadFailed: 'Not every photo could be uploaded. Please try again.',
@@ -411,6 +455,7 @@ const en: typeof de = {
     invalid: 'This invite link is invalid. Ask the host for a fresh one!',
     nameMissing: 'At least tell us your name',
     failed: 'That didn’t work. Try again.',
+    privacyNote: 'What we store (not much): privacy',
     rsvpHint: 'This just puts you on the guest list — whether you’re actually coming, you’ll tell us in the next step.',
   },
   invite: {
@@ -439,6 +484,37 @@ const en: typeof de = {
     password: 'New password',
     save: 'Save',
     error: 'That didn’t work. Is the email already taken?',
+    hostHint: 'Want to invite people yourself? Add an email above and you can create your own parties.',
+    deleteTitle: 'Delete account',
+    deleteHint:
+      'Your RSVPs, reactions and gallery photos go away. Posts and comments stay, but without your name.',
+    deleteEvents: 'Only you host these events — they will be deleted entirely:',
+    deleteButton: 'Delete account …',
+    deleteConfirm: 'Yes, delete for good',
+    deleteCancel: 'Never mind',
+    deleteFailed: 'That didn’t work. Please try again.',
+  },
+  footer: {
+    imprint: 'Imprint',
+    privacy: 'Privacy',
+    report: 'Report content',
+  },
+  install: {
+    title: 'Get 1geladen on your phone',
+    android: 'Install it as an app — one tap, no store.',
+    ios: 'In Safari, tap “Share”, then “Add to Home Screen”.',
+    install: 'Install',
+    dismiss: 'Dismiss',
+  },
+  push: {
+    title: 'Notifications',
+    hint: 'On this device: RSVPs to your events, new wall posts and replies to you.',
+    turnOn: 'Turn on',
+    turnOff: 'Turn off',
+    installFirst: 'On iPhone, notifications only work once 1geladen is on your home screen: “Share” → “Add to Home Screen”, then open it from there.',
+    unsupported: 'This browser can’t do notifications, sorry.',
+    denied: 'Notifications are blocked for 1geladen. You can change that in your browser or system settings.',
+    failed: 'That didn’t work. Please try again.',
   },
   auth: {
     loginTitle: 'Welcome back!',
@@ -452,6 +528,7 @@ const en: typeof de = {
     toLogin: 'Already in? Log in',
     errorLogin: 'That didn’t work. Check your email or password.',
     errorRegister: 'Registration failed. Maybe the account already exists?',
+    privacyNote: 'What we store (not much): privacy',
   },
 }
 

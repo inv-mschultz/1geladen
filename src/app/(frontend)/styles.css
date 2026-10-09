@@ -117,6 +117,75 @@ a {
   padding: 28px 20px 90px;
 }
 
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 22px;
+  padding: 24px 16px 40px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.site-footer a {
+  color: var(--c-muted);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--c-bright);
+}
+
+/* --- legal pages ----------------------------------------------------------------------------------------------------- */
+
+.legal {
+  max-width: 680px;
+  margin: 0 auto;
+  color: var(--c-on-bg);
+  line-height: 1.6;
+}
+
+.legal__title {
+  font-variation-settings: 'wdth' 118;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.legal h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 28px 0 8px;
+}
+
+.legal p,
+.legal li {
+  color: var(--c-muted);
+}
+
+.legal ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 20px;
+}
+
+.legal strong {
+  color: var(--c-on-bg);
+}
+
+.legal a {
+  color: var(--c-accent);
+}
+
+.legal__missing {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -1957,6 +2026,16 @@ a {
 
 /* --- gallery ----------------------------------------------------------------------------------------------- */
 
+.gallery__notice {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-muted);
+  background: var(--c-surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
 .gallery--locked {
   text-align: center;
   padding: 44px 20px;
@@ -2401,6 +2480,44 @@ a {
   flex: 1;
 }
 
+/* --- install hint ------------------------------------------------------------------------------------------------------ */
+
+.install-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px auto 0;
+  width: min(720px, calc(100% - 32px));
+  padding: 10px 10px 10px 12px;
+  background: var(--c-surface);
+  color: var(--c-bright);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.install-hint__icon {
+  flex-shrink: 0;
+  border-radius: 10px;
+}
+
+.install-hint__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.install-hint__text span {
+  color: var(--c-muted);
+}
+
+.install-hint__close {
+  flex-shrink: 0;
+  border: 0;
+  cursor: pointer;
+}
+
 /* --- auth / account / event form -------------------------------------------------------------------------------------- */
 
 .auth-page {
@@ -2445,6 +2562,15 @@ a {
   margin-top: 6px;
 }
 
+.auth-form__note {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.auth-form__note a {
+  color: var(--c-muted);
+}
+
 .auth-form__error {
   margin: 0;
   color: var(--c-bright);
@@ -2475,6 +2601,33 @@ a {
   background: var(--c-surface-2);
   border-radius: 10px;
   padding: 10px 12px;
+}
+
+.account__host-hint {
+  margin-top: 16px;
+  text-align: left;
+}
+
+.account__section {
+  display: grid;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid var(--c-line);
+  text-align: left;
+}
+
+.account__section-title {
+  font-variation-settings: 'wdth' 118;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+}
+
+.account__danger-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .event-form {

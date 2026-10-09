@@ -5,7 +5,7 @@
  */
 export async function resizeImage(
   file: File,
-  { maxDim = 2000, quality = 0.82 }: { maxDim?: number; quality?: number } = {},
+  { maxDim = 1600, quality = 0.8 }: { maxDim?: number; quality?: number } = {},
 ): Promise<File> {
   if (!file.type.startsWith('image/') || file.type === 'image/gif') return file
 
@@ -15,7 +15,7 @@ export async function resizeImage(
     const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height))
 
     // Already small enough — keep the original bytes
-    if (scale === 1 && file.size <= 1_500_000) {
+    if (scale === 1 && file.size <= 1_000_000) {
       bitmap.close()
       return file
     }

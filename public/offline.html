@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d1f17" />
+    <title>Offline — 1geladen</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: grid; place-items: center; padding: 24px; box-sizing: border-box;
+        background: #0d1f17; color: #4ce6a5; text-align: center;
+        font: 500 1rem/1.5 system-ui, -apple-system, sans-serif;
+      }
+      img { width: 72px; height: 72px; border-radius: 18px; }
+      h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; margin: 20px 0 8px; }
+      p { margin: 0 0 4px; color: #7aa892; }
+      button {
+        margin-top: 24px; padding: 14px 28px; border: 0; border-radius: 999px;
+        background: #ff8ad4; color: #33101f; font: inherit; font-weight: 800; cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" alt="" />
+      <h1>Kein Netz</h1>
+      <p>Die Party läuft weiter — sobald du wieder online bist.</p>
+      <p lang="en">No connection. The party goes on once you’re back online.</p>
+      <button type="button" onclick="location.reload()">Nochmal versuchen</button>
+    </main>
+  </body>
+</html>
