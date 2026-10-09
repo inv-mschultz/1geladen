@@ -5,6 +5,7 @@ import * as migration_20260720_145402_add_reactions from './20260720_145402_add_
 import * as migration_20260805_101500_per_event_hosts from './20260805_101500_per_event_hosts';
 import * as migration_20261008_112622_push_subscriptions from './20261008_112622_push_subscriptions';
 import * as migration_20261009_083908_gallery_retention from './20261009_083908_gallery_retention';
+import * as migration_20261009_120000_drop_legacy_image_sizes from './20261009_120000_drop_legacy_image_sizes';
 
 export const migrations = [
   {
@@ -41,5 +42,10 @@ export const migrations = [
     up: migration_20261009_083908_gallery_retention.up,
     down: migration_20261009_083908_gallery_retention.down,
     name: '20261009_083908_gallery_retention'
+  },
+  {
+    up: migration_20261009_120000_drop_legacy_image_sizes.up,
+    down: migration_20261009_120000_drop_legacy_image_sizes.down,
+    name: '20261009_120000_drop_legacy_image_sizes',
   },
 ];
