@@ -474,10 +474,12 @@ export async function rsvp(eventId: number, status: 'yes' | 'maybe' | 'no'): Pro
 type PayloadClient = Awaited<ReturnType<typeof getPayload>>
 type SessionUser = NonNullable<Awaited<ReturnType<PayloadClient['auth']>>['user']>
 
-/** Extracts text/GIF/image from a composer FormData; uploads the image if present. */
+/** Extracts text/GIF/image from a composer FormData; uploads the image if present.
+ *  The image is scoped to `wallEvent`, so only that party's guests can load it. */
 async function extractAttachments(
   payload: PayloadClient,
   user: SessionUser,
+  wallEvent: number,
   formData: FormData,
 ): Promise<{ content?: string; gifUrl?: string; image?: number } | null> {
   const content = String(formData.get('content') ?? '').trim()
@@ -494,7 +496,7 @@ async function extractAttachments(
         mimetype: photo.type,
         size: photo.size,
       },
-      data: { alt: photo.name, uploadedBy: user.id },
+      data: { alt: photo.name, uploadedBy: user.id, wallEvent },
       overrideAccess: false,
       user,
     })
@@ -513,7 +515,7 @@ export async function createPost(eventId: number, formData: FormData): Promise<v
   const { payload, user } = await getCtx()
   requireUser(user)
 
-  const attachments = await extractAttachments(payload, user, formData)
+  const attachments = await extractAttachments(payload, user, eventId, formData)
   if (!attachments) return
 
   await payload.create({
@@ -537,7 +539,20 @@ export async function createComment(postId: number, formData: FormData): Promise
   const { payload, user } = await getCtx()
   requireUser(user)
 
-  const attachments = await extractAttachments(payload, user, formData)
+  // Read with the guest's own rights: a post they cannot see is one they
+  // cannot answer, and it names the event the image belongs to.
+  const parent = await payload.findByID({
+    collection: 'posts',
+    id: postId,
+    depth: 0,
+    select: { event: true },
+    overrideAccess: false,
+    user,
+  })
+  const parentEvent = relId(parent.event)
+  if (!parentEvent) return
+
+  const attachments = await extractAttachments(payload, user, parentEvent, formData)
   if (!attachments) return
 
   const comment = await payload.create({

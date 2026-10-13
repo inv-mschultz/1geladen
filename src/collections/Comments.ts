@@ -1,6 +1,13 @@
 import type { CollectionConfig } from 'payload'
 
-import { assertEventMember, canActAsHost, isEventMember, isLoggedIn, isOwnerOrEventHost } from '@/access'
+import {
+  assertEventMember,
+  canActAsHost,
+  isEventMember,
+  isLoggedIn,
+  isOwnerOrEventHost,
+  neverUpdate,
+} from '@/access'
 import { deleteReactionsFor } from '@/lib/cascade'
 import { GIF_URL_PATTERN, requireSomeContent } from './Posts'
 
@@ -50,6 +57,7 @@ export const Comments: CollectionConfig = {
       relationTo: 'posts',
       required: true,
       index: true,
+      access: { update: neverUpdate },
     },
     {
       name: 'author',
@@ -58,6 +66,7 @@ export const Comments: CollectionConfig = {
       required: true,
       index: true,
       defaultValue: ({ user }) => user?.id,
+      access: { update: neverUpdate },
       admin: { readOnly: true },
     },
     {

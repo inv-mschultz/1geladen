@@ -8,6 +8,7 @@ import {
   isEventMember,
   isLoggedIn,
   isOwnerOrEventHost,
+  neverUpdate,
 } from '@/access'
 
 export const RSVPs: CollectionConfig = {
@@ -64,6 +65,7 @@ export const RSVPs: CollectionConfig = {
       relationTo: 'events',
       required: true,
       index: true,
+      access: { update: neverUpdate },
     },
     {
       name: 'user',

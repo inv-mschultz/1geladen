@@ -241,6 +241,7 @@ export interface Media {
    * Attach to an event to show this photo in its gallery.
    */
   event?: (number | null) | Event;
+  wallEvent?: (number | null) | Event;
   uploadedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
@@ -588,6 +589,7 @@ export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
   event?: T;
+  wallEvent?: T;
   uploadedBy?: T;
   updatedAt?: T;
   createdAt?: T;

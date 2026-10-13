@@ -7,6 +7,7 @@ import {
   isEventHostField,
   isEventMember,
   isLoggedIn,
+  neverUpdate,
   relId,
 } from '@/access'
 
@@ -83,7 +84,7 @@ export const BringItems: CollectionConfig = {
       required: true,
       index: true,
       access: {
-        update: isCreatorOrHostField,
+        update: neverUpdate,
       },
     },
     {

@@ -3,9 +3,12 @@ import type { CollectionConfig } from 'payload'
 
 import {
   canHostAccess,
+  guestListCreate,
+  guestListUpdate,
   isEventHost,
   isEventHostFieldSelf,
   isEventMemberOrHost,
+  neverUpdate,
   relId,
   toIds,
 } from '@/access'
@@ -209,7 +212,7 @@ export const Events: CollectionConfig = {
       relationTo: 'users',
       index: true,
       access: {
-        update: isEventHostFieldSelf,
+        update: neverUpdate,
       },
       admin: { position: 'sidebar' },
     },
@@ -235,7 +238,8 @@ export const Events: CollectionConfig = {
       validate: (value: unknown) =>
         toIds(value).length > 0 || 'An event needs at least one host.',
       access: {
-        update: isEventHostFieldSelf,
+        create: guestListCreate('hosts'),
+        update: guestListUpdate('hosts'),
       },
       admin: { position: 'sidebar' },
     },
@@ -248,7 +252,8 @@ export const Events: CollectionConfig = {
       hasMany: true,
       index: true,
       access: {
-        update: isEventHostFieldSelf,
+        create: guestListCreate('members'),
+        update: guestListUpdate('members'),
       },
       admin: { position: 'sidebar' },
     },

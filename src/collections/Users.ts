@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, FieldAccess } from 'payload'
 
 import {
   isAdminOrSelf,
@@ -7,6 +7,14 @@ import {
 } from '@/access'
 import { releaseUserContent } from '@/lib/deletedGuest'
 import { assertNotSoleHost } from '@/lib/membership'
+
+/**
+ * Guests see each other's names, never each other's addresses: anyone holding
+ * an invite link — and those get forwarded to big group chats — could
+ * otherwise join with a made-up name and collect every guest's email.
+ */
+const isSelfOrPlatformAdmin: FieldAccess = ({ req: { user }, doc }) =>
+  user?.role === 'admin' || (Boolean(user) && (doc as { id?: number } | undefined)?.id === user?.id)
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -57,6 +65,15 @@ export const Users: CollectionConfig = {
     ],
   },
   fields: [
+    {
+      // Payload's own email field, redeclared only to restrict who reads it.
+      name: 'email',
+      type: 'email',
+      required: true,
+      unique: true,
+      index: true,
+      access: { read: isSelfOrPlatformAdmin },
+    },
     {
       name: 'name',
       type: 'text',

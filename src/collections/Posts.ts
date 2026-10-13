@@ -1,7 +1,14 @@
 import type { CollectionConfig } from 'payload'
 import { ValidationError } from 'payload'
 
-import { assertEventMember, canActAsHost, isEventMember, isLoggedIn, isOwnerOrEventHost } from '@/access'
+import {
+  assertEventMember,
+  canActAsHost,
+  isEventMember,
+  isLoggedIn,
+  isOwnerOrEventHost,
+  neverUpdate,
+} from '@/access'
 import { releasePostContent } from '@/lib/cascade'
 
 /** Only GIFs hosted by GIPHY may be embedded. */
@@ -60,6 +67,7 @@ export const Posts: CollectionConfig = {
       relationTo: 'events',
       required: true,
       index: true,
+      access: { update: neverUpdate },
     },
     {
       name: 'author',
@@ -68,6 +76,7 @@ export const Posts: CollectionConfig = {
       required: true,
       index: true,
       defaultValue: ({ user }) => user?.id,
+      access: { update: neverUpdate },
       admin: { readOnly: true },
     },
     {

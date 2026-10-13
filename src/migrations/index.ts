@@ -7,6 +7,7 @@ import * as migration_20261008_112622_push_subscriptions from './20261008_112622
 import * as migration_20261009_083908_gallery_retention from './20261009_083908_gallery_retention';
 import * as migration_20261009_120000_drop_legacy_image_sizes from './20261009_120000_drop_legacy_image_sizes';
 import * as migration_20261013_090000_payload_3_90 from './20261013_090000_payload_3_90';
+import * as migration_20261013_100000_media_wall_event from './20261013_100000_media_wall_event';
 
 export const migrations = [
   {
@@ -53,5 +54,10 @@ export const migrations = [
     up: migration_20261013_090000_payload_3_90.up,
     down: migration_20261013_090000_payload_3_90.down,
     name: '20261013_090000_payload_3_90',
+  },
+  {
+    up: migration_20261013_100000_media_wall_event.up,
+    down: migration_20261013_100000_media_wall_event.down,
+    name: '20261013_100000_media_wall_event',
   },
 ];

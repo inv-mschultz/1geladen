@@ -8,6 +8,7 @@ import {
   isEventMember,
   isLoggedIn,
   isOwnerOrEventHost,
+  neverUpdate,
 } from '@/access'
 import { isAllowedReaction } from '@/lib/emoji'
 
@@ -146,18 +147,21 @@ export const Reactions: CollectionConfig = {
       relationTo: 'users',
       index: true,
       defaultValue: ({ user }) => user?.id,
+      access: { update: neverUpdate },
     },
     {
       name: 'post',
       type: 'relationship',
       relationTo: 'posts',
       index: true,
+      access: { update: neverUpdate },
     },
     {
       name: 'comment',
       type: 'relationship',
       relationTo: 'comments',
       index: true,
+      access: { update: neverUpdate },
     },
     {
       // Denormalised from the target so read access is a single indexed check.
@@ -165,6 +169,7 @@ export const Reactions: CollectionConfig = {
       type: 'relationship',
       relationTo: 'events',
       index: true,
+      access: { update: neverUpdate },
       admin: { readOnly: true },
     },
   ],

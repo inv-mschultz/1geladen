@@ -264,6 +264,47 @@ export const isEventHostFieldSelf: FieldAccess = ({ req: { user }, doc }) => {
 }
 
 /**
+ * Field access for an event's `members` and `hosts` lists. Nobody joins a
+ * party through the API — people arrive by invite link, and that path
+ * (joinParty, the join page) writes with overrideAccess. So through the API a
+ * host may drop guests and promote existing ones, but every id written has to
+ * be on the guest list already.
+ *
+ * Without this a host could write any account id into `members` and become a
+ * peer of the whole platform: everybody's name readable through /api/users,
+ * and every wall post pushed to everybody's phone.
+ */
+export const guestListUpdate =
+  (field: 'hosts' | 'members'): FieldAccess =>
+  ({ req: { user }, doc, siblingData }) => {
+    if (globalBypass(user)) return true
+    if (!user) return false
+    const current = doc as { hosts?: unknown; members?: unknown } | undefined
+    if (!toIds(current?.hosts).includes(user.id)) return false
+    const members = toIds(current?.members)
+    return toIds((siblingData as Record<string, unknown> | undefined)?.[field]).every((id) =>
+      members.includes(id),
+    )
+  }
+
+/** On create the only person who can be on a new event is its creator. */
+export const guestListCreate =
+  (field: 'hosts' | 'members'): FieldAccess =>
+  ({ req: { user }, siblingData }) => {
+    if (globalBypass(user)) return true
+    if (!user) return false
+    return toIds((siblingData as Record<string, unknown> | undefined)?.[field]).every(
+      (id) => id === user.id,
+    )
+  }
+
+/** For fields that say where a doc lives or whose it is. Set once on create,
+ *  never moved — moving a post is how it would end up in a stranger's party
+ *  under a stranger's name. Server code that must reassign (account deletion)
+ *  writes with overrideAccess. */
+export const neverUpdate: FieldAccess = () => false
+
+/**
  * Read access for collections that hang off an event (posts, rsvps, …):
  * you see the content of events you belong to or host, and nothing else.
  * `path` is the query path to the event id, e.g. 'event' or 'post.event'.

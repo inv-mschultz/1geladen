@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto'
 import path from 'path'
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 import { APIError } from 'payload'
 
 import {
@@ -10,6 +10,8 @@ import {
   isLoggedIn,
   isOwnerOrEventHost,
   memberEventIds,
+  neverUpdate,
+  peerUserIds,
   relId,
 } from '@/access'
 import { galleryRetiresAt } from '@/lib/time'
@@ -26,16 +28,27 @@ export const Media: CollectionConfig = {
     defaultColumns: ['filename', 'uploadedBy', 'event'],
   },
   access: {
-    // <img> requests are same-origin, so the session cookie rides along:
-    // event photos are visible to that event's members, eventless uploads
-    // (post/comment images) to any logged-in user.
+    // <img> requests are same-origin, so the session cookie rides along.
+    // Gallery photos (`event`) and wall images (`wallEvent`) are visible to
+    // that event's members. Anything attached to neither — cover images
+    // uploaded in the backstage, stray API uploads — only to people who share
+    // an event with whoever uploaded it.
     read: async ({ req }) => {
       if (!req.user) return false
       if (globalBypass(req.user)) return true
       const ids = await memberEventIds(req)
       return {
-        or: [{ event: { exists: false } }, ...(ids.length ? [{ event: { in: ids } }] : [])],
-      }
+        or: [
+          ...(ids.length ? [{ event: { in: ids } }, { wallEvent: { in: ids } }] : []),
+          {
+            and: [
+              { event: { exists: false } },
+              { wallEvent: { exists: false } },
+              { uploadedBy: { in: await peerUserIds(req) } },
+            ],
+          },
+        ],
+      } as Where
     },
     create: isLoggedIn,
     update: isOwnerOrEventHost('uploadedBy', 'event'),
@@ -59,6 +72,7 @@ export const Media: CollectionConfig = {
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation === 'create') {
+          if (data.wallEvent) await assertEventMember(req, data.wallEvent)
           if (data.event) {
             await assertEventMember(req, data.event)
             const { totalDocs } = await req.payload.count({
@@ -116,9 +130,21 @@ export const Media: CollectionConfig = {
       type: 'relationship',
       relationTo: 'events',
       index: true,
+      access: { update: neverUpdate },
       admin: {
         description: 'Attach to an event to show this photo in its gallery.',
       },
+    },
+    {
+      // The event whose wall a post or comment image belongs to. Kept apart
+      // from `event` so wall images neither show in the gallery, count
+      // against its cap, nor go when it retires — it only scopes who sees them.
+      name: 'wallEvent',
+      type: 'relationship',
+      relationTo: 'events',
+      index: true,
+      access: { update: neverUpdate },
+      admin: { readOnly: true, position: 'sidebar' },
     },
     {
       name: 'uploadedBy',
@@ -126,6 +152,7 @@ export const Media: CollectionConfig = {
       relationTo: 'users',
       index: true,
       defaultValue: ({ user }) => user?.id,
+      access: { update: neverUpdate },
       admin: { readOnly: true, position: 'sidebar' },
     },
   ],
