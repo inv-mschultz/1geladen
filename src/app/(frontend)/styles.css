@@ -141,6 +141,7 @@ a {
 .legal {
   max-width: 680px;
   margin: 0 auto;
+  padding-top: clamp(40px, 8vh, 88px);
   color: var(--c-on-bg);
   line-height: 1.6;
 }
@@ -197,7 +198,12 @@ a {
   flex-wrap: wrap;
   padding: 16px 26px;
   background: var(--c-bg);
-  border-bottom: 1px solid var(--c-line-on-bg);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.site-header[data-scrolled] {
+  border-bottom-color: var(--c-line-on-bg);
 }
 
 .site-logo {
@@ -261,6 +267,19 @@ a {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.site-nav__login {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--c-bright);
+  text-decoration: none;
+  border-radius: 999px;
+}
+
+.site-nav__login:hover {
+  background: var(--c-line);
 }
 
 /* --- language switch ---------------------------------------------------------- */
@@ -910,202 +929,6 @@ a {
 
 .join-form__login a {
   color: var(--c-muted);
-}
-
-.landing__more {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 26px;
-  font-size: 0.82rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--c-muted);
-  text-decoration: none;
-}
-
-.landing__more:hover {
-  color: var(--c-bright);
-}
-
-/* --- about (/so-gehts) ----------------------------------------------------------------------- */
-
-.about {
-  display: grid;
-  gap: 56px;
-  padding: 44px 0 20px;
-}
-
-.about__hero {
-  margin: 0 auto;
-}
-
-.about__hero .landing__blurb {
-  margin-bottom: 0;
-}
-
-.about__heading {
-  color: var(--c-on-bg);
-  margin-bottom: 20px;
-}
-
-.about__steps,
-.about__features {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 16px;
-}
-
-.about__steps {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.about__features {
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-}
-
-.about__step,
-.about__feature {
-  background: var(--c-surface);
-  color: var(--c-bright);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-soft);
-  padding: 26px 24px;
-}
-
-.about__step h3,
-.about__feature h3 {
-  font-variation-settings: 'wdth' 112;
-  font-size: 1.1rem;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.about__step p,
-.about__feature p {
-  margin: 0;
-  color: var(--c-muted);
-  font-size: 0.95rem;
-}
-
-/* Outlined numerals, the same trick as the landing title's accent line. */
-.about__step-number {
-  display: block;
-  font-variation-settings: 'wdth' 125;
-  font-weight: 800;
-  font-size: 3.4rem;
-  line-height: 1;
-  margin-bottom: 14px;
-  color: transparent;
-  -webkit-text-stroke: 2px var(--c-accent);
-}
-
-.about__feature-emoji {
-  display: block;
-  font-size: 1.9rem;
-  line-height: 1;
-  margin-bottom: 14px;
-}
-
-.about__not ul {
-  list-style: none;
-  margin: 14px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.about__not li {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  font-weight: 700;
-}
-
-.about__not li::before {
-  content: '';
-  flex-shrink: 0;
-  width: 14px;
-  height: 3px;
-  margin-top: 0.7em;
-  align-self: flex-start;
-  background: var(--c-accent);
-  border-radius: 2px;
-}
-
-.about__faq {
-  display: grid;
-  gap: 10px;
-}
-
-.about__faq-item {
-  background: var(--c-surface);
-  color: var(--c-bright);
-  border-radius: var(--radius-el);
-}
-
-.about__faq-item summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 20px;
-  font-weight: 800;
-}
-
-.about__faq-item summary::-webkit-details-marker {
-  display: none;
-}
-
-.about__faq-item summary::after {
-  content: '+';
-  flex-shrink: 0;
-  color: var(--c-accent);
-  font-weight: 900;
-  transition: transform 0.2s ease;
-}
-
-.about__faq-item[open] summary::after {
-  transform: rotate(45deg);
-}
-
-.about__faq-item summary:focus-visible {
-  outline: 2px solid var(--c-bright);
-  outline-offset: 2px;
-  border-radius: var(--radius-el);
-}
-
-.about__faq-item p {
-  margin: 0;
-  padding: 0 20px 20px;
-  color: var(--c-muted);
-}
-
-.about__cta {
-  display: grid;
-  justify-items: center;
-  gap: 18px;
-  text-align: center;
-  color: var(--c-on-bg);
-}
-
-@media (max-width: 760px) {
-  .about {
-    gap: 44px;
-  }
-  .about__steps {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .about__faq-item summary::after {
-    transition: none;
-  }
 }
 
 /* --- home / misc --------------------------------------------------------------------------- */
@@ -3455,4 +3278,158 @@ a {
   color: var(--c-accent);
   font-size: 0.88rem;
   margin-top: 12px;
+}
+
+/* --- interaction states ------------------------------------------------------------------------------------------- */
+/* One vocabulary for every control: hover brightens or lifts (pointer devices
+   only, so nothing sticks after a tap), pressing sinks it a little, and
+   keyboard focus draws a clear ring. Pressing uses the standalone `scale`
+   property, so it stacks on whatever `transform` a control already has. */
+
+:where(button, a, summary, [role='button'], label.field--check) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Filled controls: the default ring is currentColor, which is their dark
+   label colour and vanishes against the page. Ring them in the bright tone. */
+.btn:focus-visible,
+.fab-edit:focus-visible,
+.rsvp-nudgebar:focus-visible,
+.lang-switch__btn:focus-visible,
+.mode-switch__btn:focus-visible,
+.view-switch__btn:focus-visible,
+.gallery__photo button:focus-visible,
+.gif-picker__grid button:focus-visible,
+.color-field__swatch:focus-visible {
+  outline: 3px solid var(--c-bright);
+  outline-offset: 3px;
+}
+
+/* Inside a pill-shaped switch the ring would be clipped; draw it inside. */
+.lang-switch__btn:focus-visible,
+.mode-switch__btn:focus-visible,
+.view-switch__btn:focus-visible {
+  outline-offset: -4px;
+  outline-color: var(--c-accent);
+}
+
+.user-menu__item:focus-visible,
+.emoji-picker__grid button:focus-visible,
+.reactions__pill:focus-visible,
+.reactions__add:focus-visible,
+.lightbox__close:focus-visible,
+.lightbox__nav:focus-visible,
+.site-nav__login:focus-visible,
+.site-mainnav a:focus-visible,
+.site-footer a:focus-visible,
+.auth-card__switch:focus-visible,
+.archive__link:focus-visible,
+.event-card:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.user-menu__trigger,
+.lang-switch__btn,
+.mode-switch__btn,
+.view-switch__btn,
+.site-nav__login,
+.user-menu__item,
+.emoji-picker__grid button,
+.gif-picker__grid button,
+.reactions__pill,
+.reactions__add,
+.lightbox__close,
+.lightbox__nav,
+.install-hint__close,
+.color-field__trigger {
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease,
+    scale 0.1s ease;
+}
+
+.btn,
+.fab-edit,
+.event-card,
+.archive__link,
+.color-field__swatch {
+  transition-property: transform, opacity, scale, background-color;
+}
+
+@media (hover: hover) {
+  .user-menu__trigger:hover,
+  .user-menu__trigger[aria-expanded='true'] {
+    border-color: var(--c-bright);
+  }
+
+  .lang-switch__btn:not(.is-active):hover,
+  .mode-switch__btn:not(.is-active):hover,
+  .view-switch__btn:not(.is-active):hover {
+    color: var(--c-bright);
+    background: var(--c-line);
+  }
+
+  .btn--ghost:hover:not(:disabled) {
+    border-color: var(--c-bright);
+  }
+
+  .site-logo:hover .site-logo__one {
+    color: var(--c-accent);
+  }
+
+  .auth-card__switch:hover {
+    color: var(--c-bright);
+  }
+
+  .gallery__photo button:hover img {
+    transform: scale(1.03);
+  }
+}
+
+/* Pressed */
+.btn:active:not(:disabled):not(.is-disabled),
+.fab-edit:active,
+.btn-quiet:active:not(:disabled),
+.user-menu__trigger:active,
+.lang-switch__btn:active,
+.mode-switch__btn:active,
+.view-switch__btn:active,
+.site-nav__login:active,
+.reactions__pill:active,
+.reactions__add:active,
+.emoji-picker__grid button:active,
+.gif-picker__grid button:active,
+.lightbox__close:active,
+.lightbox__nav:active,
+.install-hint__close:active,
+.color-field__trigger:active,
+.color-field__swatch:active,
+.gallery__photo button:active {
+  scale: 0.95;
+}
+
+.event-card:active,
+.archive__link:active,
+.user-menu__item:active,
+.rsvp-nudgebar:active {
+  scale: 0.985;
+}
+
+.user-menu__item:active {
+  background: var(--c-surface-2);
+}
+
+.site-mainnav a:active,
+.site-footer a:active,
+.auth-card__switch:active,
+.legal a:active {
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, a, [role='button']):active {
+    scale: none !important;
+  }
 }

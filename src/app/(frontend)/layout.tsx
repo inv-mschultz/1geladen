@@ -60,7 +60,7 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
   const hostsAnything = user ? (await hostedEventIdsFor(payload, user)).length > 0 : false
 
   return (
-    <html lang={locale}>
+    <html lang={locale} data-scroll-behavior="smooth">
       <body className={archivo.variable}>
         <style>{themeCss(PLATFORM_COLOR, PLATFORM_ACCENT, mode === 'light')}</style>
         <header className="site-header">
@@ -98,7 +98,12 @@ export default async function FrontendLayout(props: { children: React.ReactNode 
                 }}
               />
             ) : (
-              <LangSwitch current={locale} />
+              <>
+                <Link href="/login" className="site-nav__login">
+                  {dict.nav.login}
+                </Link>
+                <LangSwitch current={locale} />
+              </>
             )}
           </nav>
         </header>

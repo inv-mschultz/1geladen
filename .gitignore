@@ -51,3 +51,6 @@ node_modules/
 
 # local sqlite database
 *.db
+
+# python (blender scripts)
+__pycache__/

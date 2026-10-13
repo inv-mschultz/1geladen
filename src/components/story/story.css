@@ -1,0 +1,1616 @@
+/* ---------------------------------------------------------------------------
+   The landing story: a party from a guest's side — invitation, answer,
+   run-up, planning, questions, afterwards — and a last call.
+
+   StoryScroll writes `--p` (0–1) on every chapter and `data-scene` on <html>;
+   everything here is computed from those two. Tall chapters pin their stage
+   with position: sticky and play over `--p`. Without JavaScript, or with
+   reduced motion, `--p` is 1 and every scene simply shows its end state.
+
+   The story keeps its own colours instead of the theme tokens: it is always
+   night here, whatever mode the visitor picked.
+--------------------------------------------------------------------------- */
+
+@property --sky-a {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #0f241a;
+}
+
+@property --sky-b {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #050c08;
+}
+
+@property --stars {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --day {
+  syntax: '<integer>';
+  inherits: true;
+  initial-value: 30;
+}
+
+html {
+  transition: --sky-a 1.4s ease, --sky-b 1.4s ease, --stars 1.4s ease;
+}
+
+html[data-scene='invite'] { --sky-a: #0f241a; --sky-b: #050c08; --stars: 0; }
+html[data-scene='rsvp'] { --sky-a: #0c1d15; --sky-b: #040a07; --stars: 0.25; }
+html[data-scene='notify'] { --sky-a: #0b1813; --sky-b: #06060a; --stars: 0.5; }
+html[data-scene='kitchen'] { --sky-a: #0d1a12; --sky-b: #050906; --stars: 0.5; }
+html[data-scene='wall'] { --sky-a: #0a140f; --sky-b: #030705; --stars: 0.8; }
+html[data-scene='faq'] { --sky-a: #0a1210; --sky-b: #030605; --stars: 0.9; }
+html[data-scene='late'] { --sky-a: #08100f; --sky-b: #030609; --stars: 1; }
+html[data-scene='close'] { --sky-a: #06080a; --sky-b: #020304; --stars: 0.3; }
+
+/* --- page frame -------------------------------------------------------------------------- */
+
+body:has(.story) {
+  overflow-x: clip;
+}
+
+body:has(.story) .site-main {
+  max-width: none;
+  padding: 0;
+}
+
+body:has(.story) .site-header {
+  background: color-mix(in oklab, var(--sky-a) 78%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom-color: transparent;
+}
+
+body:has(.story) .site-header[data-scrolled] {
+  border-bottom-color: rgba(228, 251, 239, 0.1);
+}
+
+/* The closing section carries the footer links. */
+body:has(.story) .site-footer {
+  display: none;
+}
+
+.story {
+  --st-text: #e4fbef;
+  --st-muted: #93bfaa;
+  --st-green: #4ce6a5;
+  --st-pink: #ff8ad4;
+  --st-ink: #10251b;
+  --st-card: #10291d;
+  --st-paper: #fffdf6;
+
+  position: relative;
+  color: var(--st-text);
+}
+
+.story__sky {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  /* Always darker towards the bottom, never lighter: no muddy greys. */
+  background: linear-gradient(180deg, var(--sky-a) 0%, var(--sky-a) 30%, var(--sky-b) 100%);
+}
+
+/* Twinkling dots across the whole story, in the lower part of the screen,
+   fading in from the middle. The closing screen has its own. */
+.story__dots {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, transparent 42%, #000 80%);
+  mask-image: linear-gradient(180deg, transparent 42%, #000 80%);
+  transition: opacity 0.8s ease;
+}
+
+html[data-scene='close'] .story__dots {
+  opacity: 0;
+}
+
+/* Scroll snapping: every chapter is a resting point, and tall chapters get
+   one more where their scene has played out. Mandatory, so the page always
+   settles on one; content taller than the screen still scrolls freely. */
+html:has(.story) {
+  scroll-snap-type: y mandatory;
+}
+
+/* Each chapter is a stop you can't fling past in one go. */
+.story__chapter {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.story__snap {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  top: calc((100% - 100vh) * var(--at));
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  pointer-events: none;
+}
+
+/* Pixel stars, brighter as the night goes on. */
+.story__sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--stars);
+  background-image:
+    linear-gradient(#fff, #fff), linear-gradient(#ff8ad4, #ff8ad4), linear-gradient(#4ce6a5, #4ce6a5),
+    linear-gradient(#fff, #fff), linear-gradient(#fff, #fff);
+  background-size: 3px 3px;
+  background-repeat: no-repeat;
+  background-position: 12% 18%, 78% 12%, 64% 34%, 30% 42%, 90% 58%;
+}
+
+.story__sky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: calc(var(--stars) * 0.6);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1.5px);
+  background-size: 97px 89px;
+  background-position: 13px 21px;
+  mask-image: linear-gradient(#000, transparent 70%);
+}
+
+/* --- chapters ------------------------------------------------------------------------------- */
+
+.story__chapter {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 14vh 24px;
+  display: grid;
+  align-content: center;
+}
+
+.story__chapter--tall {
+  padding: 0;
+  display: block;
+  /* Block containers honour align-content now; the stage must start at the top. */
+  align-content: normal;
+}
+
+.story__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  overflow: hidden;
+  padding: 88px 24px 24px;
+}
+
+.story__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 64px;
+  align-items: center;
+  justify-items: stretch;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.story__stage.story__split {
+  max-width: none;
+  padding-inline: max(24px, calc((100vw - 1120px) / 2));
+}
+
+.story__split--flip > .story__copy {
+  order: 2;
+}
+
+.story__prop {
+  position: relative;
+  width: 100%;
+}
+
+.story__kicker {
+  margin: 0 0 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--st-pink);
+}
+
+.story__title {
+  font-variation-settings: 'wdth' 120;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.9rem, 4.4vw, 3.3rem);
+  color: var(--st-green);
+  margin-bottom: 18px;
+  text-wrap: balance;
+}
+
+.story__text {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 1.1rem;
+  color: var(--st-muted);
+}
+
+.story__reveal {
+  transition:
+    opacity 0.7s ease,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Copy slides in from the side, the prop rises a beat later. */
+.story__chapter:not([data-seen]) .story__copy.story__reveal {
+  opacity: 0;
+  transform: translateX(-32px);
+}
+
+.story__chapter:not([data-seen]) .story__prop.story__reveal,
+.story__chapter:not([data-seen]) .story__reveal:not(.story__copy, .story__prop) {
+  opacity: 0;
+  transform: translateY(48px) scale(0.97);
+}
+
+.story__prop.story__reveal,
+.story-board.story__reveal {
+  transition-delay: 0.12s;
+}
+
+.story-card {
+  position: relative;
+  background: var(--st-card);
+  color: var(--st-text);
+  border: 1px solid rgba(76, 230, 165, 0.2);
+  border-radius: 20px;
+  padding: 30px 26px 26px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+}
+
+.story-card__tag {
+  position: absolute;
+  top: -14px;
+  left: 22px;
+  transform: rotate(-4deg);
+  background: #bdf5da;
+  color: #0d1f17;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 900;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+@keyframes story-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* --- the invitation ------------------------------------------------------------------------ */
+
+.story-invite {
+  height: 280vh;
+  --open1: clamp(0, var(--p, 0) / 0.1, 1);
+  --open2: clamp(0, (var(--p, 0) - 0.1) / 0.1, 1);
+  --rise: clamp(0, (var(--p, 0) - 0.2) / 0.35, 1);
+  --settle: clamp(0, (var(--p, 0) - 0.55) / 0.3, 1);
+}
+
+.story-invite .story__stage {
+  gap: 30px;
+}
+
+.story-invite__hint {
+  margin: 0;
+  text-align: center;
+  color: var(--st-muted);
+  opacity: calc(1 - var(--p, 0) * 6);
+}
+
+/* A big display line over the envelope; it steps aside as the card comes out. */
+.story-invite__headline {
+  margin: 0 0 -0.32em;
+  text-align: center;
+  font-variation-settings: 'wdth' 125;
+  font-weight: 900;
+  font-size: clamp(3rem, 10.5vw, 10rem);
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--st-green);
+  opacity: calc(1 - var(--rise) * 2.2);
+  transform: translateY(calc(var(--p, 0) * -80px));
+  pointer-events: none;
+}
+
+.story-invite__hint {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.story-invite__arrow {
+  display: inline-block;
+  animation: story-nudge 1.6s ease-in-out infinite;
+}
+
+@keyframes story-nudge {
+  50% { transform: translateY(5px); }
+}
+
+.story-invite__envelope {
+  --env-w: min(540px, 84vw);
+  --env-h: calc(var(--env-w) * 2 / 3);
+  --sink: translateY(calc(var(--settle) * 75vh));
+  position: relative;
+  width: var(--env-w);
+  height: var(--env-h);
+}
+
+.story-invite__back,
+.story-invite__front,
+.story-invite__flap,
+.story-invite__flap-open,
+.story-invite__seal {
+  position: absolute;
+  pointer-events: none;
+  opacity: calc(1 - var(--settle) * 1.4);
+}
+
+.story-invite__back {
+  inset: 0;
+  border-radius: 8px;
+  background: #c95ea3;
+  transform: var(--sink);
+}
+
+/* The flap after opening: pointing up, behind the card. */
+.story-invite__flap-open {
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 54%;
+  background: #d76aaf;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transform-origin: bottom;
+  transform: var(--sink) scaleY(var(--open2));
+}
+
+.story-invite__slot {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* Clip only below the envelope until it has dropped away. */
+  clip-path: inset(-400% -40% calc(var(--settle) * -400%) -40%);
+}
+
+.story-invite__card {
+  position: absolute;
+  top: 7%;
+  left: 4%;
+  right: 4%;
+  background: var(--st-card);
+  border-radius: 16px;
+  padding: 30px 26px 26px;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  transform:
+    translateY(calc(var(--rise) * -62% + var(--settle) * (12% + 0.43 * var(--env-h))))
+    scale(calc(1 + var(--settle) * 0.06));
+}
+
+.story-invite__card .sticker--invite {
+  margin-bottom: 14px;
+  background: var(--st-pink);
+  color: #33101f;
+}
+
+.story-invite__title {
+  font-variation-settings: 'wdth' 120;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.5rem, 4.4vw, 2.5rem);
+  color: var(--st-green);
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.story-invite__title em {
+  font-style: normal;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--st-green);
+}
+
+.story-invite__blurb {
+  margin: 0 auto 22px;
+  max-width: 44ch;
+  color: var(--st-muted);
+  font-size: 0.98rem;
+}
+
+.story-invite__cta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* The pocket: a full front face with a V cut out of the top. */
+.story-invite__front {
+  inset: 0;
+  z-index: 3;
+  border-radius: 8px;
+  background:
+    linear-gradient(to top right, rgba(0, 0, 0, 0.06) 50%, transparent 50%) left / 50% 100% no-repeat,
+    linear-gradient(to top left, rgba(0, 0, 0, 0.06) 50%, transparent 50%) right / 50% 100% no-repeat,
+    #ff9edc;
+  clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%);
+  transform: var(--sink);
+}
+
+.story-invite__address {
+  position: absolute;
+  left: 7%;
+  bottom: 10%;
+  display: grid;
+  gap: 2px;
+  color: #5a1a40;
+  font-weight: 800;
+  font-size: clamp(0.8rem, 2.6vw, 1.05rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.story-invite__address span:last-child {
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+.story-invite__stamp {
+  position: absolute;
+  right: 6%;
+  bottom: 10%;
+  width: clamp(44px, 10vw, 64px);
+  aspect-ratio: 4 / 5;
+  display: grid;
+  place-items: center;
+  background: var(--st-card);
+  color: var(--st-pink);
+  border: 3px dotted #ff9edc;
+  outline: 2px solid var(--st-card);
+  transform: rotate(4deg);
+}
+
+.story-invite__stamp .px-sparkle {
+  transform: translate(-10px, -10px) scale(0.8);
+}
+
+/* The closed flap folds up towards its hinge as you scroll. */
+.story-invite__flap {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 56%;
+  z-index: 4;
+  background: #f27fc6;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top;
+  transform: var(--sink) scaleY(calc(1 - var(--open1)));
+}
+
+.story-invite__seal {
+  left: 50%;
+  top: 56%;
+  z-index: 5;
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--st-card);
+  color: var(--st-pink);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+  opacity: calc(1 - var(--open1) * 2.5);
+  transform: scale(calc(1 + var(--open1) * 0.6));
+}
+
+/* --- answering and planning: a pretend event page ------------------------------------------- */
+
+.story-plan {
+  height: 240vh;
+  --in: clamp(0, (var(--p, 0) - 0.12) / 0.4, 1);
+  --in-eased: calc(var(--in) * var(--in) * (3 - 2 * var(--in)));
+}
+
+.story-plan .story__stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Big and centred at first; it shrinks a little and moves up as the card
+   arrives (the card's half height is roughly 280px). */
+.story-plan__copy {
+  max-width: 900px;
+  text-align: center;
+  transform: translateY(calc((1 - var(--in-eased)) * 280px)) scale(calc(1.18 - var(--in-eased) * 0.38));
+  transform-origin: center bottom;
+}
+
+.story-plan__copy .story__title {
+  font-size: clamp(2rem, 4.6vw, 3.8rem);
+  margin-bottom: 14px;
+}
+
+.story-plan__copy .story__text {
+  max-width: 62ch;
+  margin: 0 auto;
+  /* Folds away as the card arrives: the card says the rest. */
+  max-height: calc((1 - var(--in-eased)) * 9em);
+  opacity: calc(1 - var(--in) * 1.6);
+  overflow: hidden;
+}
+
+.story-plan__card {
+  width: min(1060px, 100%);
+  opacity: clamp(0, var(--in) * 2.5, 1);
+  transform: translateY(calc((1 - var(--in-eased)) * 70vh));
+}
+
+.story-event {
+  /* The demo is neutral grey with pink, so it stands apart from the green
+     section around it. */
+  --st-card: #1e1f1f;
+  --st-text: #f4f4f4;
+  --st-muted: #a3a3a3;
+  --st-green: var(--st-pink);
+  position: relative;
+  padding: 34px clamp(20px, 3vw, 40px) 30px;
+  border-radius: 22px;
+  background: var(--st-card);
+  color: var(--st-text);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+}
+
+.story-event__title {
+  margin: 0;
+  font-variation-settings: 'wdth' 118;
+  font-weight: 900;
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  text-transform: uppercase;
+  color: var(--st-green);
+}
+
+.story-event__meta {
+  margin: 4px 0 26px;
+  color: var(--st-muted);
+}
+
+.story-event__cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+}
+
+.story-event__label {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--st-muted);
+}
+
+/* The three answers, styled like the real event page: one control. */
+.story-event__answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.story-event__answer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--st-green);
+  background: transparent;
+  color: var(--st-green);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.12s ease, scale 0.1s ease, background-color 0.14s ease, color 0.14s ease;
+}
+
+@media (hover: hover) {
+  .story-event__answer:not(.is-selected):hover {
+    transform: translateY(-2px);
+    background: rgba(255, 138, 212, 0.12);
+  }
+}
+
+.story-event__answer:active {
+  scale: 0.95;
+}
+
+.story-event__answer:focus-visible,
+.story-event .btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.story-event__answer.is-selected {
+  background: var(--st-pink);
+  color: #33101f;
+}
+
+.story-event__reply {
+  min-height: 1.5em;
+  margin: 12px 0 14px;
+  font-weight: 800;
+  color: var(--st-pink);
+}
+
+.story-event__group + .story-event__group {
+  margin-top: 14px;
+}
+
+.story-event__group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.story-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 13px 4px 4px;
+  border-radius: 999px;
+  background: #2e2f2f;
+  color: var(--st-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.story-chip.is-you {
+  background: var(--st-pink);
+  color: #33101f;
+  animation: story-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.story-chip__avatar {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #1a1a1a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.story-event__bring {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.story-event__bring li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.25s ease;
+}
+
+.story-event__bring li.is-mine {
+  background: rgba(255, 138, 212, 0.1);
+  border-radius: 10px;
+}
+
+.story-event__emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.story-event__bring li.is-mine .story-event__emoji {
+  animation: story-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.story-event__item {
+  display: grid;
+  line-height: 1.25;
+}
+
+.story-event__item span {
+  font-size: 0.82rem;
+  color: var(--st-muted);
+}
+
+.story-event__bring li.is-taken:not(.is-mine) strong {
+  color: var(--st-muted);
+}
+
+.story-event .btn--ghost {
+  color: var(--st-text);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* --- the run-up: a phone that keeps buzzing ------------------------------------------------- */
+
+.story-notify {
+  height: 260vh;
+}
+
+.story-phone {
+  position: relative;
+  width: min(320px, 78vw);
+  aspect-ratio: 9 / 19;
+  max-height: 76svh;
+  margin: 0 auto;
+  padding: 12px;
+  border-radius: 46px;
+  background: #050907;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.08),
+    0 40px 90px rgba(0, 0, 0, 0.55);
+  transform: rotate(-3deg) translateY(calc((1 - clamp(0, var(--p, 0) * 4, 1)) * 40px));
+}
+
+/* The dynamic island. */
+.story-phone::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  z-index: 2;
+  width: 30%;
+  height: 26px;
+  margin-left: -15%;
+  border-radius: 20px;
+  background: #000;
+}
+
+.story-phone__screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 36px;
+  padding: 64px 12px 16px;
+  text-align: center;
+  color: #f1fbf6;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255, 138, 212, 0.35), transparent 60%),
+    radial-gradient(90% 50% at 50% 100%, rgba(76, 230, 165, 0.25), transparent 70%),
+    #0d1f17;
+}
+
+.story-phone__time {
+  margin: 0;
+  font-variation-settings: 'wdth' 110;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 6vw, 3.6rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.story-phone__date {
+  margin: 6px 0 24px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+/* Newest on top: each note pushes in from above as you scroll. */
+.story-phone__notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 8px;
+  text-align: left;
+}
+
+.story-note {
+  --show: clamp(0, (var(--p, 0) - 0.12 - var(--n) * 0.24) / 0.1, 1);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(244, 251, 247, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--st-ink);
+  font-size: 0.78rem;
+  line-height: 1.32;
+  opacity: var(--show);
+  /* Collapsed until it arrives, so the others slide down to make room. */
+  max-height: calc(var(--show) * 120px);
+  margin-bottom: calc((var(--show) - 1) * 8px);
+  overflow: hidden;
+  transform: translateY(calc((1 - var(--show)) * -24px)) scale(calc(0.94 + var(--show) * 0.06));
+}
+
+.story-note__icon {
+  position: relative;
+  flex: none;
+  width: 31px;
+  height: 31px;
+  border-radius: 8px;
+  background: #0d1f17;
+  color: var(--st-pink);
+}
+
+/* The full logo mark, top-left pixel included, at 3px per pixel: 15px wide,
+   so it sits exactly 8px in from every edge. */
+.story-note__icon .px-sparkle {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  background: currentColor;
+  transform-origin: 0 0;
+  transform: scale(0.6);
+}
+
+.story-note__body {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  text-wrap: pretty; /* no lone emoji or "Uhr" on the last line */
+}
+
+.story-note__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+/* --- polaroids ------------------------------------------------------------------------------------ */
+
+.story-photo {
+  margin: 0;
+  padding: 7px 7px 0;
+  border-radius: 3px;
+  background: #fdfaf3;
+  color: #2a2a2a;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
+}
+
+.story-photo__image {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  background: linear-gradient(135deg, var(--from), var(--to));
+}
+
+.story-photo figcaption {
+  padding: 5px 2px 7px;
+  font-size: clamp(0.58rem, 1.4vw, 0.72rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.story-photo:nth-child(3n + 2) { --tilt: 3deg; }
+.story-photo:nth-child(3n + 3) { --tilt: -2deg; }
+.story-photo:nth-child(4n) { --tilt: 5deg; }
+
+/* --- the wall: a thread that builds itself ---------------------------------------------------- */
+
+.story-wall {
+  height: 260vh;
+}
+
+.story-thread {
+  display: grid;
+  gap: 14px;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+/* Each piece arrives at its own step of the chapter's progress. */
+.story-thread__in,
+.story-thread__pop {
+  --show: clamp(0, (var(--p, 0) - 0.06 - var(--n) * 0.09) / 0.07, 1);
+  opacity: var(--show);
+}
+
+.story-thread__in {
+  transform: translateY(calc((1 - var(--show)) * 30px));
+}
+
+.story-thread__pop {
+  transform: scale(calc(0.4 + var(--show) * 0.6));
+}
+
+.story-thread__post {
+  padding: 20px 22px 18px;
+  border-radius: 20px;
+  background: var(--st-card);
+  border: 1px solid rgba(76, 230, 165, 0.16);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.story-thread__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--st-muted);
+}
+
+.story-thread__head strong {
+  color: var(--st-text);
+  font-size: 0.95rem;
+}
+
+.story-thread__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #10251b;
+  font-weight: 900;
+}
+
+.story-thread__text {
+  margin: 10px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.story-thread__post > .story-thread__text {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.story-thread__reactions {
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.story-thread__reactions li {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #1b3427;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.story-thread__reactions li:first-child {
+  background: rgba(255, 138, 212, 0.18);
+  outline: 2px solid var(--st-pink);
+}
+
+.story-thread__comments {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 26px;
+  display: grid;
+  gap: 12px;
+  border-left: 2px solid rgba(76, 230, 165, 0.18);
+}
+
+.story-thread__comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.story-thread__bubble {
+  padding: 12px 16px;
+  border-radius: 4px 18px 18px 18px;
+  background: #142a1f;
+}
+
+.story-thread__bubble .story-thread__text {
+  margin-top: 4px;
+  font-size: 0.98rem;
+}
+
+.story-thread__gif {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 180px;
+  height: 120px;
+  margin-top: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ff8ad4, #6b2fd6 55%, #4ce6a5);
+}
+
+.story-thread__gif-emoji {
+  font-size: 3.6rem;
+  animation: story-dance 0.9s ease-in-out infinite;
+}
+
+.story-thread__gif-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+@keyframes story-dance {
+  0%, 100% { transform: rotate(-10deg) translateY(0); }
+  50% { transform: rotate(10deg) translateY(-6px); }
+}
+
+/* --- FAQ: sticky notes ---------------------------------------------------------------------------- */
+
+.story-faq {
+  gap: 36px;
+}
+
+.story-faq__intro,
+.story-board {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.story-faq__intro .story__text {
+  max-width: none;
+}
+
+.story-board__hint {
+  margin: 0 0 22px;
+  color: var(--st-muted);
+}
+
+.story-board__notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px 28px;
+}
+
+/* Square notes, three by two. */
+.story-board__note {
+  aspect-ratio: 1;
+}
+
+.story-board__face {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 4px;
+  background: linear-gradient(150deg, var(--paper-a), var(--paper-b));
+  color: #fff6fb;
+}
+
+/* A fine static grain, multiplied in so it only ever darkens the paper. */
+.story-board__face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.story-board__note {
+  position: relative;
+  display: grid;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transform: rotate(var(--tilt));
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease, scale 0.12s ease;
+}
+
+@media (hover: hover) {
+  .story-board__note:hover {
+    transform: rotate(0deg) scale(1.03);
+  }
+}
+
+.story-board__note:active {
+  scale: 0.97;
+}
+
+.story-board__note:focus-visible {
+  outline: 3px solid var(--st-pink);
+  outline-offset: 6px;
+}
+
+.story-board__face {
+  grid-area: 1 / 1;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 26px 22px 20px;
+  backface-visibility: hidden;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.story-board__face--front {
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.story-board__face--back {
+  padding: 30px 28px 24px;
+  transform: rotateY(180deg);
+}
+
+.story-board__note.is-open .story-board__face--front {
+  transform: rotateY(-180deg);
+}
+
+.story-board__note.is-open .story-board__face--back {
+  transform: rotateY(0deg);
+}
+
+.story-board__note--pink .story-board__face { --paper-a: #8a2f6b; --paper-b: #4f1a3d; }
+.story-board__note--green .story-board__face { --paper-a: #1f6f4f; --paper-b: #10402d; }
+.story-board__note--plum .story-board__face { --paper-a: #5c2a66; --paper-b: #321438; }
+
+.story-board__q {
+  font-variation-settings: 'wdth' 112;
+  font-weight: 900;
+  font-size: 1.2rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.story-board__q--small {
+  font-size: 0.85rem;
+  color: #ffd1ec;
+}
+
+.story-board__note--green .story-board__q--small {
+  color: #a6f5d1;
+}
+
+.story-board__a {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.story-board__sticker {
+  position: relative;
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+@keyframes story-wiggle {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+
+@keyframes story-bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-9px) scale(1.06, 0.95); }
+}
+
+@keyframes story-tilt {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.18) rotate(-6deg); }
+}
+
+/* --- afterwards: the photos fade ---------------------------------------------------------------------------- */
+
+.story-late {
+  height: 230vh;
+  --day: calc(var(--p, 0) * 29 + 1);
+}
+
+.story-late__strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: min(380px, 100%, 52svh);
+  margin: 0 auto;
+}
+
+.story-late .story-photo {
+  --fade: clamp(0, var(--p, 0) * 1.5 - var(--i) * 0.12, 1);
+  transform: rotate(var(--tilt, -3deg));
+  filter: grayscale(var(--fade)) blur(calc(var(--fade) * 1.5px));
+  opacity: calc(1 - var(--fade) * 0.85);
+}
+
+.story-late__day {
+  margin: 26px 0 0;
+  text-align: center;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+  color: var(--st-muted);
+}
+
+.story-late__counter::after {
+  counter-reset: day var(--day);
+  content: counter(day);
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--st-pink);
+  font-size: 1.6em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- the close: one screen under a disco ball ------------------------------------------------ */
+
+.story-close {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 54svh 24px 96px;
+  align-content: start;
+  justify-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Fine coloured dots behind everything, brightest around the ball. */
+.story-close__dots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: calc(var(--p, 0) * 2);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 28%, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 85%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 28%, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 85%);
+}
+
+/* The ball's canvas, inside this section only. It is transparent; the
+   glow and rays add light to the page beneath. */
+.story-close__ball {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The rod runs up out of view; let it fade rather than stop at an edge. */
+.story-close__ball .story-three {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 16%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 16%);
+}
+
+.story-close > :not(.story-close__ball, .story-close__dots) {
+  position: relative;
+  z-index: 1;
+}
+
+.story-close__title {
+  font-variation-settings: 'wdth' 125;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 7vw, 5rem);
+  line-height: 0.95;
+  margin-bottom: 52px;
+  text-wrap: balance;
+  color: var(--st-green);
+}
+
+.story-close__legal {
+  position: absolute !important;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 22px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.story-close__legal a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+}
+
+.story-close__legal a:hover {
+  color: #fff;
+}
+
+.story-close__legal a:active {
+  opacity: 0.7;
+}
+
+.story-close__legal a:focus-visible {
+  outline: 2px solid var(--st-pink);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* --- three.js scenes ------------------------------------------------------------------------
+   SceneCanvas sets data-three on the chapter once WebGL is running; until then
+   (and without it) the CSS scenes above are what people see. */
+
+.story-three {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.story__stage:has(> .story-three) > :not(.story-three) {
+  position: relative;
+  z-index: 1;
+}
+
+[data-three] .story-invite__back,
+[data-three] .story-invite__front,
+[data-three] .story-invite__flap,
+[data-three] .story-invite__flap-open,
+[data-three] .story-invite__seal {
+  display: none;
+}
+
+/* The 3D card turns into this one (positioned per frame by the scene):
+   its background comes in first, its content last. Once in hand it's
+   bigger than the one in the envelope — more air, a larger title. */
+.story-invite[data-three] .story-invite__slot {
+  clip-path: none;
+}
+
+.story-invite[data-three] .story-invite__card {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  width: min(780px, 92vw);
+  padding: clamp(32px, 5vh, 64px) clamp(24px, 6vw, 80px) clamp(32px, 5vh, 56px);
+  background: none;
+  box-shadow: none;
+  visibility: hidden;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.story-invite[data-three] .story-invite__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 22px;
+  background: var(--st-card);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  opacity: var(--card-bg, 1);
+}
+
+.story-invite[data-three] .story-invite__card > * {
+  opacity: var(--card-content, 1);
+}
+
+.story-invite[data-three] .story-invite__card .sticker--invite {
+  margin-bottom: 24px;
+}
+
+.story-invite[data-three] .story-invite__title {
+  font-size: clamp(2rem, min(5vw, 6.4vh), 3.8rem);
+  margin-bottom: 22px;
+}
+
+.story-invite[data-three] .story-invite__blurb {
+  font-size: clamp(1rem, 1.6vw, 1.18rem);
+  max-width: 50ch;
+  margin-bottom: 32px;
+}
+
+
+/* --- small screens --------------------------------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  .story-board__notes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .story__split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .story__split--flip > .story__copy {
+    order: 0;
+  }
+
+  .story__stage {
+    padding-top: 76px;
+  }
+
+  .story__stage .story__title {
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+  }
+
+  .story__stage .story__text {
+    font-size: 0.95rem;
+  }
+
+
+
+  .story-late__strip {
+    width: min(280px, 34svh, 100%);
+  }
+
+  .story-phone {
+    width: min(250px, 62vw);
+    max-height: 56svh;
+  }
+
+  /* The phone is smaller here, so its lock screen scales down with it. */
+  .story-phone__screen {
+    padding: 54px 9px 12px;
+  }
+
+  .story-phone__time {
+    font-size: 2.3rem;
+  }
+
+  .story-phone__date {
+    margin-bottom: 16px;
+    font-size: 0.7rem;
+  }
+
+  .story-phone__notes {
+    gap: 6px;
+  }
+
+  .story-note {
+    gap: 8px;
+    padding: 8px 9px;
+    border-radius: 14px;
+    font-size: 0.64rem;
+    line-height: 1.3;
+  }
+
+  .story-note__meta {
+    font-size: 0.56rem;
+  }
+
+  /* 2px per pixel: a 10px mark, 7px in from every edge. */
+  .story-note__icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+  }
+
+  .story-note__icon .px-sparkle {
+    left: 7px;
+    top: 7px;
+    transform: scale(0.4);
+  }
+
+  .story-event__cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Phones: no room for the hand-over; heading and card simply stack. */
+  .story-plan {
+    height: auto;
+    --in: 1;
+  }
+
+  .story-plan .story__stage {
+    position: relative;
+    height: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .story-invite__card {
+    left: 2%;
+    right: 2%;
+    padding: 26px 16px 20px;
+  }
+
+  .story-invite__cta .btn--big {
+    padding: 13px 22px;
+  }
+
+  .story-board__notes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+  }
+
+  .story-board__note {
+    width: min(320px, 100%);
+  }
+}
+
+/* --- reduced motion: every scene at its end, nothing moves on its own -------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
+
+  .story__chapter {
+    --p: 1 !important;
+  }
+
+  .story__chapter--tall {
+    height: auto !important;
+  }
+
+  .story__stage {
+    position: relative;
+    height: auto;
+    min-height: 100svh;
+  }
+
+  .story__reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none;
+  }
+
+  .story-invite__arrow,
+  .story-thread__gif-emoji,
+  .story-chip.is-you,
+  .story-event__bring li.is-mine .story-event__emoji {
+    animation: none;
+  }
+
+  .story-board__face {
+    transition: none;
+  }
+}

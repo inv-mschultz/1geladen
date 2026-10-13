@@ -8,8 +8,10 @@ import React from 'react'
 import { canHost, hostedEventIdsFor } from '@/access'
 import { EventView } from '@/components/EventView'
 import { ArrowDown, ArrowRight } from '@/components/icons'
+import { Story, storyCta } from '@/components/story/Story'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
+import { getStory } from '@/i18n/story'
 import { getThemeMode, resolveEventTheme } from '@/lib/mode'
 import { EVENT_TIMEZONE, isEventPast } from '@/lib/time'
 import { themeCss } from '@/lib/theme'
@@ -30,30 +32,8 @@ export default async function HomePage() {
   }
 
   if (!user) {
-    return (
-      <div className="landing">
-        <div className="landing__poster reveal">
-          <span className="sticker sticker--invite">{dict.landing.kicker}</span>
-          <h1 className="landing__title">
-            {dict.landing.tagline}
-            <br />
-            <em>{dict.landing.taglineAccent}</em>
-          </h1>
-          <p className="landing__blurb">{dict.landing.blurb}</p>
-          <div className="landing__cta">
-            <Link href="/register" className="btn btn--big btn--yes">
-              {dict.landing.cta}
-            </Link>
-            <Link href="/login" className="btn btn--big btn--ghost">
-              {dict.landing.ctaSecondary}
-            </Link>
-          </div>
-          <Link href="/so-gehts" className="landing__more">
-            {dict.about.landingLink} <ArrowRight />
-          </Link>
-        </div>
-      </div>
-    )
+    const story = getStory(locale)
+    return <Story t={story} footer={dict.footer} cta={storyCta(null, story)} />
   }
 
   const now = new Date()

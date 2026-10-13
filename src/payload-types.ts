@@ -198,7 +198,7 @@ export interface Event {
   };
   coverImage?: (number | null) | Media;
   /**
-   * One color, e.g. #4ce6a5 — the event theme is derived from it.
+   * One color, e.g. #4ce6a5. The event theme is derived from it.
    */
   themeColor?: string | null;
   /**
@@ -211,7 +211,7 @@ export interface Event {
   accentColorLight?: string | null;
   createdBy?: (number | null) | User;
   /**
-   * Light mode — dark content on a light background.
+   * Light mode: dark content on a light background.
    */
   invertTheme?: boolean | null;
   hosts?: (number | User)[] | null;
@@ -304,7 +304,7 @@ export interface BringItem {
    */
   title: string;
   /**
-   * Optional details — "enough for 12 people"
+   * Optional details, e.g. "enough for 12 people"
    */
   note?: string | null;
   /**

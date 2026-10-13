@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import React from 'react'
 
+import { ScrollToTop } from '@/components/ScrollToTop'
+
 import { contactEmail, operator } from '@/lib/legal'
 
-export const metadata: Metadata = { title: 'Datenschutz — 1geladen' }
+export const metadata: Metadata = { title: 'Datenschutz · 1geladen' }
 
 /*
  * A draft written for this app as it is built, not legal advice. Have it
@@ -14,6 +16,7 @@ export default function DatenschutzPage() {
   const email = contactEmail()
   return (
     <article className="legal reveal">
+      <ScrollToTop />
       <h1 className="legal__title">Datenschutz</h1>
 
       <h2>Kurz gesagt</h2>
@@ -66,16 +69,16 @@ export default function DatenschutzPage() {
       <h2>Dienstleister</h2>
       <ul>
         <li>
-          <strong>Vercel Inc.</strong> (USA) — Hosting und Speicherung der Fotos. Vercel ist unter dem
+          <strong>Vercel Inc.</strong> (USA): Hosting und Speicherung der Fotos. Vercel ist unter dem
           EU-U.S. Data Privacy Framework zertifiziert; mit Vercel besteht ein Vertrag zur
           Auftragsverarbeitung.
         </li>
         <li>
-          <strong>Neon Inc.</strong> (USA) — Datenbank, betrieben über Vercel. Ebenfalls mit Vertrag zur
+          <strong>Neon Inc.</strong> (USA): Datenbank, betrieben über Vercel. Ebenfalls mit Vertrag zur
           Auftragsverarbeitung.
         </li>
         <li>
-          <strong>GIPHY</strong> (Shutterstock, USA) — Wenn du GIFs suchst oder ein Beitrag ein GIF
+          <strong>GIPHY</strong> (Shutterstock, USA): Wenn du GIFs suchst oder ein Beitrag ein GIF
           enthält, lädt dein Browser es direkt von GIPHY. Dabei erhält GIPHY deine IP-Adresse.
         </li>
       </ul>

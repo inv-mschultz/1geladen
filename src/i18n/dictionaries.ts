@@ -5,7 +5,7 @@ export const defaultLocale: Locale = 'de'
 
 const de = {
   meta: {
-    title: '1geladen — Zusammen essen, wie früher.',
+    title: '1geladen · Zusammen essen, wie früher.',
     description: 'Events organisieren wie 2010. Nur besser. Und mit mehr Kartoffelsalat.',
   },
   nav: {
@@ -48,7 +48,7 @@ const de = {
     datePlaceholder: 'TT.MM.JJJJ',
     time: 'Uhrzeit',
     timePlaceholder: 'HH:MM',
-    dateInvalid: 'Datum bitte als TT.MM.JJJJ — und in der Zukunft.',
+    dateInvalid: 'Datum bitte als TT.MM.JJJJ und in der Zukunft.',
     timeInvalid: 'Uhrzeit bitte als HH:MM.',
     locationName: 'Location',
     locationPlaceholder: 'z.B. „Bei Michael“',
@@ -61,11 +61,11 @@ const de = {
     accentLight: 'Akzent für helles Theme',
     modeDark: 'Dunkel',
     modeLight: 'Hell',
-    colorsHint: 'Das Event startet mit den Standardfarben — anpassen kannst du sie später beim Bearbeiten.',
+    colorsHint: 'Das Event startet mit den Standardfarben. Anpassen kannst du sie später beim Bearbeiten.',
     customColor: 'Eigene Farbe (Hex)',
     contrastLabel: 'Kontrast',
     contrastWarning:
-      'Kontrast nur {ratio}:1 — nötig sind {required}:1, sonst wird es schwer lesbar.',
+      'Kontrast nur {ratio}:1. Nötig sind {required}:1, sonst wird es schwer lesbar.',
     description: 'Was erwartet die Gäste?',
     submit: 'Event erstellen',
     editTitle: 'Event bearbeiten',
@@ -75,20 +75,11 @@ const de = {
     error: 'Das hat nicht geklappt. Sind alle Pflichtfelder gefüllt?',
     errorLimit: 'Du richtest schon 10 kommende Events aus. Feiere erst ein paar davon!',
   },
-  landing: {
-    kicker: 'Du bist eingeladen',
-    tagline: 'Events organisieren wie 2010.',
-    taglineAccent: 'Nur besser.',
-    blurb:
-      'Abendessen planen, Beiträge schreiben, Mitbringsel aufteilen und danach die Fotos teilen — alles an einem Ort, ganz ohne blaues F.',
-    cta: 'Ich will mitfeiern',
-    ctaSecondary: 'Ich habe schon ein Konto',
-  },
   home: {
     nextUp: 'Als Nächstes',
     lastParty: 'Das war schön',
     noEvents: 'Noch keine Events. Die Ruhe vor der Party.',
-    noEventsHint: 'Warte auf eine Einladung — oder lade selbst ein.',
+    noEventsHint: 'Warte auf eine Einladung oder lade selbst ein.',
     newEvent: 'Party anlegen',
     archive: 'Weitere Events',
   },
@@ -97,7 +88,7 @@ const de = {
     when: 'Wann?',
     what: 'Was?',
     mapLink: 'Karte öffnen',
-    pastBadge: 'Schon vorbei — aber schön war’s!',
+    pastBadge: 'Schon vorbei, aber schön war’s!',
   },
   rsvp: {
     title: 'Bist du dabei?',
@@ -169,7 +160,7 @@ const de = {
     subtitle: 'Beweise, dass es schön war.',
     locked: 'Die Galerie öffnet nach dem Event.',
     retiresOn:
-      'Die Fotos bleiben bis zum {date} — danach räumen wir auf. Lieblingsbilder also vorher herunterladen!',
+      'Die Fotos bleiben bis zum {date}, danach räumen wir auf. Lieblingsbilder also vorher herunterladen!',
     retired: 'Die Fotos wurden 30 Tage nach der Party aufgeräumt. Hoffentlich habt ihr eure Lieblinge gesichert!',
     upload: 'Fotos hochladen',
     uploading: 'Lädt hoch …',
@@ -192,7 +183,7 @@ const de = {
     nameMissing: 'Sag uns wenigstens deinen Namen',
     failed: 'Das hat nicht geklappt. Versuch es nochmal.',
     privacyNote: 'Was wir speichern (wenig): Datenschutz',
-    rsvpHint: 'Damit stehst du erstmal nur auf der Gästeliste — ob du wirklich kommst, sagst du im nächsten Schritt.',
+    rsvpHint: 'Damit stehst du erstmal nur auf der Gästeliste. Ob du wirklich kommst, sagst du im nächsten Schritt.',
   },
   invite: {
     title: 'Gäste einladen',
@@ -202,20 +193,20 @@ const de = {
   },
   hosts: {
     title: 'Wer richtet aus',
-    hint: 'Hosts können dieses Event bearbeiten, einladen und aufräumen — und sind automatisch dabei.',
+    hint: 'Hosts können dieses Event bearbeiten, einladen und aufräumen und sind automatisch dabei.',
     promote: 'Zum Host machen',
     demote: 'Kein Host',
     badge: 'Host',
     creator: 'Hat das Event erstellt',
     you: 'Du',
-    lastHost: 'Jemand muss das Event ausrichten — mach erst jemand anderen zum Host.',
+    lastHost: 'Jemand muss das Event ausrichten. Mach erst jemand anderen zum Host.',
     failed: 'Das hat nicht geklappt. Lade die Seite neu.',
     empty: 'Noch niemand da, den du zum Host machen könntest.',
   },
   account: {
     title: 'Dein Konto',
     intro: 'Mit E-Mail und Passwort kannst du dich auch auf anderen Geräten anmelden.',
-    syntheticHint: 'Du bist über einen Einladungslink dabei — noch ohne eigene E-Mail.',
+    syntheticHint: 'Du bist über einen Einladungslink dabei, noch ohne eigene E-Mail.',
     email: 'E-Mail',
     password: 'Neues Passwort',
     save: 'Speichern',
@@ -224,82 +215,11 @@ const de = {
     deleteTitle: 'Konto löschen',
     deleteHint:
       'Deine Zusagen, Reaktionen und Galerie-Fotos verschwinden. Beiträge und Kommentare bleiben stehen, aber ohne deinen Namen.',
-    deleteEvents: 'Diese Events richtest nur du aus — sie werden komplett gelöscht:',
+    deleteEvents: 'Diese Events richtest nur du aus. Sie werden komplett gelöscht:',
     deleteButton: 'Konto löschen …',
     deleteConfirm: 'Ja, endgültig löschen',
     deleteCancel: 'Doch nicht',
     deleteFailed: 'Das hat nicht geklappt. Versuch es nochmal.',
-  },
-  about: {
-    metaTitle: 'So geht’s — 1geladen',
-    kicker: 'So geht’s',
-    title: 'Eine Einladung.',
-    titleAccent: 'Ein Link. Eine Party.',
-    blurb:
-      'Erinnerst du dich, als man Partys noch online geplant hat, ohne dass einem dabei jemand etwas verkaufen wollte? 1geladen ist genau das: eine Seite pro Fest, nur für die Leute, die eingeladen sind.',
-    stepsTitle: 'In drei Schritten',
-    steps: [
-      {
-        title: 'Party anlegen',
-        text: 'Wo, wann, was — und eine Farbe, die zur Stimmung passt. Dauert eine Minute.',
-      },
-      {
-        title: 'Link teilen',
-        text: 'Ab in die WhatsApp-Gruppe damit. Gäste tippen ihren Namen ein und sind dabei — ohne Konto, ohne App, ohne Passwort.',
-      },
-      {
-        title: 'Feiern',
-        text: 'Alle sagen zu, ab oder vielleicht, teilen auf, wer was mitbringt, und schreiben an die Pinnwand. Ab Partystart füllt sich die Galerie.',
-      },
-    ],
-    featuresTitle: 'Was drin ist',
-    features: [
-      { emoji: '✅', title: 'Dabei · Vielleicht · Kann nicht', text: 'Die heilige Dreifaltigkeit. Du siehst auf einen Blick, wer kommt.' },
-      { emoji: '📌', title: 'Pinnwand', text: 'Fragen, Vorfreude, GIFs. Mit Kommentaren und Reaktionen, wie früher.' },
-      { emoji: '🥗', title: 'Mitbringliste', text: 'Ihr tragt ein, was gebraucht wird, und jede:r schnappt sich etwas. Nie wieder fünf Kartoffelsalate. Außer ihr wollt das.' },
-      { emoji: '📸', title: 'Fotogalerie', text: 'Öffnet, wenn die Party beginnt. Alle laden ihre Bilder an einen Ort statt in zwölf Chats.' },
-      { emoji: '👯', title: 'Co-Hosts', text: 'Zu zweit ausrichten? Mach Gäste zu Hosts — dann können sie mit bearbeiten, einladen und aufräumen.' },
-      { emoji: '📱', title: 'Aufs Handy', text: 'Zum Home-Bildschirm hinzufügen, Benachrichtigungen einschalten: fühlt sich an wie eine App, ganz ohne Store.' },
-    ],
-    notTitle: 'Was es nicht gibt',
-    not: [
-      'Keine Werbung.',
-      'Kein Tracking, keine Analyse-Cookies.',
-      'Kein Algorithmus, kein Feed, keine öffentlichen Profile.',
-      'Niemand außer den Gästen sieht, was auf der Event-Seite passiert.',
-      'Kein Abo, keine Kosten. 1geladen ist ein privates Hobbyprojekt.',
-    ],
-    faqTitle: 'Fragen',
-    faq: [
-      {
-        q: 'Kostet das etwas?',
-        a: 'Nein. Kein Abo, keine Premium-Version, keine versteckten Kosten. Damit das so bleibt, gibt es ein paar Grenzen: bis zu 10 kommende Partys pro Person und 300 Fotos pro Galerie.',
-      },
-      {
-        q: 'Brauchen meine Gäste ein Konto?',
-        a: 'Nein. Wer den Link hat, gibt einen Namen ein und ist dabei. Wer sich auf mehreren Geräten anmelden oder selbst einladen will, kann später eine E-Mail hinzufügen.',
-      },
-      {
-        q: 'Wer sieht unsere Fotos und Beiträge?',
-        a: 'Nur die Gäste und Hosts dieser einen Party. Event-Seiten sind nicht öffentlich und tauchen nirgends auf.',
-      },
-      {
-        q: 'Was passiert nach der Party?',
-        a: 'Die Seite bleibt als Erinnerung. Die Fotos in der Galerie werden 30 Tage nach der Party gelöscht — bis dahin könnt ihr eure Lieblingsbilder herunterladen.',
-      },
-      {
-        q: 'Gibt es eine App?',
-        a: 'Sozusagen: Öffne 1geladen im Browser und füge es zum Home-Bildschirm hinzu. Dann hat es ein eigenes Icon und kann dir Bescheid geben, wenn jemand zusagt oder dir antwortet.',
-      },
-      {
-        q: 'Kann ich mein Konto löschen?',
-        a: 'Jederzeit, selbst, unter „Dein Konto“. Was dann mit deinen Daten passiert, steht im Datenschutz.',
-      },
-    ],
-    ctaTitle: 'Lust bekommen?',
-    ctaHost: 'Party anlegen',
-    ctaRegister: 'Konto erstellen',
-    landingLink: 'So geht’s',
   },
   footer: {
     about: 'So geht’s',
@@ -309,7 +229,7 @@ const de = {
   },
   install: {
     title: '1geladen aufs Handy',
-    android: 'Als App installieren — ein Tipp, kein Store.',
+    android: 'Als App installieren: ein Tipp, kein Store.',
     ios: 'In Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.',
     install: 'Installieren',
     dismiss: 'Ausblenden',
@@ -342,7 +262,7 @@ const de = {
 
 const en: typeof de = {
   meta: {
-    title: '1geladen — Dinner together, like the old days.',
+    title: '1geladen · Dinner together, like the old days.',
     description: 'Organize events like it’s 2010. Only better. With more potato salad.',
   },
   nav: {
@@ -385,7 +305,7 @@ const en: typeof de = {
     datePlaceholder: 'DD.MM.YYYY',
     time: 'Time',
     timePlaceholder: 'HH:MM',
-    dateInvalid: 'Date must be DD.MM.YYYY — and in the future.',
+    dateInvalid: 'Date must be DD.MM.YYYY and in the future.',
     timeInvalid: 'Time must be HH:MM.',
     locationName: 'Location',
     locationPlaceholder: 'e.g. “At Michael’s”',
@@ -398,11 +318,11 @@ const en: typeof de = {
     accentLight: 'Accent for light theme',
     modeDark: 'Dark',
     modeLight: 'Light',
-    colorsHint: 'The event starts with the standard colors — you can change them later while editing.',
+    colorsHint: 'The event starts with the standard colors. You can change them later while editing.',
     customColor: 'Custom color (hex)',
     contrastLabel: 'Contrast',
     contrastWarning:
-      'Contrast is only {ratio}:1 — {required}:1 is needed, below that it gets hard to read.',
+      'Contrast is only {ratio}:1. {required}:1 is needed, below that it gets hard to read.',
     description: 'What can guests expect?',
     submit: 'Create event',
     editTitle: 'Edit event',
@@ -412,20 +332,11 @@ const en: typeof de = {
     error: 'That didn’t work. Are all required fields filled?',
     errorLimit: 'You’re already hosting 10 upcoming events. Throw a few of those first!',
   },
-  landing: {
-    kicker: 'You are invited',
-    tagline: 'Organize events like it’s 2010.',
-    taglineAccent: 'Only better.',
-    blurb:
-      'Plan dinners, post on the wall, split up who brings what, and share the photos afterwards — all in one place, no blue F required.',
-    cta: 'Count me in',
-    ctaSecondary: 'I already have an account',
-  },
   home: {
     nextUp: 'Up next',
     lastParty: 'That was lovely',
     noEvents: 'No events yet. The calm before the party.',
-    noEventsHint: 'Wait for an invite — or send one yourself.',
+    noEventsHint: 'Wait for an invite, or send one yourself.',
     newEvent: 'Throw a party',
     archive: 'More events',
   },
@@ -434,7 +345,7 @@ const en: typeof de = {
     when: 'When?',
     what: 'What?',
     mapLink: 'Open map',
-    pastBadge: 'Already happened — and it was great!',
+    pastBadge: 'Already happened, and it was great!',
   },
   rsvp: {
     title: 'Are you in?',
@@ -505,7 +416,7 @@ const en: typeof de = {
     title: 'Photos',
     subtitle: 'Proof that it was lovely.',
     locked: 'The gallery opens after the event.',
-    retiresOn: 'The photos stay until {date} — then we tidy up. Save your favourites before that!',
+    retiresOn: 'The photos stay until {date}, then we tidy up. Save your favourites before that!',
     retired: 'The photos were cleared away 30 days after the party. Hopefully you saved your favourites!',
     upload: 'Upload photos',
     uploading: 'Uploading …',
@@ -528,7 +439,7 @@ const en: typeof de = {
     nameMissing: 'At least tell us your name',
     failed: 'That didn’t work. Try again.',
     privacyNote: 'What we store (not much): privacy',
-    rsvpHint: 'This just puts you on the guest list — whether you’re actually coming, you’ll tell us in the next step.',
+    rsvpHint: 'This just puts you on the guest list. Whether you’re actually coming, you’ll tell us in the next step.',
   },
   invite: {
     title: 'Invite guests',
@@ -538,20 +449,20 @@ const en: typeof de = {
   },
   hosts: {
     title: 'Who’s hosting',
-    hint: 'Hosts can edit this event, invite people and tidy up — and are in by default.',
+    hint: 'Hosts can edit this event, invite people and tidy up, and are in by default.',
     promote: 'Make host',
     demote: 'Not a host',
     badge: 'Host',
     creator: 'Created this event',
     you: 'You',
-    lastHost: 'Somebody has to run this party — make someone else a host first.',
+    lastHost: 'Somebody has to run this party. Make someone else a host first.',
     failed: 'That didn’t work. Reload the page.',
     empty: 'Nobody here to make a host yet.',
   },
   account: {
     title: 'Your account',
     intro: 'With an email and password you can log in on other devices too.',
-    syntheticHint: 'You joined via an invite link — no email on file yet.',
+    syntheticHint: 'You joined via an invite link, no email on file yet.',
     email: 'Email',
     password: 'New password',
     save: 'Save',
@@ -560,82 +471,11 @@ const en: typeof de = {
     deleteTitle: 'Delete account',
     deleteHint:
       'Your RSVPs, reactions and gallery photos go away. Posts and comments stay, but without your name.',
-    deleteEvents: 'Only you host these events — they will be deleted entirely:',
+    deleteEvents: 'Only you host these events. They will be deleted entirely:',
     deleteButton: 'Delete account …',
     deleteConfirm: 'Yes, delete for good',
     deleteCancel: 'Never mind',
     deleteFailed: 'That didn’t work. Please try again.',
-  },
-  about: {
-    metaTitle: 'How it works — 1geladen',
-    kicker: 'How it works',
-    title: 'One invite.',
-    titleAccent: 'One link. One party.',
-    blurb:
-      'Remember planning parties online without anyone trying to sell you something along the way? That’s 1geladen: one page per party, only for the people who are invited.',
-    stepsTitle: 'Three steps',
-    steps: [
-      {
-        title: 'Create the party',
-        text: 'Where, when, what — and a colour that fits the mood. Takes a minute.',
-      },
-      {
-        title: 'Share the link',
-        text: 'Drop it in the group chat. Guests type their name and they’re in — no account, no app, no password.',
-      },
-      {
-        title: 'Party',
-        text: 'Everyone says yes, no or maybe, splits up who brings what and posts on the wall. Once the party starts, the gallery fills up.',
-      },
-    ],
-    featuresTitle: 'What’s inside',
-    features: [
-      { emoji: '✅', title: 'Attending · Maybe · Can’t', text: 'The holy trinity. See at a glance who’s coming.' },
-      { emoji: '📌', title: 'The wall', text: 'Questions, excitement, GIFs. With comments and reactions, like back then.' },
-      { emoji: '🥗', title: 'Bring list', text: 'List what’s needed and everyone grabs something. Never five potato salads again. Unless you want that.' },
-      { emoji: '📸', title: 'Photo gallery', text: 'Opens when the party starts. Everyone’s pictures in one place instead of twelve chats.' },
-      { emoji: '👯', title: 'Co-hosts', text: 'Hosting together? Make guests hosts so they can edit, invite and tidy up too.' },
-      { emoji: '📱', title: 'On your phone', text: 'Add it to your home screen and turn on notifications: feels like an app, no store needed.' },
-    ],
-    notTitle: 'What you won’t find',
-    not: [
-      'No ads.',
-      'No tracking, no analytics cookies.',
-      'No algorithm, no feed, no public profiles.',
-      'Nobody but the guests sees what happens on the event page.',
-      'No subscription, no cost. 1geladen is a private hobby project.',
-    ],
-    faqTitle: 'Questions',
-    faq: [
-      {
-        q: 'Does it cost anything?',
-        a: 'No. No subscription, no premium tier, no hidden costs. To keep it that way there are a few limits: up to 10 upcoming parties per person and 300 photos per gallery.',
-      },
-      {
-        q: 'Do my guests need an account?',
-        a: 'No. Whoever has the link enters a name and is in. Anyone who wants to log in on several devices or send invites themselves can add an email later.',
-      },
-      {
-        q: 'Who sees our photos and posts?',
-        a: 'Only the guests and hosts of that one party. Event pages aren’t public and don’t show up anywhere.',
-      },
-      {
-        q: 'What happens after the party?',
-        a: 'The page stays as a memory. Gallery photos are deleted 30 days after the party — until then you can download your favourites.',
-      },
-      {
-        q: 'Is there an app?',
-        a: 'Sort of: open 1geladen in your browser and add it to your home screen. It gets its own icon and can let you know when someone RSVPs or replies to you.',
-      },
-      {
-        q: 'Can I delete my account?',
-        a: 'Any time, yourself, under “Your account”. What happens to your data then is explained in the privacy policy.',
-      },
-    ],
-    ctaTitle: 'In the mood?',
-    ctaHost: 'Throw a party',
-    ctaRegister: 'Create account',
-    landingLink: 'How it works',
   },
   footer: {
     about: 'How it works',
@@ -645,7 +485,7 @@ const en: typeof de = {
   },
   install: {
     title: 'Get 1geladen on your phone',
-    android: 'Install it as an app — one tap, no store.',
+    android: 'Install it as an app: one tap, no store.',
     ios: 'In Safari, tap “Share”, then “Add to Home Screen”.',
     install: 'Install',
     dismiss: 'Dismiss',

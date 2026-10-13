@@ -177,7 +177,7 @@ export const Events: CollectionConfig = {
         !value || /^#[0-9a-fA-F]{6}$/.test(value) || 'Use a hex color like #4ce6a5',
       admin: {
         position: 'sidebar',
-        description: 'One color, e.g. #4ce6a5 — the event theme is derived from it.',
+        description: 'One color, e.g. #4ce6a5. The event theme is derived from it.',
       },
     },
     {
@@ -220,7 +220,7 @@ export const Events: CollectionConfig = {
       defaultValue: false,
       admin: {
         position: 'sidebar',
-        description: 'Light mode — dark content on a light background.',
+        description: 'Light mode: dark content on a light background.',
       },
     },
     {

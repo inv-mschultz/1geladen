@@ -47,7 +47,7 @@ export const RSVPs: CollectionConfig = {
               errors: [
                 {
                   path: 'event',
-                  message: 'You already RSVPed to this event — update your existing RSVP instead.',
+                  message: 'You already RSVPed to this event. Update your existing RSVP instead.',
                 },
               ],
             })

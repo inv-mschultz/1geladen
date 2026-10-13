@@ -98,7 +98,7 @@ export const BringItems: CollectionConfig = {
     {
       name: 'note',
       type: 'text',
-      admin: { description: 'Optional details — "enough for 12 people"' },
+      admin: { description: 'Optional details, e.g. "enough for 12 people"' },
       access: {
         update: isCreatorOrHostField,
       },

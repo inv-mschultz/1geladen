@@ -58,7 +58,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: ' — 1geladen',
+      titleSuffix: ' · 1geladen',
     },
   },
   collections: [Users, Events, Posts, Comments, BringItems, RSVPs, Reactions, Media, PushSubscriptions],
