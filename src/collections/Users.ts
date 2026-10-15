@@ -6,6 +6,7 @@ import {
   isPlatformAdminFieldLevel,
 } from '@/access'
 import { releaseUserContent } from '@/lib/deletedGuest'
+import { legacySessionStrategy } from '@/lib/legacySession'
 import { assertNotSoleHost } from '@/lib/membership'
 
 /**
@@ -25,6 +26,8 @@ export const Users: CollectionConfig = {
   auth: {
     // Guests shouldn't have to log in before every party — keep sessions for 30 days
     tokenExpiration: 60 * 60 * 24 * 30,
+    // Temporary: sessions from before Payload 3.90. See lib/legacySession.
+    strategies: [legacySessionStrategy],
   },
   access: {
     // Only admins may enter the backstage area
