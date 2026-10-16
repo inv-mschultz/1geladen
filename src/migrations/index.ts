@@ -8,6 +8,7 @@ import * as migration_20261009_083908_gallery_retention from './20261009_083908_
 import * as migration_20261009_120000_drop_legacy_image_sizes from './20261009_120000_drop_legacy_image_sizes';
 import * as migration_20261013_090000_payload_3_90 from './20261013_090000_payload_3_90';
 import * as migration_20261013_100000_media_wall_event from './20261013_100000_media_wall_event';
+import * as migration_20261015_152718_media_object_key from './20261015_152718_media_object_key';
 
 export const migrations = [
   {
@@ -59,5 +60,10 @@ export const migrations = [
     up: migration_20261013_100000_media_wall_event.up,
     down: migration_20261013_100000_media_wall_event.down,
     name: '20261013_100000_media_wall_event',
+  },
+  {
+    up: migration_20261015_152718_media_object_key.up,
+    down: migration_20261015_152718_media_object_key.down,
+    name: '20261015_152718_media_object_key',
   },
 ];
