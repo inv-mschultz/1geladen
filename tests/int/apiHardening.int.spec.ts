@@ -298,6 +298,40 @@ describe('API hardening', () => {
   })
 
   describe('photos', () => {
+    it('wall images go when their party is deleted', async () => {
+      const party = await payload.create({
+        collection: 'events',
+        data: {
+          title: `${MARK} short-lived`,
+          slug: `${MARK}-short-lived`,
+          date: tomorrow(),
+          hosts: [host.id],
+        },
+        overrideAccess: true,
+      })
+      const image = await upload(host, { wallEvent: party.id })
+      await payload.create({
+        collection: 'posts',
+        data: { event: party.id, author: host.id, image: image.id },
+        overrideAccess: false,
+        user: host,
+      })
+
+      await payload.delete({
+        collection: 'events',
+        id: party.id,
+        overrideAccess: false,
+        user: host,
+      })
+
+      const { totalDocs } = await payload.find({
+        collection: 'media',
+        where: { id: { equals: image.id } },
+        overrideAccess: true,
+      })
+      expect(totalDocs).toBe(0)
+    })
+
     it('wall images are visible to that party only', async () => {
       const image = await upload(guest, { wallEvent: partyId })
 

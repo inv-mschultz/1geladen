@@ -57,8 +57,8 @@ export async function releasePostContent(req: PayloadRequest, postId: number): P
  *
  * Posts, RSVPs and bring items have NOT NULL event columns, so without this an
  * event with any activity cannot be deleted. Gallery photos have a nullable
- * column and would survive as orphans — still in the Blob store, now readable
- * by any logged-in user through the eventless-media rule — so they go too.
+ * column and would survive as orphans in the Blob store, so they go too — as
+ * do wall and comment images (`wallEvent`), once the posts showing them are gone.
  * Deleting each post runs its own beforeDelete, which takes the comments and
  * reactions with it.
  */
@@ -81,4 +81,10 @@ export async function releaseEventContent(req: PayloadRequest, eventId: number):
   for (const collection of ['reactions', 'rsvps', 'bring-items', 'media'] as const) {
     await req.payload.delete({ collection, where: byEvent, overrideAccess: true, req })
   }
+  await req.payload.delete({
+    collection: 'media',
+    where: { wallEvent: { equals: eventId } },
+    overrideAccess: true,
+    req,
+  })
 }
