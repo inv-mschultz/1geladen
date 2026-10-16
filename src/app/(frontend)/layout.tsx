@@ -10,6 +10,7 @@ import { canHost, hostedEventIdsFor } from '@/access'
 import { BRAND_BG, logoSvg } from '@/lib/brand'
 import { reportMailto } from '@/lib/legal'
 import { getThemeMode } from '@/lib/mode'
+import { shareMetadata } from '@/lib/share'
 import { PLATFORM_ACCENT, PLATFORM_COLOR, themeCss } from '@/lib/theme'
 
 import { HeaderMeasure } from '@/components/HeaderMeasure'
@@ -36,8 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
   const dict = getDictionary(locale)
   return {
-    title: dict.meta.title,
-    description: dict.meta.description,
+    ...shareMetadata(dict.meta.title, dict.meta.description, locale),
     applicationName: '1geladen',
     manifest: '/manifest.webmanifest',
     appleWebApp: { capable: true, title: '1geladen', statusBarStyle: 'black' },

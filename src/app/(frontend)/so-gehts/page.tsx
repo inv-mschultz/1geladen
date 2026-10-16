@@ -8,10 +8,12 @@ import { Story, storyCta } from '@/components/story/Story'
 import { getDictionary } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
 import { getStory } from '@/i18n/story'
+import { shareMetadata } from '@/lib/share'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = getStory(await getLocale())
-  return { title: t.metaTitle, description: t.metaDescription }
+  const locale = await getLocale()
+  const t = getStory(locale)
+  return shareMetadata(t.metaTitle, t.metaDescription, locale)
 }
 
 /**

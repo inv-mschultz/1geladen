@@ -5,8 +5,9 @@ export const defaultLocale: Locale = 'de'
 
 const de = {
   meta: {
-    title: '1geladen · Zusammen essen, wie früher.',
-    description: 'Events organisieren wie 2010. Nur besser. Und mit mehr Kartoffelsalat.',
+    title: '1geladen · Events organisieren wie 2010. Nur besser.',
+    description:
+      'Eine Einladung, ein Link: Zusagen, Mitbringliste, Pinnwand und Fotos für deine Party. Für Freunde gemacht. Kostenlos, ohne Werbung, ohne Tracking.',
   },
   nav: {
     login: 'Anmelden',
@@ -262,8 +263,9 @@ const de = {
 
 const en: typeof de = {
   meta: {
-    title: '1geladen · Dinner together, like the old days.',
-    description: 'Organize events like it’s 2010. Only better. With more potato salad.',
+    title: '1geladen · Organize events like it’s 2010. Only better.',
+    description:
+      'One invite, one link: RSVPs, a bring list, a wall and photos for your party. Made for friends. Free, no ads, no tracking.',
   },
   nav: {
     login: 'Log in',
