@@ -10,7 +10,7 @@
  * Playback reads the Blob URL directly for the same reason in reverse.
  */
 
-export const MAX_VIDEO_BYTES = 100 * 1024 * 1024
+export const MAX_VIDEO_BYTES = 500 * 1024 * 1024
 
 export const MAX_VIDEOS_PER_EVENT = 30
 

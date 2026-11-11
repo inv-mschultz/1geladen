@@ -65,6 +65,7 @@ export async function POST(request: Request): Promise<Response> {
     })
     return Response.json(result)
   } catch (error) {
+    payload.logger.warn({ msg: 'video upload refused', err: error, user: user.id })
     return Response.json({ error: (error as Error).message }, { status: 400 })
   }
 }

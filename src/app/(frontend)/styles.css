@@ -2085,6 +2085,10 @@ a {
   font-size: 0.9rem;
 }
 
+.gallery__error p {
+  margin: 0;
+}
+
 .gallery__grid {
   list-style: none;
   margin: 0;

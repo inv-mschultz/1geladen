@@ -146,6 +146,8 @@ const videoTypeOf = (file: File): string | null =>
     ? file.type
     : (TYPE_BY_EXTENSION[file.name.split('.').pop()?.toLowerCase() ?? ''] ?? null)
 
+type UploadFailure = 'photo' | 'video' | 'videoTooLarge'
+
 const randomName = (ext: string) =>
   `${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')}.${ext}`
 
@@ -179,7 +181,8 @@ export function Gallery({
   const [pending, startTransition] = useTransition()
   const [progress, setProgress] = useState<number | null>(null)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
-  const [failed, setFailed] = useState(false)
+  // What went wrong in the last batch, each said once.
+  const [failed, setFailed] = useState<ReadonlySet<UploadFailure>>(() => new Set())
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Ids of photos whose bitmap has arrived; everything else wears a skeleton.
@@ -212,36 +215,45 @@ export function Gallery({
   const onFiles = (files: FileList | null) => {
     if (!files || files.length === 0 || pending) return
     startTransition(async () => {
-      setFailed(false)
+      setFailed(new Set())
       // One request per photo. Vercel caps a serverless request body at 4.5 MB
       // and that cap sits in front of the function, so next.config's larger
       // serverActions.bodySizeLimit cannot lift it — batching a phone's worth of
       // photos into a single FormData just gets the whole upload rejected.
-      let anyFailed = false
+      const failures = new Set<UploadFailure>()
       for (const file of Array.from(files)) {
         try {
           const videoType = videoTypeOf(file)
           if (videoType) {
-            await uploadVideo(file, videoType)
+            if (file.size > MAX_VIDEO_BYTES) {
+              failures.add('videoTooLarge')
+              continue
+            }
+            try {
+              await uploadVideo(file, videoType)
+            } catch (error) {
+              console.error('[gallery] video upload failed', error)
+              failures.add('video')
+            }
             continue
           }
           const formData = new FormData()
           formData.append('photos', await resizeImage(file))
           await uploadPhotos(eventId, formData)
         } catch {
-          anyFailed = true // keep going: one oversized photo shouldn't sink the rest
+          failures.add('photo') // keep going: one oversized photo shouldn't sink the rest
         } finally {
           setProgress(null)
         }
       }
-      setFailed(anyFailed)
+      setFailed(failures)
       if (inputRef.current) inputRef.current.value = ''
     })
   }
 
   // Videos skip the function body limit by going to Blob first (see lib/video).
   const uploadVideo = async (file: File, type: string) => {
-    if (!videosAllowed || file.size > MAX_VIDEO_BYTES) throw new Error('video refused')
+    if (!videosAllowed) throw new Error('Videos are not enabled for this party.')
     const formData = new FormData()
     const poster = await captureVideoPoster(file)
     if (poster) formData.append('poster', poster)
@@ -315,10 +327,14 @@ export function Gallery({
 
       {notice && <p className="gallery__notice">{notice}</p>}
 
-      {failed && (
-        <p className="gallery__error" role="alert">
-          {dict.uploadFailed}
-        </p>
+      {failed.size > 0 && (
+        <div className="gallery__error" role="alert">
+          {failed.has('photo') && <p>{dict.uploadFailed}</p>}
+          {failed.has('videoTooLarge') && (
+            <p>{dict.videoTooLarge.replace('{mb}', String(MAX_VIDEO_BYTES / 1024 / 1024))}</p>
+          )}
+          {failed.has('video') && <p>{dict.videoFailed}</p>}
+        </div>
       )}
 
       {allPhotos.length === 0 ? (
