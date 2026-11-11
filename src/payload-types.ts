@@ -226,6 +226,10 @@ export interface Event {
    * Open the photo gallery for uploads. The gallery also opens automatically once the event has started.
    */
   photosOpen?: boolean | null;
+  /**
+   * Guests may upload videos to the gallery (platform admins only).
+   */
+  videosAllowed?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -242,6 +246,7 @@ export interface Media {
    */
   event?: (number | null) | Event;
   wallEvent?: (number | null) | Event;
+  poster?: (number | null) | Media;
   uploadedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
@@ -514,6 +519,7 @@ export interface EventsSelect<T extends boolean = true> {
   inviteToken?: T;
   galleryRetiredAt?: T;
   photosOpen?: T;
+  videosAllowed?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -590,6 +596,7 @@ export interface MediaSelect<T extends boolean = true> {
   caption?: T;
   event?: T;
   wallEvent?: T;
+  poster?: T;
   uploadedBy?: T;
   updatedAt?: T;
   createdAt?: T;

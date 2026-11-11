@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { canHost, relId, toIds } from '@/access'
+import { canHost, ownEventsFor, relId, toIds } from '@/access'
 import { BreakableTitle } from '@/components/BreakableTitle'
 import { getDictionary, type Dictionary, type Locale } from '@/i18n/dictionaries'
 import { getLocale } from '@/i18n/locale'
@@ -112,6 +112,8 @@ export default async function EventsOverviewPage() {
 
   const { docs: events } = await payload.find({
     collection: 'events',
+    // Read access alone would hand a platform admin every party.
+    where: await ownEventsFor(payload, user),
     sort: 'date',
     limit: 100,
     locale,

@@ -3,9 +3,13 @@
 import React, { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 
-import { loadOlderPhotos, uploadPhotos } from '@/app/(frontend)/actions'
+import { upload } from '@vercel/blob/client'
+
+import { addGalleryVideo, loadOlderPhotos, uploadPhotos } from '@/app/(frontend)/actions'
 import type { Dictionary } from '@/i18n/dictionaries'
 import { resizeImage } from '@/lib/resizeImage'
+import { isVideoType, MAX_VIDEO_BYTES, videoExtension } from '@/lib/video'
+import { captureVideoPoster } from '@/lib/videoPoster'
 import { useMounted } from '@/lib/useMounted'
 import { ArrowLeft, ArrowRight, X } from './icons'
 
@@ -16,6 +20,8 @@ export type GalleryPhoto = {
   alt: string
   caption?: string | null
   uploaderName?: string | null
+  /** Set for videos: where it plays from. `url`/`largeUrl` are then its poster, if any. */
+  video?: string
   /** Pagination cursor for loading older photos. */
   createdAt: string
 }
@@ -77,8 +83,19 @@ function Lightbox({
       )}
 
       <figure className="lightbox__stage" onClick={(e) => e.stopPropagation()}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photo.largeUrl} alt={photo.alt} />
+        {photo.video ? (
+          <video
+            key={photo.id}
+            src={photo.video}
+            poster={photo.largeUrl || undefined}
+            controls
+            autoPlay
+            playsInline
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo.largeUrl} alt={photo.alt} />
+        )}
         <figcaption className="lightbox__bar">
           <span className="lightbox__meta">
             <span className="lightbox__count">
@@ -87,8 +104,8 @@ function Lightbox({
             {label && <span className="lightbox__label">{label}</span>}
           </span>
           <a
-            href={photo.largeUrl}
-            download={`1geladen-foto-${photo.id}.jpg`}
+            href={photo.video ? downloadUrl(photo.video) : photo.largeUrl}
+            download={photo.video ? `1geladen-video-${photo.id}` : `1geladen-foto-${photo.id}.jpg`}
             className="btn btn--small"
             onClick={(e) => e.stopPropagation()}
           >
@@ -115,6 +132,23 @@ function Lightbox({
   )
 }
 
+/** Blob ignores `download` (another origin); it has its own switch for that. */
+const downloadUrl = (url: string) => (url.startsWith('https://') ? `${url}?download=1` : url)
+
+/** Some browsers leave `type` empty for .mov; the extension is all there is then. */
+const TYPE_BY_EXTENSION: Record<string, string> = {
+  mov: 'video/quicktime',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+}
+const videoTypeOf = (file: File): string | null =>
+  isVideoType(file.type)
+    ? file.type
+    : (TYPE_BY_EXTENSION[file.name.split('.').pop()?.toLowerCase() ?? ''] ?? null)
+
+const randomName = (ext: string) =>
+  `${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')}.${ext}`
+
 export function Gallery({
   eventId,
   photos,
@@ -123,6 +157,8 @@ export function Gallery({
   unlocked,
   retired = false,
   notice,
+  videosAllowed = false,
+  directVideoUpload = false,
   dict,
 }: {
   eventId: number
@@ -134,9 +170,14 @@ export function Gallery({
   retired?: boolean
   /** Shown above the grid — e.g. when the photos will go. */
   notice?: string | null
+  /** Greenlit by a platform admin for this party (events.videosAllowed). */
+  videosAllowed?: boolean
+  /** Videos go to Blob from the browser (production); otherwise through the action. */
+  directVideoUpload?: boolean
   dict: Dictionary['gallery']
 }) {
   const [pending, startTransition] = useTransition()
+  const [progress, setProgress] = useState<number | null>(null)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -179,16 +220,47 @@ export function Gallery({
       let anyFailed = false
       for (const file of Array.from(files)) {
         try {
+          const videoType = videoTypeOf(file)
+          if (videoType) {
+            await uploadVideo(file, videoType)
+            continue
+          }
           const formData = new FormData()
           formData.append('photos', await resizeImage(file))
           await uploadPhotos(eventId, formData)
         } catch {
           anyFailed = true // keep going: one oversized photo shouldn't sink the rest
+        } finally {
+          setProgress(null)
         }
       }
       setFailed(anyFailed)
       if (inputRef.current) inputRef.current.value = ''
     })
+  }
+
+  // Videos skip the function body limit by going to Blob first (see lib/video).
+  const uploadVideo = async (file: File, type: string) => {
+    if (!videosAllowed || file.size > MAX_VIDEO_BYTES) throw new Error('video refused')
+    const formData = new FormData()
+    const poster = await captureVideoPoster(file)
+    if (poster) formData.append('poster', poster)
+
+    if (directVideoUpload) {
+      setProgress(0)
+      const blob = await upload(randomName(videoExtension(type) ?? 'mp4'), file, {
+        access: 'public',
+        handleUploadUrl: '/video-upload',
+        clientPayload: JSON.stringify({ eventId }),
+        contentType: type,
+        multipart: file.size > 20 * 1024 * 1024,
+        onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
+      })
+      formData.append('pathname', blob.pathname)
+    } else {
+      formData.append('video', new File([file], file.name, { type }))
+    }
+    await addGalleryVideo(eventId, formData)
   }
 
   // Wrap-around navigation
@@ -217,7 +289,7 @@ export function Gallery({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={videosAllowed ? 'image/*,video/*' : 'image/*'}
           multiple
           id="photo-upload"
           className="gallery__input"
@@ -225,9 +297,21 @@ export function Gallery({
           disabled={pending}
         />
         <label htmlFor="photo-upload" className={`btn ${pending ? 'is-disabled' : ''}`}>
-          {pending ? dict.uploading : dict.upload}
+          {pending
+            ? progress === null
+              ? dict.uploading
+              : `${dict.uploading} ${progress} %`
+            : videosAllowed
+              ? dict.uploadWithVideos
+              : dict.upload}
         </label>
       </div>
+
+      {videosAllowed && (
+        <p className="gallery__notice">
+          {dict.videoHint.replace('{mb}', String(MAX_VIDEO_BYTES / 1024 / 1024))}
+        </p>
+      )}
 
       {notice && <p className="gallery__notice">{notice}</p>}
 
@@ -246,21 +330,39 @@ export function Gallery({
               key={photo.id}
               className={`gallery__photo ${loaded.has(photo.id) ? '' : 'is-loading'}`}
             >
-              <button type="button" onClick={() => setOpenIndex(index)} aria-label={photo.alt || dict.title}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo.url}
-                  alt={photo.alt}
-                  loading="lazy"
-                  // A cached image can already be complete before React attaches
-                  // onLoad, which would strand the skeleton on top of it forever.
-                  ref={(el) => {
-                    if (el?.complete) markLoaded(photo.id)
-                  }}
-                  onLoad={() => markLoaded(photo.id)}
-                  // A broken photo should show itself as broken, not shimmer for ever.
-                  onError={() => markLoaded(photo.id)}
-                />
+              <button
+                type="button"
+                onClick={() => setOpenIndex(index)}
+                aria-label={photo.video ? dict.play : photo.alt || dict.title}
+              >
+                {photo.video && <span className="gallery__play" />}
+                {photo.video && !photo.url ? (
+                  // No poster (the browser couldn't decode it at upload): let
+                  // the video show its own first frame instead.
+                  <video
+                    src={`${photo.video}#t=0.1`}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    onLoadedData={() => markLoaded(photo.id)}
+                    onError={() => markLoaded(photo.id)}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photo.url}
+                    alt={photo.alt}
+                    loading="lazy"
+                    // A cached image can already be complete before React attaches
+                    // onLoad, which would strand the skeleton on top of it forever.
+                    ref={(el) => {
+                      if (el?.complete) markLoaded(photo.id)
+                    }}
+                    onLoad={() => markLoaded(photo.id)}
+                    // A broken photo should show itself as broken, not shimmer for ever.
+                    onError={() => markLoaded(photo.id)}
+                  />
+                )}
               </button>
               {(photo.caption || photo.uploaderName) && (
                 <span className="gallery__caption">{photo.caption || photo.uploaderName}</span>

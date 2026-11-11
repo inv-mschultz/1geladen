@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { ownEventsFor } from '@/access'
 import { EventView } from '@/components/EventView'
 import { ArrowLeft } from '@/components/icons'
 import { getDictionary } from '@/i18n/dictionaries'
@@ -29,7 +30,8 @@ export default async function EventPage(props: { params: Promise<{ slug: string 
 
   const result = await payload.find({
     collection: 'events',
-    where: { slug: { equals: slug } },
+    // Read access alone would let a platform admin open any party.
+    where: { and: [await ownEventsFor(payload, user), { slug: { equals: slug } }] },
     limit: 1,
     locale,
     overrideAccess: false,

@@ -2110,7 +2110,8 @@ a {
   cursor: pointer;
 }
 
-.gallery__photo img {
+.gallery__photo img,
+.gallery__photo video {
   display: block;
   width: 100%;
   aspect-ratio: 1;
@@ -2118,7 +2119,29 @@ a {
   transition: transform 0.16s ease;
 }
 
-.gallery__photo:hover img {
+/* Marks a video tile. Sits above the shimmer so it reads as a video while the
+   poster loads. */
+.gallery__play {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.gallery__play::before {
+  content: '';
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.55)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E")
+    center / 22px no-repeat;
+}
+
+.gallery__photo:hover img,
+.gallery__photo:hover video {
   transform: scale(1.04);
 }
 
@@ -2140,7 +2163,8 @@ a {
   animation: gallery-shimmer 1.4s ease-in-out infinite;
 }
 
-.gallery__photo.is-loading img {
+.gallery__photo.is-loading img,
+.gallery__photo.is-loading video {
   opacity: 0;
 }
 
@@ -2194,7 +2218,8 @@ a {
   align-items: center;
 }
 
-.lightbox__stage img {
+.lightbox__stage img,
+.lightbox__stage video {
   max-width: 100%;
   max-height: 82vh;
   object-fit: contain;

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { canHost, hostedEventIdsFor } from '@/access'
+import { canHost, hostedEventIdsFor, ownEventsFor } from '@/access'
 import { EventView } from '@/components/EventView'
 import { ArrowDown, ArrowRight } from '@/components/icons'
 import { Story, storyCta } from '@/components/story/Story'
@@ -46,10 +46,11 @@ export default async function HomePage() {
   const GRACE_MS = 36 * 60 * 60 * 1000
   const cutoff = new Date(now.getTime() - GRACE_MS).toISOString()
 
+  const ownEvents = await ownEventsFor(payload, user)
   const [upcomingDocs, pastDocs] = await Promise.all([
     payload.find({
       collection: 'events',
-      where: { date: { greater_than_equal: cutoff } },
+      where: { and: [ownEvents, { date: { greater_than_equal: cutoff } }] },
       sort: 'date',
       limit: 10,
       locale,
@@ -58,7 +59,7 @@ export default async function HomePage() {
     }),
     payload.find({
       collection: 'events',
-      where: { date: { less_than: now.toISOString() } },
+      where: { and: [ownEvents, { date: { less_than: now.toISOString() } }] },
       sort: '-date',
       limit: 10,
       locale,

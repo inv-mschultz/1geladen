@@ -348,6 +348,8 @@ export async function EventView({
           unlocked={photosUnlocked}
           retired={galleryRetired}
           notice={galleryNotice}
+          videosAllowed={Boolean(event.videosAllowed)}
+          directVideoUpload={Boolean(process.env.MEDIA_READ_WRITE_TOKEN)}
           dict={dict.gallery}
         />
       </section>

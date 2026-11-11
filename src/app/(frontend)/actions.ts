@@ -7,6 +7,7 @@ import { cookies, headers as getHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import type { Where } from 'payload'
+import { del, head } from '@vercel/blob'
 
 import { randomBytes } from 'crypto'
 
@@ -21,6 +22,7 @@ import { addEventMember, soleHostedEvents } from '@/lib/membership'
 import { MODE_COOKIE } from '@/lib/mode'
 import { pushEnabled, sendPush, snippet, type PushMessage } from '@/lib/push'
 import { PLATFORM_ACCENT, PLATFORM_COLOR } from '@/lib/theme'
+import { blobBaseUrl, isVideoType, VIDEO_PATHNAME } from '@/lib/video'
 import { getViewAsGuest } from '@/lib/viewas'
 import { fetchGalleryPhotos } from '@/lib/gallery'
 import { fetchWallPosts } from '@/lib/wall'
@@ -761,6 +763,95 @@ export async function uploadPhotos(eventId: number, formData: FormData): Promise
       overrideAccess: false,
       user,
     })
+  }
+  revalidateEventViews()
+}
+
+/**
+ * Adds a video to a party's gallery, for parties greenlit for videos (see
+ * lib/video). In production the browser has already put the file into Blob
+ * via /video-upload and sends its `pathname`; we trust none of what it says
+ * about the file and read size and type back from Blob. Without a Blob store
+ * (local dev) the `video` itself comes along instead.
+ *
+ * `poster` is an optional still frame for the grid.
+ */
+export async function addGalleryVideo(eventId: number, formData: FormData): Promise<void> {
+  const { payload, user } = await getCtx()
+  requireUser(user)
+
+  const pathname = String(formData.get('pathname') ?? '')
+  const video = formData.get('video')
+  const posterFile = formData.get('poster')
+
+  let file: { data: Buffer; name: string; mimetype: string; size: number } | undefined
+  let registered: { filename: string; mimeType: string; filesize: number } | undefined
+
+  if (pathname) {
+    const base = blobBaseUrl()
+    if (!base || !VIDEO_PATHNAME.test(pathname)) throw new Error('Invalid video.')
+    const blob = await head(`${base}/${pathname}`, { token: process.env.MEDIA_READ_WRITE_TOKEN })
+    if (!isVideoType(blob.contentType)) throw new Error('Invalid video.')
+    // Already somebody's video: refuse, and above all don't clean it up below.
+    const { totalDocs } = await payload.count({
+      collection: 'media',
+      where: { filename: { equals: pathname } },
+      overrideAccess: true,
+    })
+    if (totalDocs > 0) throw new Error('Invalid video.')
+    registered = { filename: pathname, mimeType: blob.contentType, filesize: blob.size }
+  } else if (video instanceof File && isVideoType(video.type)) {
+    file = {
+      data: Buffer.from(await video.arrayBuffer()),
+      name: video.name,
+      mimetype: video.type,
+      size: video.size,
+    }
+  } else {
+    throw new Error('No video given.')
+  }
+
+  // The poster is created first and scoped to the wall, not the gallery, so it
+  // never shows up as a photo of its own.
+  let poster: number | undefined
+  if (posterFile instanceof File && posterFile.size > 0 && posterFile.type.startsWith('image/')) {
+    poster = (
+      await payload.create({
+        collection: 'media',
+        file: {
+          data: Buffer.from(await posterFile.arrayBuffer()),
+          name: posterFile.name,
+          mimetype: posterFile.type,
+          size: posterFile.size,
+        },
+        data: { alt: 'poster', uploadedBy: user.id, wallEvent: eventId },
+        overrideAccess: false,
+        user,
+      })
+    ).id
+  }
+
+  try {
+    await payload.create({
+      collection: 'media',
+      ...(file ? { file } : {}),
+      data: { event: eventId, alt: 'video', uploadedBy: user.id, poster, ...registered },
+      // A registered video carries its own file data, which Payload only takes
+      // from trusted callers. Media's beforeChange still checks membership,
+      // the party's greenlight and the caps against `user`.
+      overrideAccess: Boolean(registered),
+      context: { registeredVideo: Boolean(registered) },
+      user,
+    })
+  } catch (error) {
+    if (poster) await payload.delete({ collection: 'media', id: poster, overrideAccess: true })
+    // Refused (cap, greenlight, membership): nobody may keep the file either.
+    if (registered) {
+      await del(`${blobBaseUrl()}/${registered.filename}`, {
+        token: process.env.MEDIA_READ_WRITE_TOKEN,
+      })
+    }
+    throw error
   }
   revalidateEventViews()
 }

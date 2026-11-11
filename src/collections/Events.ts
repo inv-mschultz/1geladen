@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto'
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Field, FieldAccess } from 'payload'
 
 import {
   canHostAccess,
@@ -7,12 +7,44 @@ import {
   guestListUpdate,
   isEventHost,
   isEventHostFieldSelf,
+  isEventMemberFieldSelf,
   isEventMemberOrHost,
+  isPlatformAdminFieldLevel,
   neverUpdate,
   relId,
   toIds,
 } from '@/access'
 import { releaseEventContent } from '@/lib/cascade'
+
+/** Both must allow it. */
+const both =
+  (a: FieldAccess, b: FieldAccess | undefined): FieldAccess =>
+  async (args) =>
+    (await a(args)) && (b ? b(args) : true)
+
+/**
+ * Platform admins may open any event to flip `videosAllowed`, and nothing
+ * else: every other field stays writable by the event's hosts only, and what
+ * is inside the party (CONTENT_FIELDS) stays readable by its guests only.
+ */
+const CONTENT_FIELDS = ['description', 'location', 'coverImage', 'members']
+
+const scopeFieldToParty = (field: Field): Field => {
+  if (!('name' in field) || field.name === 'videosAllowed') return field
+  const access = 'access' in field ? (field.access ?? {}) : {}
+  return {
+    ...field,
+    access: {
+      ...access,
+      update: both(isEventHostFieldSelf, access.update),
+      ...(CONTENT_FIELDS.includes(field.name)
+        ? { read: both(isEventMemberFieldSelf, access.read) }
+        : {}),
+    },
+  } as Field
+}
+
+const scopedToParty = (fields: Field[]): Field[] => fields.map(scopeFieldToParty)
 
 const formatSlug = (value: string): string =>
   value
@@ -37,7 +69,8 @@ export const Events: CollectionConfig = {
     // Anyone with a real account may throw a party, and becomes the first host
     // of the ones they create.
     create: canHostAccess,
-    update: isEventHost('id'),
+    // Platform admins get in to greenlight videos; scopedToParty keeps them to that.
+    update: (args) => args.req.user?.role === 'admin' || isEventHost('id')(args),
     delete: isEventHost('id'),
   },
   hooks: {
@@ -99,7 +132,7 @@ export const Events: CollectionConfig = {
       },
     ],
   },
-  fields: [
+  fields: scopedToParty([
     {
       name: 'title',
       type: 'text',
@@ -292,5 +325,20 @@ export const Events: CollectionConfig = {
           'Open the photo gallery for uploads. The gallery also opens automatically once the event has started.',
       },
     },
-  ],
+    {
+      // Greenlit by a platform admin, never by the host: videos are what fills
+      // the Blob store, so who gets them is a storage budget call. See lib/video.
+      name: 'videosAllowed',
+      type: 'checkbox',
+      defaultValue: false,
+      access: {
+        create: isPlatformAdminFieldLevel,
+        update: isPlatformAdminFieldLevel,
+      },
+      admin: {
+        position: 'sidebar',
+        description: 'Guests may upload videos to the gallery (platform admins only).',
+      },
+    },
+  ]),
 }

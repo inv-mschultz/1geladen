@@ -12,7 +12,8 @@
 import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { User } from '@/payload-types'
+import { ownEventsFor } from '@/access'
+import type { Event, User } from '@/payload-types'
 import config from '@/payload.config'
 
 const MARK = 'hostaccess-fixture'
@@ -127,10 +128,13 @@ describe('per-event host access', () => {
   })
 
   describe('events', () => {
+    // Platform admins may list every party in the backstage, to greenlight
+    // videos (see lib/video). Everything the frontend shows goes through
+    // ownEventsFor, and what's inside a party stays with its guests.
     it('shows a host their own event and nobody else’s', async () => {
       const { docs } = await payload.find({
         collection: 'events',
-        where: { slug: { like: MARK } },
+        where: { and: [await ownEventsFor(payload, hostA), { slug: { like: MARK } }] },
         overrideAccess: false,
         user: hostA,
         depth: 0,
@@ -138,10 +142,25 @@ describe('per-event host access', () => {
       expect(docs.map((d) => d.id)).toEqual([eventA.id])
     })
 
+    it('lists somebody else’s event in the backstage, without what is inside', async () => {
+      const other = (await payload.findByID({
+        collection: 'events',
+        id: eventB.id,
+        overrideAccess: false,
+        user: hostA,
+        depth: 0,
+      })) as Event
+      expect(other.title).toBe(`${MARK} event-b`)
+      expect(other.members).toBeUndefined()
+      expect(other.location).toBeUndefined()
+      expect(other.inviteToken).toBeUndefined()
+    })
+
     it('gives an organizer who hosts nothing no events at all', async () => {
       const nobody = await makeUser('hostless-admin', 'admin')
       const { docs } = await payload.find({
         collection: 'events',
+        where: await ownEventsFor(payload, nobody),
         overrideAccess: false,
         user: nobody,
         depth: 0,
@@ -175,17 +194,19 @@ describe('per-event host access', () => {
     })
 
     it('refuses a host editing or deleting somebody else’s event', async () => {
-      expect(
-        await refused(
-          payload.update({
-            collection: 'events',
-            id: eventB.id,
-            data: { title: 'hijacked' },
-            overrideAccess: false,
-            user: hostA,
-          }),
-        ),
-      ).toBe(true)
+      // As a platform admin the update gets in (for videosAllowed) but can't
+      // change anything else.
+      await payload
+        .update({
+          collection: 'events',
+          id: eventB.id,
+          data: { title: 'hijacked' },
+          overrideAccess: false,
+          user: hostA,
+        })
+        .catch(() => null)
+      const after = await payload.findByID({ collection: 'events', id: eventB.id, overrideAccess: true })
+      expect(after.title).toBe(`${MARK} event-b`)
       expect(
         await refused(
           payload.delete({ collection: 'events', id: eventB.id, overrideAccess: false, user: hostA }),

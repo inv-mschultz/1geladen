@@ -134,6 +134,18 @@ export async function peerUserIds(req: PayloadRequest): Promise<number[]> {
   return (await scopeFor(req.payload, req.user)).peerUserIds
 }
 
+/**
+ * The events a user was invited to or runs, as a query for the frontend. Read
+ * access alone is wider for platform admins (see isEventMemberOrHost). By id
+ * rather than by `members`, which is not queryable for everyone.
+ */
+export async function ownEventsFor(
+  payload: Payload,
+  user: { id: number } | null | undefined,
+): Promise<Where> {
+  return { id: { in: (await scopeFor(payload, user)).visibleIds } }
+}
+
 /** IDs of all events the user hosts, from a server component or action. */
 export async function hostedEventIdsFor(
   payload: Payload,
@@ -206,11 +218,25 @@ export const isEventPeerOrSelf: Access = async ({ req }) => {
 /**
  * Read access for the Events collection itself: the events you were invited to,
  * plus the ones you run.
+ *
+ * Platform admins see every event, so they can greenlight videos (see
+ * lib/video) — but only the listing: what's inside a party stays behind
+ * `isEventMemberFieldSelf`, and the frontend scopes its own queries with
+ * `ownEventsFor`, so an admin's overview still shows only their parties.
  */
 export const isEventMemberOrHost: Access = ({ req: { user } }) => {
   if (!user) return false
-  if (globalBypass(user)) return true
+  if (globalBypass(user) || user.role === 'admin') return true
   return { or: [{ members: { in: [user.id] } }, { hosts: { in: [user.id] } }] } as Where
+}
+
+/** Field read access for what's inside an event: its guests and hosts only.
+ *  Reads `doc.members`/`doc.hosts` directly, so it costs no query. */
+export const isEventMemberFieldSelf: FieldAccess = ({ req: { user }, doc }) => {
+  if (globalBypass(user)) return true
+  if (!user) return false
+  const event = doc as { hosts?: unknown; members?: unknown } | undefined
+  return toIds(event?.members).includes(user.id) || toIds(event?.hosts).includes(user.id)
 }
 
 /**
